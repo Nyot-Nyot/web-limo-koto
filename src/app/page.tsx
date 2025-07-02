@@ -10,7 +10,7 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState('01');
 
   return (
-    <div className="relative min-h-screen bg-gray-900 overflow-x-hidden">
+    <div className="relative min-h-screen bg-gray-900 overflow-hidden">
       {/* Header */}
       <Header />
       
@@ -30,7 +30,10 @@ export default function Home() {
       
       {/* Main Content */}
       <main className="relative">
-        <HeroSection />
+        <HeroSection
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
       </main>
     </div>
   );

@@ -7,11 +7,11 @@ interface MobileSidebarProps {
 
 export default function MobileSidebar({ activeSection, onSectionChange }: MobileSidebarProps) {
   const sections = [
-    { id: '01', title: 'Beranda', label: 'Beranda' },
-    { id: '02', title: '', label: '' },
-    { id: '03', title: '', label: '' },
-    { id: '04', title: '', label: '' },
-    { id: '05', title: '', label: '' },
+    { id: '01', title: 'Beranda', label: 'BERANDA' },
+    { id: '02', title: 'Fitur-Fitur Website', label: 'FITUR-FITUR' },
+    { id: '03', title: 'Section 3', label: 'SECTION 3' },
+    { id: '04', title: 'Section 4', label: 'SECTION 4' },
+    { id: '05', title: 'Section 5', label: 'SECTION 5' },
   ];
 
   return (
@@ -20,13 +20,12 @@ export default function MobileSidebar({ activeSection, onSectionChange }: Mobile
         {sections.map((section) => (
           <button
             key={section.id}
-            onClick={() => section.id === '01' && onSectionChange(section.id)}
+            onClick={() => onSectionChange(section.id)}
             className={`group relative flex items-center ${
               activeSection === section.id
                 ? 'text-white'
                 : 'text-white/60 hover:text-white/80'
             } transition-all duration-300`}
-            disabled={section.id !== '01'}
           >
             {/* Red line indicator */}
             <div
@@ -43,7 +42,7 @@ export default function MobileSidebar({ activeSection, onSectionChange }: Mobile
                 className={`text-lg font-bold transition-all duration-300 ${
                   activeSection === section.id
                     ? 'text-white'
-                    : 'text-white/40'
+                    : 'text-white/40 group-hover:text-white'
                 }`}
               >
                 {section.id}

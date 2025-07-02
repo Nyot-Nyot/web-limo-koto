@@ -7,11 +7,11 @@ interface SidebarProps {
 
 export default function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
   const sections = [
-    { id: '01', title: 'Beranda', label: 'Beranda' },
-    { id: '02', title: '', label: '' },
-    { id: '03', title: '', label: '' },
-    { id: '04', title: '', label: '' },
-    { id: '05', title: '', label: '' },
+    { id: '01', title: 'Beranda', label: 'BERANDA' },
+    { id: '02', title: 'Fitur-Fitur Website', label: 'FITUR-FITUR' },
+    { id: '03', title: 'Section 3', label: 'SECTION 3' },
+    { id: '04', title: 'Section 4', label: 'SECTION 4' },
+    { id: '05', title: 'Section 5', label: 'SECTION 5' },
   ];
 
   return (
@@ -20,20 +20,19 @@ export default function Sidebar({ activeSection, onSectionChange }: SidebarProps
         {sections.map((section) => (
           <button
             key={section.id}
-            onClick={() => section.id === '01' && onSectionChange(section.id)}
+            onClick={() => onSectionChange(section.id)}
             className={`group relative flex items-center ${
               activeSection === section.id
                 ? 'text-white'
                 : 'text-white/60 hover:text-white/80'
             } transition-all duration-300`}
-            disabled={section.id !== '01'}
           >
             {/* Red line indicator */}
             <div
               className={`w-1 h-12 transition-all duration-300 ${
                 activeSection === section.id
                   ? 'bg-red-500'
-                  : 'bg-white/20 group-hover:bg-white/40'
+                  : 'bg-white/20 group-hover:bg-red-500'
               }`}
             />
             
@@ -43,7 +42,7 @@ export default function Sidebar({ activeSection, onSectionChange }: SidebarProps
                 className={`text-3xl font-bold transition-all duration-300 ${
                   activeSection === section.id
                     ? 'text-white'
-                    : 'text-white/40'
+                    : 'text-white/40 group-hover:text-white'
                 }`}
               >
                 {section.id}
