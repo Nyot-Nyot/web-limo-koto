@@ -14,35 +14,35 @@ export default function Galeri() {
 
   const galleries = {
     makanan: [
-      { id: 1, title: 'Rendang Dagiang', image: 'https://via.placeholder.com/400x300/DC2626/000000?text=Rendang+Dagiang' },
-      { id: 2, title: 'Gulai Ikan Bilih', image: 'https://via.placeholder.com/400x300/059669/000000?text=Gulai+Ikan+Bilih' },
-      { id: 3, title: 'Dendeng Batokok', image: 'https://via.placeholder.com/400x300/DC9333/000000?text=Dendeng+Batokok' },
-      { id: 4, title: 'Kalio Ayam', image: 'https://via.placeholder.com/400x300/7C3AED/000000?text=Kalio+Ayam' },
-      { id: 5, title: 'Sambal Lado Ijo', image: 'https://via.placeholder.com/400x300/16A34A/000000?text=Sambal+Lado+Ijo' },
-      { id: 6, title: 'Gulai Cubadak', image: 'https://via.placeholder.com/400x300/EA580C/000000?text=Gulai+Cubadak' },
-      { id: 7, title: 'Kerupuk Sanjai', image: 'https://via.placeholder.com/400x300/0891B2/000000?text=Kerupuk+Sanjai' },
-      { id: 8, title: 'Randang Jantung Pisang', image: 'https://via.placeholder.com/400x300/BE123C/000000?text=Randang+Jantung+Pisang' }
+      { id: 1, title: 'Rendang Dagiang', image: 'https://placehold.co/400x300' },
+      { id: 2, title: 'Gulai Ikan Bilih', image: 'https://placehold.co/400x300' },
+      { id: 3, title: 'Dendeng Batokok', image: 'https://placehold.co/400x300' },
+      { id: 4, title: 'Kalio Ayam', image: 'https://placehold.co/400x300' },
+      { id: 5, title: 'Sambal Lado Ijo', image: 'https://placehold.co/400x300' },
+      { id: 6, title: 'Gulai Cubadak', image: 'https://placehold.co/400x300' },
+      { id: 7, title: 'Kerupuk Sanjai', image: 'https://placehold.co/400x300' },
+      { id: 8, title: 'Randang Jantung Pisang', image: 'https://placehold.co/400x300' }
     ],
     budaya: [
-      { id: 1, title: 'Tari Piring', image: 'https://via.placeholder.com/400x300/7C3AED/000000?text=Tari+Piring' },
-      { id: 2, title: 'Randai', image: 'https://via.placeholder.com/400x300/DC2626/000000?text=Randai' },
-      { id: 3, title: 'Saluang', image: 'https://via.placeholder.com/400x300/059669/000000?text=Saluang' },
-      { id: 4, title: 'Batagak Penghulu', image: 'https://via.placeholder.com/400x300/DC9333/000000?text=Batagak+Penghulu' },
-      { id: 5, title: 'Upacara Adat', image: 'https://via.placeholder.com/400x300/16A34A/000000?text=Upacara+Adat' },
-      { id: 6, title: 'Pakaian Adat', image: 'https://via.placeholder.com/400x300/EA580C/000000?text=Pakaian+Adat' }
+      { id: 1, title: 'Tari Piring', image: 'https://placehold.co/400x300' },
+      { id: 2, title: 'Randai', image: 'https://placehold.co/400x300' },
+      { id: 3, title: 'Saluang', image: 'https://placehold.co/400x300' },
+      { id: 4, title: 'Batagak Penghulu', image: 'https://placehold.co/400x300' },
+      { id: 5, title: 'Upacara Adat', image: 'https://placehold.co/400x300' },
+      { id: 6, title: 'Pakaian Adat', image: 'https://placehold.co/400x300' }
     ],
     alam: [
-      { id: 1, title: 'Panorama Bukit', image: 'https://via.placeholder.com/400x300/16A34A/000000?text=Panorama+Bukit' },
-      { id: 2, title: 'Sungai Batang Hari', image: 'https://via.placeholder.com/400x300/0891B2/000000?text=Sungai+Batang+Hari' },
-      { id: 3, title: 'Sawah Terasering', image: 'https://via.placeholder.com/400x300/059669/000000?text=Sawah+Terasering' },
-      { id: 4, title: 'Kebun Karet', image: 'https://via.placeholder.com/400x300/16A34A/000000?text=Kebun+Karet' },
-      { id: 5, title: 'Air Terjun', image: 'https://via.placeholder.com/400x300/0891B2/000000?text=Air+Terjun' }
+      { id: 1, title: 'Panorama Bukit', image: 'https://placehold.co/400x300' },
+      { id: 2, title: 'Sungai Batang Hari', image: 'https://placehold.co/400x300' },
+      { id: 3, title: 'Sawah Terasering', image: 'https://placehold.co/400x300' },
+      { id: 4, title: 'Kebun Karet', image: 'https://placehold.co/400x300' },
+      { id: 5, title: 'Air Terjun', image: 'https://placehold.co/400x300' }
     ],
     arsitektur: [
-      { id: 1, title: 'Rumah Gadang', image: 'https://via.placeholder.com/400x300/DC2626/000000?text=Rumah+Gadang' },
-      { id: 2, title: 'Surau Tua', image: 'https://via.placeholder.com/400x300/059669/000000?text=Surau+Tua' },
-      { id: 3, title: 'Balai Adat', image: 'https://via.placeholder.com/400x300/DC9333/000000?text=Balai+Adat' },
-      { id: 4, title: 'Masjid Nagari', image: 'https://via.placeholder.com/400x300/7C3AED/000000?text=Masjid+Nagari' }
+      { id: 1, title: 'Rumah Gadang', image: 'https://placehold.co/400x300' },
+      { id: 2, title: 'Surau Tua', image: 'https://placehold.co/400x300' },
+      { id: 3, title: 'Balai Adat', image: 'https://placehold.co/400x300' },
+      { id: 4, title: 'Masjid Nagari', image: 'https://placehold.co/400x300' }
     ]
   };
 
