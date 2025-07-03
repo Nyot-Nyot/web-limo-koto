@@ -120,7 +120,7 @@ export default function HeroSection({ activeSection = '01', onSectionChange }: H
             </h2>
             
             <p className="text-lg md:text-xl mb-8 text-gray-200 max-w-4xl mx-auto leading-relaxed">
-              Akses mudah ke berbagai informasi dan layanan digital Nagari yang dirancang khusus untuk kemudahan masyarakat
+              Akses mudah ke berbagai informasi dan layanan digital Nagari yang dirancang khusus untuk memudahkan masyarakat
             </p>
 
             {/* Features Grid */}
