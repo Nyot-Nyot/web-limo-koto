@@ -75,7 +75,7 @@ export default function ProfilSingkat() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [adatImages.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -93,14 +93,6 @@ export default function ProfilSingkat() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Auto-slide images
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [adatImages.length]);
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-24">
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -108,7 +100,7 @@ export default function ProfilSingkat() {
         <div className="text-white space-y-6">
           <div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Profil <span className="text-yellow-400">Singkat</span>
+              <>Profil <span className="text-yellow-400">Singkat</span></>
             </h2>
             <div className="w-20 h-1 bg-yellow-400 mb-6"></div>
           </div>
