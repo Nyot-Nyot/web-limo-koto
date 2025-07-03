@@ -9,9 +9,9 @@ export default function MobileSidebar({ activeSection, onSectionChange }: Mobile
   const sections = [
     { id: '01', title: 'Beranda', label: 'BERANDA' },
     { id: '02', title: 'Fitur-Fitur Website', label: 'FITUR-FITUR' },
-    { id: '03', title: 'Section 3', label: 'SECTION 3' },
-    { id: '04', title: 'Section 4', label: 'SECTION 4' },
-    { id: '05', title: 'Section 5', label: 'SECTION 5' },
+    { id: '03', title: 'Struktur', label: 'Struktur' },
+    { id: '04', title: 'Galeri', label: 'Galeri' },
+    { id: '05', title: 'Statistik', label: 'Statistik' },
   ];
 
   return (

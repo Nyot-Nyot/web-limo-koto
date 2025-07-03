@@ -124,7 +124,7 @@ export default function HeroSection({ activeSection = '01', onSectionChange }: H
             </p>
 
             {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full md:w-[746px] mx-auto">
               {/* Card 1 - Profil Nagari */}
               <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 text-black hover:bg-white transition-all duration-300 group">
                 <div className="mb-3">
@@ -233,16 +233,18 @@ export default function HeroSection({ activeSection = '01', onSectionChange }: H
               <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 text-center text-black h-[400px] flex flex-col">
                 <h3 className="text-lg font-semibold">Wali Nagari</h3>
                 <div className="h-4" /> {/* Consistent spacing */}
-                <div className="relative w-full h-[280px] flex-shrink-0">
-                  <Image
-                    src="/images/pejabat-1.jpg"
-                    alt="Wali Nagari"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    className="rounded-md"
-                  />
+                <div className="relative w-full flex-1 overflow-hidden">
+                  <div className="absolute inset-0">
+                    <Image
+                      src="/images/pejabat-1.jpg"
+                      alt="Wali Nagari"
+                      fill
+                      style={{ objectFit: 'cover' }}
+                      className="rounded-md"
+                    />
+                  </div>
                 </div>
-                <div className="flex-grow flex items-center justify-center">
+                <div className="mt-4">
                   <p className="text-gray-600 text-sm">Dr. Sukirman, M.Pd</p>
                 </div>
               </div>
@@ -255,16 +257,18 @@ export default function HeroSection({ activeSection = '01', onSectionChange }: H
                     <h3 className="text-lg font-semibold">Kepala Jorong</h3>
                     <p className="text-sm text-gray-700 mt-1">{item.jorong}</p>
                     <div className="h-1" /> {/* Small adjustment for subtitle */}
-                    <div className="relative w-full h-[280px] flex-shrink-0">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        className="rounded-md"
-                      />
+                    <div className="relative w-full flex-1 overflow-hidden">
+                      <div className="absolute inset-0">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          className="rounded-md"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-grow flex items-center justify-center">
+                    <div className="mt-4">
                       <p className="text-gray-600 text-sm">{item.name}</p>
                     </div>
                   </div>
@@ -278,16 +282,18 @@ export default function HeroSection({ activeSection = '01', onSectionChange }: H
                   <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 text-center text-black h-[400px] flex flex-col">
                     <h3 className="text-lg font-semibold">Sekretaris</h3>
                     <div className="h-4" /> {/* Consistent spacing */}
-                    <div className="relative w-full h-[280px] flex-shrink-0">
-                      <Image
-                        src={item.image}
-                        alt="Sekretaris"
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        className="rounded-md"
-                      />
+                    <div className="relative w-full flex-1 overflow-hidden">
+                      <div className="absolute inset-0">
+                        <Image
+                          src={item.image}
+                          alt="Sekretaris"
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          className="rounded-md"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-grow flex items-center justify-center">
+                    <div className="mt-4">
                       <p className="text-gray-600 text-sm">{item.name}</p>
                     </div>
                   </div>
