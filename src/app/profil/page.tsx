@@ -126,7 +126,10 @@ function MobileProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarPr
 
 export default function ProfilPage() {
   const [activeSection, setActiveSection] = useState('01');
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
   const sectionsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTime = useRef(0);
 
   const sections = [
     { id: '01', component: <ProfilSingkat /> },
@@ -136,34 +139,85 @@ export default function ProfilPage() {
     { id: '05', component: <Galeri /> },
   ];
 
-  // Scroll to section when activeSection changes
+  // Debounced scroll handler
   useEffect(() => {
-    const section = sectionsRef.current[activeSection];
+    const handleScroll = () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Set a shorter timeout for more responsive updates
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsUserScrolling(false);
+      }, 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle manual section change from sidebar
+  const handleSectionChange = (sectionId: string) => {
+    setIsUserScrolling(true);
+    setActiveSection(sectionId);
+    
+    const section = sectionsRef.current[sectionId];
     if (section) {
       section.scrollIntoView({ 
         behavior: 'smooth',
         block: 'start'
       });
     }
-  }, [activeSection]);
+
+    // Reset user scrolling flag after scroll completes
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsUserScrolling(false);
+    }, 800); // Reduced from 1500ms to 800ms
+  };
 
   // Intersection Observer to update active section based on scroll
   useEffect(() => {
     const observerOptions = {
       root: null,
-      rootMargin: '-50% 0px -50% 0px',
-      threshold: 0
+      rootMargin: '-20% 0px -20% 0px', // Better detection margins
+      threshold: [0, 0.1, 0.5, 1] // Multiple thresholds for better detection
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.getAttribute('data-section');
-          if (sectionId) {
+      // Only update active section if user is not manually scrolling
+      if (!isUserScrolling) {
+        // Find the entry with the highest intersection ratio
+        const visibleEntries = entries
+          .filter(entry => entry.isIntersecting && entry.intersectionRatio > 0)
+          .sort((a, b) => {
+            // Prioritize entries that are more visible
+            if (b.intersectionRatio !== a.intersectionRatio) {
+              return b.intersectionRatio - a.intersectionRatio;
+            }
+            // If intersection ratios are equal, prioritize the one that's more centered
+            const aRect = a.boundingClientRect;
+            const bRect = b.boundingClientRect;
+            const viewportCenter = window.innerHeight / 2;
+            const aDistance = Math.abs(aRect.top + aRect.height / 2 - viewportCenter);
+            const bDistance = Math.abs(bRect.top + bRect.height / 2 - viewportCenter);
+            return aDistance - bDistance;
+          });
+        
+        if (visibleEntries.length > 0) {
+          const sectionId = visibleEntries[0].target.getAttribute('data-section');
+          if (sectionId && sectionId !== activeSection) {
             setActiveSection(sectionId);
           }
         }
-      });
+      }
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
@@ -177,11 +231,14 @@ export default function ProfilPage() {
 
     return () => {
       observer.disconnect();
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     };
-  }, []);
+  }, [isUserScrolling, activeSection]);
 
   return (
-    <div className="relative min-h-screen bg-gray-900 overflow-x-hidden">
+    <div className="relative min-h-screen bg-gray-900 overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
       {/* Header */}
       <Header />
       
@@ -189,24 +246,15 @@ export default function ProfilPage() {
       <div className="hidden md:block">
         <ProfilSidebar 
           activeSection={activeSection} 
-          onSectionChange={setActiveSection} 
+          onSectionChange={handleSectionChange} 
         />
       </div>
       
       {/* Mobile Sidebar */}
       <MobileProfilSidebar 
         activeSection={activeSection} 
-        onSectionChange={setActiveSection} 
+        onSectionChange={handleSectionChange} 
       />
-      
-      {/* Page Title Overlay
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
-        <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-1 shadow-lg border border-white/10">
-          <h1 className="text-white text-sm font-medium">
-            Profil Nagari Lima Koto
-          </h1>
-        </div>
-      </div> */}
 
       {/* Main Content */}
       <main className="relative">
@@ -228,7 +276,6 @@ export default function ProfilPage() {
               key={section.id}
               ref={(el) => { sectionsRef.current[section.id] = el; }}
               data-section={section.id}
-              className="min-h-screen"
             >
               {section.component}
             </div>
