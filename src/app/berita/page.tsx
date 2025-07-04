@@ -1,3 +1,4 @@
+// Dzaki Lobang Amblas
 "use client";
 import Image from "next/image";
 import { FaEye } from "react-icons/fa";
