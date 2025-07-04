@@ -1,7 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { MagnifyingGlassIcon, UserIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useState } from "react";
+import {
+  MagnifyingGlassIcon,
+  UserIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,19 +17,28 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <img 
-                src="/images/icon_sijunjung.png" 
-                alt="Nagari Lima Koto Logo" 
-                className="w-8 h-8"
+            <img
+              src="/images/icon_sijunjung.png"
+              alt="Nagari Lima Koto Logo"
+              className="w-8 h-8"
             />
             <span className="text-xl font-semibold">Nagari Lima Koto</span>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="hover:text-gray-300 transition-colors">Profil</a>
-            <a href="#" className="hover:text-gray-300 transition-colors">Layanan</a>
-            <a href="#" className="hover:text-gray-300 transition-colors">Berita</a>
+            <a href="/profil" className="hover:text-gray-300 transition-colors">
+              Profil
+            </a>
+            <a
+              href="/layanan"
+              className="hover:text-gray-300 transition-colors"
+            >
+              Layanan
+            </a>
+            <a href="/berita" className="hover:text-gray-300 transition-colors">
+              Berita
+            </a>
           </nav>
 
           {/* Search and User */}
@@ -59,9 +73,24 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-16 left-0 right-0 bg-black/90 backdrop-blur-sm border-t border-white/20 z-50">
             <nav className="px-4 py-6 space-y-4">
-              <a href="#" className="block py-2 text-lg hover:text-gray-300 transition-colors">Profil</a>
-              <a href="#" className="block py-2 text-lg hover:text-gray-300 transition-colors">Layanan</a>
-              <a href="#" className="block py-2 text-lg hover:text-gray-300 transition-colors">Agenda</a>
+              <a
+                href="/profil"
+                className="block py-2 text-lg hover:text-gray-300 transition-colors"
+              >
+                Profil
+              </a>
+              <a
+                href="/layanan"
+                className="block py-2 text-lg hover:text-gray-300 transition-colors"
+              >
+                Layanan
+              </a>
+              <a
+                href="/berita"
+                className="block py-2 text-lg hover:text-gray-300 transition-colors"
+              >
+                Berita
+              </a>
               <div className="pt-4 border-t border-white/20">
                 <div className="relative mb-4">
                   <input
