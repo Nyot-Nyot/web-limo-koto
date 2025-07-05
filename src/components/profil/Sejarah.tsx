@@ -47,7 +47,7 @@ export default function Sejarah() {
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-600 to-orange-700 shadow-2xl">
               <img 
-                src="https://via.placeholder.com/600x450/D97706/000000?text=Sejarah+Nagari" 
+                src="https://placehold.co/600x450" 
                 alt="Sejarah Nagari Lima Koto"
                 className="w-full h-full object-cover"
               />
