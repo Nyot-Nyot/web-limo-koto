@@ -5,8 +5,10 @@ import { useState, useEffect, useRef } from 'react';
 export default function ProfilSingkat() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [isAutoSlideActive, setIsAutoSlideActive] = useState(true);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if mobile
   useEffect(() => {
@@ -36,12 +38,10 @@ export default function ProfilSingkat() {
     const isRightSwipe = distance < -50;
 
     if (isLeftSwipe) {
-      setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
+      goToNext();
     }
     if (isRightSwipe) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? adatImages.length - 1 : prev - 1
-      );
+      goToPrevious();
     }
   };
   
@@ -68,24 +68,57 @@ export default function ProfilSingkat() {
     }
   ];
 
-  // Auto-slide functionality
-  useEffect(() => {
-    const interval = setInterval(() => {
+  // Reset auto-slide interval
+  const resetAutoSlide = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
     }, 4000);
+  };
 
-    return () => clearInterval(interval);
-  }, [adatImages.length]);
+  // Auto-slide functionality
+  useEffect(() => {
+    if (isAutoSlideActive) {
+      intervalRef.current = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
+      }, 4000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [adatImages.length, isAutoSlideActive]);
+
+  // Manual navigation functions
+  const goToPrevious = () => {
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? adatImages.length - 1 : prev - 1
+    );
+    resetAutoSlide();
+  };
+
+  const goToNext = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
+    resetAutoSlide();
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentImageIndex(index);
+    resetAutoSlide();
+  };
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
-        setCurrentImageIndex((prev) => 
-          prev === 0 ? adatImages.length - 1 : prev - 1
-        );
+        goToPrevious();
       } else if (e.key === 'ArrowRight') {
-        setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
+        goToNext();
       }
     };
 
@@ -94,7 +127,7 @@ export default function ProfilSingkat() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-24">
+    <div className="flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         {/* Content - Now on the left */}
         <div className="text-white space-y-6">
@@ -143,7 +176,7 @@ export default function ProfilSingkat() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-          >
+          >   
             {adatImages.map((image, index) => {
               const isActive = index === currentImageIndex;
               const isNext = index === (currentImageIndex + 1) % adatImages.length;
@@ -191,7 +224,7 @@ export default function ProfilSingkat() {
                   key={index}
                   className={cardClasses}
                   style={cardStyle}
-                  onClick={() => setCurrentImageIndex(index)}
+                  onClick={() => goToSlide(index)}
                   role="button"
                   tabIndex={isActive ? 0 : -1}
                   aria-label={`View ${image.title}`}
@@ -217,7 +250,7 @@ export default function ProfilSingkat() {
             {adatImages.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentImageIndex(index)}
+                onClick={() => goToSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-200 hover:scale-125 active:scale-110 ${
                   index === currentImageIndex 
                     ? 'bg-yellow-400 shadow-lg' 
@@ -231,9 +264,7 @@ export default function ProfilSingkat() {
           {/* Navigation Buttons */}
           <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-4">
             <button
-              onClick={() => setCurrentImageIndex((prev) => 
-                prev === 0 ? adatImages.length - 1 : prev - 1
-              )}
+              onClick={goToPrevious}
               className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 shadow-lg hover:scale-110 active:scale-95"
               aria-label="Previous image"
             >
@@ -242,9 +273,7 @@ export default function ProfilSingkat() {
               </svg>
             </button>
             <button
-              onClick={() => setCurrentImageIndex((prev) => 
-                (prev + 1) % adatImages.length
-              )}
+              onClick={goToNext}
               className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 shadow-lg hover:scale-110 active:scale-95"
               aria-label="Next image"
             >
