@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import ProfilSingkat from '@/components/profil/ProfilSingkat';
 import VisiMisi from '@/components/profil/VisiMisi';
-import Sejarah from '@/components/profil/Sejarah';
+import InformasiJorong from '@/components/profil/Jorong';
 import AdatIstiadat from '@/components/profil/AdatIstiadat';
 import Galeri from '@/components/profil/Galeri';
 
@@ -17,7 +17,7 @@ function ProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarProps) {
   const sections = [
     { id: '01', title: 'Profil Singkat', label: 'Profil' },
     { id: '02', title: 'Visi & Misi', label: 'Visi Misi' },
-    { id: '03', title: 'Sejarah', label: 'Sejarah' },
+    { id: '03', title: 'Jorong', label: 'Jorong' },
     { id: '04', title: 'Adat Istiadat', label: 'Adat' },
     { id: '05', title: 'Galeri', label: 'Galeri' },
   ];
@@ -78,7 +78,7 @@ function MobileProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarPr
   const sections = [
     { id: '01', title: 'Profil Singkat', label: 'Profil' },
     { id: '02', title: 'Visi & Misi', label: 'Visi Misi' },
-    { id: '03', title: 'Sejarah', label: 'Sejarah' },
+    { id: '03', title: 'Jorong', label: 'Jorong' },
     { id: '04', title: 'Adat Istiadat', label: 'Adat' },
     { id: '05', title: 'Galeri', label: 'Galeri' },
   ];
@@ -134,7 +134,7 @@ export default function ProfilPage() {
   const sections = [
     { id: '01', component: <ProfilSingkat /> },
     { id: '02', component: <VisiMisi /> },
-    { id: '03', component: <Sejarah /> },
+    { id: '03', component: <InformasiJorong /> },
     { id: '04', component: <AdatIstiadat /> },
     { id: '05', component: <Galeri /> },
   ];
