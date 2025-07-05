@@ -408,18 +408,18 @@ export default function Galeri() {
         </div>
 
         {/* Main Gallery Layout */}
-        <div className={`grid gap-8 lg:gap-12 transition-all duration-500 ${
+        <div className={`grid gap-8 lg:gap-16 transition-all duration-500 ${
           selectedImage !== null 
             ? 'grid-cols-1 lg:grid-cols-12' 
             : 'grid-cols-1'
         }`}>
           {/* Left Sidebar - Description - Only show when image is selected */}
           {selectedImage !== null && (
-            <div className="lg:col-span-6 order-2 lg:order-1">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 lg:p-10 border border-white/10 sticky top-8">
+            <div className="lg:col-span-5 order-2 lg:order-1 relative z-5">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-white/10 sticky top-8">
                 <div className={`image-transition ${imageTransition ? 'transitioning' : ''} ${selectedImage !== null ? 'content-enter' : ''}`}>
                   {/* Image Preview */}
-                  <div className="mb-10">
+                  <div className="mb-6">
                     <div className="aspect-[4/3] rounded-xl overflow-hidden bg-white/5 border border-white/10 relative shadow-lg">
                       <img
                         src={selectedItem?.image}
@@ -430,45 +430,45 @@ export default function Galeri() {
                   </div>
 
                   {/* Content Info */}
-                  <div className="mb-8">
-                    <span className="text-4xl lg:text-5xl font-bold text-yellow-400">
+                  <div className="mb-4">
+                    <span className="text-xl lg:text-2xl font-bold text-yellow-400">
                       {String(selectedImage + 1).padStart(2, '0')}
                     </span>
-                    <span className="text-gray-400 ml-4 text-lg">
+                    <span className="text-gray-400 ml-2 text-sm">
                       {categories.find(cat => cat.id === activeCategory)?.name}
                     </span>
                   </div>
                   
-                  <h3 className="text-4xl lg:text-5xl font-bold text-white mb-8 leading-tight">
+                  <h3 className="text-xl lg:text-2xl font-bold text-white mb-4 leading-tight">
                     {selectedItem?.title}
                   </h3>
                   
-                  <div className="w-24 h-1 bg-yellow-400 mb-10"></div>
+                  <div className="w-16 h-0.5 bg-yellow-400 mb-4"></div>
                   
-                  <p className="text-gray-300 leading-relaxed text-xl lg:text-2xl">
+                  <p className="text-gray-300 leading-relaxed text-sm lg:text-base">
                     {selectedItem?.description}
                   </p>
                   
                   {/* Navigation Info */}
-                  <div className="mt-12 pt-10 border-t border-white/10">
-                    <div className="flex items-center justify-between text-lg text-gray-400">
+                  <div className="mt-6 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs text-gray-400">
                       <span className="font-medium">{selectedImage + 1} dari {currentGallery.length}</span>
-                      <div className="flex space-x-4">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => setSelectedImage(Math.max(0, selectedImage - 1))}
                           disabled={selectedImage === 0}
-                          className="p-4 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          className="p-3 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                           </svg>
                         </button>
                         <button
                           onClick={() => setSelectedImage(Math.min(currentGallery.length - 1, selectedImage + 1))}
                           disabled={selectedImage === currentGallery.length - 1}
-                          className="p-4 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          className="p-3 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
@@ -481,11 +481,11 @@ export default function Galeri() {
           )}
 
           {/* Image Gallery */}
-          <div className={`order-1 lg:order-2 ${
-            selectedImage !== null ? 'lg:col-span-6' : 'col-span-1'
+          <div className={`order-1 lg:order-2 relative z-10 ${
+            selectedImage !== null ? 'lg:col-span-7' : 'col-span-1'
           }`}>
             {/* Album Section Title */}
-            <div className="mb-8">
+            <div className="mb-8 px-4">
               <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
                 Album Kegiatan {categories.find(cat => cat.id === activeCategory)?.name}
               </h3>
@@ -493,7 +493,7 @@ export default function Galeri() {
             </div>
 
             {/* Gallery Horizontal Scroll Layout - 2 rows */}
-            <div className="relative">
+            <div className="relative overflow-visible">
               {/* Scrollable Gallery Container */}
               <div 
                 ref={scrollContainerRef}
@@ -516,11 +516,11 @@ export default function Galeri() {
                     aria-label={`View ${item.title}`}
                     className={`gallery-item cursor-pointer transition-all duration-300 group ${
                       selectedImage === index 
-                        ? 'ring-2 ring-yellow-400 scale-[1.05] ring-offset-4 ring-offset-transparent active' 
+                        ? 'active' 
                         : 'hover:scale-[1.03] opacity-80 hover:opacity-100'
                     }`}
                   >
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 relative shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div className="aspect-[4/3] rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 relative shadow-lg hover:shadow-xl transition-shadow duration-300 z-10">
                       {/* Loading skeleton */}
                       {loadingImages.has(item.id) && (
                         <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
@@ -643,9 +643,11 @@ export default function Galeri() {
           grid-auto-columns: 18rem; /* Fixed width for consistent spacing */
           gap: 2rem; /* Increased gap for more breathing room */
           overflow-x: auto;
+          overflow-y: visible; /* Allow vertical overflow for scaled images */
           scrollbar-width: none;
           -ms-overflow-style: none;
-          padding: 1rem 0;
+          padding: 2rem 2rem 2rem 3rem; /* Extra padding for scaled images, especially left */
+          margin: -1rem -1rem -1rem -2rem; /* Negative margin to compensate */
           scroll-behavior: smooth;
           scroll-snap-type: x mandatory;
         }
@@ -659,6 +661,8 @@ export default function Galeri() {
           width: 18rem; /* Match grid-auto-columns */
           flex-shrink: 0;
           scroll-snap-align: start;
+          position: relative;
+          z-index: 8;
         }
         
         /* Enhanced navigation button styling */
@@ -722,8 +726,24 @@ export default function Galeri() {
         
         /* Gallery item active state enhancement */
         .gallery-item.active {
-          box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.6);
+          position: relative;
+          z-index: 15;
+        }
+        
+        .gallery-item.active > div {
+          border: 3px solid rgba(251, 191, 36, 0.9);
+          box-shadow: 
+            0 0 0 1px rgba(251, 191, 36, 0.3),
+            0 8px 32px rgba(251, 191, 36, 0.25),
+            0 4px 16px rgba(0, 0, 0, 0.3);
+          border-radius: 0.75rem;
+          background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(251, 191, 36, 0.02));
           transform: scale(1.05);
+          transform-origin: center;
+        }
+        
+        .gallery-item.active img {
+          border-radius: 0.5rem; /* Slightly smaller radius for image inside border */
         }
         
         /* Pulse animation for active indicator */
@@ -739,7 +759,10 @@ export default function Galeri() {
         }
         
         .active-indicator {
+          position: relative;
+          z-index: 20;
           animation: pulse 2s infinite;
+          box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
         }
       `}</style>
     </div>
