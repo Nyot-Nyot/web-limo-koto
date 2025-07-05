@@ -17,12 +17,17 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <img
-              src="/images/icon_sijunjung.png"
-              alt="Nagari Lima Koto Logo"
-              className="w-8 h-8"
-            />
-            <span className="text-xl font-semibold">Nagari Lima Koto</span>
+            <a
+              href="/"
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+            >
+              <img
+                src="/images/icon_sijunjung.png"
+                alt="Nagari Lima Koto Logo"
+                className="w-8 h-8"
+              />
+              <span className="text-xl font-semibold">Nagari Lima Koto</span>
+            </a>
           </div>
 
           {/* Desktop Navigation */}
@@ -30,10 +35,7 @@ export default function Header() {
             <a href="/profil" className="hover:text-gray-300 transition-colors">
               Profil
             </a>
-            <a
-              href="/layanan"
-              className="hover:text-gray-300 transition-colors"
-            >
+            <a href="#" className="hover:text-gray-300 transition-colors">
               Layanan
             </a>
             <a href="/berita" className="hover:text-gray-300 transition-colors">
@@ -80,13 +82,13 @@ export default function Header() {
                 Profil
               </a>
               <a
-                href="/layanan"
+                href="#"
                 className="block py-2 text-lg hover:text-gray-300 transition-colors"
               >
                 Layanan
               </a>
               <a
-                href="/berita"
+                href="#"
                 className="block py-2 text-lg hover:text-gray-300 transition-colors"
               >
                 Berita

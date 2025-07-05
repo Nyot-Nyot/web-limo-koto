@@ -1,0 +1,102 @@
+{
+  "page": "Beranda / Profil Nagari",
+  "title": "Nagari Limo Koto",
+  "theme": {
+    "name": "Cultural Modernism",
+    "description": "Perpaduan antara elemen budaya Minangkabau (seperti arsitektur rumah gadang) dengan tampilan modern dan interaktif. Fokus pada kesan elegan, bersih, dan profesional yang tetap menyiratkan identitas lokal."
+  },
+  "layout": {
+    "type": "split-overlay",
+    "background": {
+      "type": "image",
+      "content": "Foto rumah gadang dengan suasana senja",
+      "filter": "dark overlay (gradient hitam transparan untuk kontras text)"
+    },
+    "mainContent": {
+      "alignment": "left",
+      "elements": [
+        {
+          "type": "heading",
+          "text": "Nagari Limo Koto",
+          "fontSize": "4xl",
+          "fontWeight": "bold",
+          "color": "white"
+        },
+        {
+          "type": "subheading",
+          "text": "Visi Misi – Lorem Ipsum",
+          "fontSize": "xl",
+          "fontWeight": "medium",
+          "color": "#CCCCCC"
+        },
+        {
+          "type": "paragraph",
+          "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+          "fontSize": "base",
+          "color": "#DDDDDD",
+          "maxWidth": "40%"
+        }
+      ]
+    },
+    "carousel": {
+      "type": "horizontal-cards",
+      "items": [
+        {
+          "image": "chicken_wings.jpg",
+          "title": "Chicken Wings"
+        },
+        {
+          "image": "ramen.jpg",
+          "title": "Ramen"
+        }
+      ],
+      "cardStyle": {
+        "borderRadius": "xl",
+        "shadow": "lg",
+        "background": "semi-transparent dark",
+        "hoverEffect": "scale-up"
+      }
+    }
+  },
+  "navbar": {
+    "position": "fixed-top",
+    "background": "black-transparent",
+    "logo": {
+      "type": "image",
+      "content": "Lambang Nagari",
+      "alt": "Logo Nagari"
+    },
+    "items": [
+      { "text": "Profil", "active": true },
+      { "text": "Layanan", "active": false },
+      { "text": "Berita", "active": false }
+    ],
+    "search": {
+      "type": "input",
+      "placeholder": "Cari...",
+      "icon": "search"
+    },
+    "userIcon": true
+  },
+  "interaction": {
+    "animation": {
+      "type": "fade-in + slide-up",
+      "trigger": "onLoad + onScroll"
+    },
+    "responsive": true,
+    "accessibility": {
+      "fontContrast": "high",
+      "keyboardNavigation": true
+    }
+  },
+  "typography": {
+    "fontFamily": "Poppins, sans-serif",
+    "headingWeight": "700",
+    "bodyWeight": "400",
+    "colorScheme": {
+      "primary": "#ffffff",
+      "secondary": "#DDDDDD",
+      "accent": "#FACC15"
+    }
+  }
+}
