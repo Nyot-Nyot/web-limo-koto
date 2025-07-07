@@ -10,7 +10,7 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState("01");
 
   return (
-    <div className="relative min-h-screen bg-gray-900 overflow-hidden">
+    <div className="relative min-h-screen bg-gray-900 overflow-hidden pr-0 md:pr-0">
       {/* Header */}
       <Header />
 

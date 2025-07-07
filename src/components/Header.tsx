@@ -41,7 +41,7 @@ export default function Header() {
             >
               Layanan
             </a>
-            <a href="#" className="hover:text-gray-300 transition-colors">
+            <a href="/berita" className="hover:text-gray-300 transition-colors">
               Berita
             </a>
           </nav>
@@ -52,11 +52,11 @@ export default function Header() {
               <input
                 type="text"
                 placeholder="Search..."
-                className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 shadow-2xl"
               />
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
             </div>
-            <button className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
+            <button className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors shadow-2xl border border-white/20">
               <UserIcon className="w-5 h-5" />
             </button>
           </div>

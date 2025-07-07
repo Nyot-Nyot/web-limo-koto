@@ -20,7 +20,7 @@ export default function BackButton({ href }: BackButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className="absolute top-28 left-8 z-20 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors duration-300"
+      className="absolute top-28 left-8 z-20 bg-white/10 backdrop-blur-sm p-2 rounded-full hover:bg-white/20 transition-colors duration-300 border border-white/20 shadow-2xl"
       aria-label="Kembali"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

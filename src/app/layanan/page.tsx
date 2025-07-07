@@ -70,7 +70,7 @@ export default function LayananPage() {
           Kantor Wali Nagari, Nagari Limo Koto
         </p>
         <div className="flex justify-center mb-10">
-          <span className="bg-white/80 text-gray-900 rounded-full px-6 py-2 text-xs font-semibold shadow">
+          <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-full px-6 py-2 text-xs font-semibold shadow-2xl">
             Senin-Jumat 08:00 - 12:00 & 13:30 - 16:00 WIB
           </span>
         </div>
@@ -79,14 +79,14 @@ export default function LayananPage() {
             <button
               key={layanan.id}
               onClick={() => setActiveSection(layanan.id)}
-              className={`group w-full bg-white/80 backdrop-blur-md hover:bg-yellow-400/80 hover:text-gray-900 text-gray-900 rounded-xl p-4 shadow flex flex-col items-start transition-all duration-300 border border-gray-200`}
+              className={`group w-full bg-white/10 backdrop-blur-sm hover:bg-yellow-400/20 hover:text-white text-white rounded-2xl p-4 shadow-2xl flex flex-col items-start transition-all duration-300 border border-white/10`}
               style={{ minHeight: 140, textAlign: "left" }}
             >
-              <h3 className="text-base font-bold mb-2 group-hover:text-black transition-colors duration-300">
+              <h3 className="text-base font-bold mb-2 group-hover:text-yellow-300 transition-colors duration-300">
                 {layanan.title}
               </h3>
-              <div className="w-full h-[2px] bg-black group-hover:bg-black mb-3 mt-1 rounded transition-colors duration-300"></div>
-              <ul className="text-xs list-disc pl-4 space-y-1 transition-colors duration-300 group-hover:text-black">
+              <div className="w-full h-[2px] bg-white group-hover:bg-yellow-400 mb-3 mt-1 rounded transition-colors duration-300"></div>
+              <ul className="text-xs list-disc pl-4 space-y-1 transition-colors duration-300 group-hover:text-gray-200 text-gray-300">
                 {layanan.id === "domisili" && (
                   <>
                     <li>FC KK dan KTP</li>
@@ -130,7 +130,7 @@ export default function LayananPage() {
           ))}
         </div>
 
-        <div className="bg-white/10 rounded-lg p-6 shadow">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/10">
           {layananList.map((layanan) => (
             <div
               key={layanan.id}
