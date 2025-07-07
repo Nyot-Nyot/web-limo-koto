@@ -57,9 +57,10 @@ This directory contains components and utilities for the news/berita page of the
 - Features:
   - Search functionality
   - Sort by date/popularity
-  - Pagination logic
+  - Pagination logic with edge case handling
   - Memoized calculations for performance
   - Smooth scrolling to content
+  - Auto-reset to page 1 when sorting or searching changes
 
 ## Data
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { NewsItem } from "@/data/newsData";
 
 export function useNewsFilter(newsData: NewsItem[]) {
@@ -48,6 +48,11 @@ export function useNewsFilter(newsData: NewsItem[]) {
     paginatedNews.filter(news => !news.isFeatured),
     [paginatedNews]
   );
+
+  // Reset to first page when sort order changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy]);
 
   const handleSearch = () => {
     setCurrentPage(1); // Reset to first page when searching
