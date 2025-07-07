@@ -21,29 +21,26 @@ export default function BeritaPage() {
           </div>
 
           {/* Search and Filter Section */}
-          <div className="mb-10">
-            <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                {/* Search Input */}
-                <div className="relative flex-1 max-w-md">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Cari berita..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all text-sm"
-                  />
-                </div>
-                
-                {/* Sort Dropdown */}
-                <div className="relative">
-                  <select className="px-4 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 cursor-pointer appearance-none pr-8 text-sm">
-                    <option value="latest" className="bg-gray-800">Terbaru</option>
-                    <option value="popular" className="bg-gray-800">Terpopuler</option>
-                    <option value="oldest" className="bg-gray-800">Terlama</option>
-                  </select>
-                  <FaFilter className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none text-xs" />
-                </div>
+          <div className="mb-8 flex flex-col lg:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-4 w-full lg:w-auto">
+              <div className="relative flex-1 lg:w-80">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cari berita..."
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:border-white/40"
+                />
               </div>
+              <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2 transition-colors">
+                <FaFilter />
+                Filter
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <span className="px-3 py-1 bg-white/20 rounded-full text-sm">Semua</span>
+              <span className="px-3 py-1 bg-white/10 rounded-full text-sm hover:bg-white/20 cursor-pointer">Pemerintahan</span>
+              <span className="px-3 py-1 bg-white/10 rounded-full text-sm hover:bg-white/20 cursor-pointer">Ekonomi</span>
+              <span className="px-3 py-1 bg-white/10 rounded-full text-sm hover:bg-white/20 cursor-pointer">Sosial</span>
             </div>
           </div>
 
@@ -425,95 +422,6 @@ export default function BeritaPage() {
                       </div>
                     </div>
                   </a>
-
-                  {/* Additional News Articles */}
-                  
-                  {/* Berita 13 */}
-                  <a
-                    href="/berita/pembangunan-jembatan-baru"
-                    className="bg-white text-black rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] group"
-                  >
-                    <div className="relative">
-                      <div className="w-full h-48 bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
-                        <span className="text-white text-4xl">🌉</span>
-                      </div>
-                      <span className="absolute top-3 right-3 px-2 py-1 bg-gray-600 text-white text-xs rounded-full">
-                        Infrastruktur
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                        Pembangunan Jembatan Penghubung
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                        Konstruksi jembatan baru untuk menghubungkan dua sisi nagari dan memperlancar akses transportasi.
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>28 Mei 2025</span>
-                        <span className="flex items-center gap-1">
-                          <FaEye /> 67
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-
-                  {/* Berita 14 */}
-                  <a
-                    href="/berita/launching-website-nagari"
-                    className="bg-white text-black rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] group"
-                  >
-                    <div className="relative">
-                      <div className="w-full h-48 bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center">
-                        <span className="text-white text-4xl">🌐</span>
-                      </div>
-                      <span className="absolute top-3 right-3 px-2 py-1 bg-indigo-600 text-white text-xs rounded-full">
-                        Teknologi
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                        Launching Website Resmi Nagari
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                        Peluncuran website resmi nagari untuk meningkatkan transparansi dan akses informasi publik.
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>26 Mei 2025</span>
-                        <span className="flex items-center gap-1">
-                          <FaEye /> 198
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-
-                  {/* Berita 15 */}
-                  <a
-                    href="/berita/penanaman-pohon-massal"
-                    className="bg-white text-black rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] group"
-                  >
-                    <div className="relative">
-                      <div className="w-full h-48 bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center">
-                        <span className="text-white text-4xl">🌳</span>
-                      </div>
-                      <span className="absolute top-3 right-3 px-2 py-1 bg-green-700 text-white text-xs rounded-full">
-                        Lingkungan
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                        Penanaman 1000 Pohon
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                        Gerakan penanaman pohon massal untuk menjaga kelestarian lingkungan dan mencegah erosi.
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>24 Mei 2025</span>
-                        <span className="flex items-center gap-1">
-                          <FaEye /> 123
-                        </span>
-                      </div>
-                    </div>
-                  </a>
                 </div>
               </div>
 
@@ -540,18 +448,18 @@ export default function BeritaPage() {
             {/* Sidebar - Agenda */}
             <aside className="lg:col-span-1">
               <div className="sticky top-6">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
+                  <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                     <FaCalendarAlt className="text-yellow-400" />
                     Agenda Terkini
                   </h2>
-                  <div className="space-y-4 max-h-[calc(100vh-180px)] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Presentasi KKN</h3>
+                  <div className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin [--sb-thumb:rgba(255,255,255,0.1)] [--sb-track:rgba(255,255,255,0.05)] scrollbar-thumb-[var(--sb-thumb)] scrollbar-track-[var(--sb-track)]">
+                    <div className="bg-white text-black rounded-lg p-4 shadow-md">
+                      <h3 className="font-bold text-base mb-2">Presentasi KKN</h3>
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Oleh:</strong> KKN UNP 2025
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 mb-2">
                         <strong>Di:</strong> Lantai 2 Kantor Wali Nagari
                       </p>
                       <div className="flex justify-between text-xs text-gray-500">
@@ -560,12 +468,12 @@ export default function BeritaPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Rapat Koordinasi BPD</h3>
+                    <div className="bg-white text-black rounded-lg p-4 shadow-md">
+                      <h3 className="font-bold text-base mb-2">Rapat Koordinasi BPD</h3>
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Oleh:</strong> Badan Permusyawaratan Desa
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 mb-2">
                         <strong>Di:</strong> Balai Nagari
                       </p>
                       <div className="flex justify-between text-xs text-gray-500">
@@ -574,12 +482,12 @@ export default function BeritaPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Sosialisasi Program Kesehatan</h3>
+                    <div className="bg-white text-black rounded-lg p-4 shadow-md">
+                      <h3 className="font-bold text-base mb-2">Sosialisasi Program Kesehatan</h3>
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Oleh:</strong> Puskesmas Nagari
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 mb-2">
                         <strong>Di:</strong> Lapangan Nagari
                       </p>
                       <div className="flex justify-between text-xs text-gray-500">
@@ -588,12 +496,12 @@ export default function BeritaPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Pelatihan Digital Marketing</h3>
+                    <div className="bg-white text-black rounded-lg p-4 shadow-md">
+                      <h3 className="font-bold text-base mb-2">Pelatihan Digital Marketing</h3>
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Oleh:</strong> Dinas Koperasi & UMKM
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 mb-2">
                         <strong>Di:</strong> Gedung Serbaguna
                       </p>
                       <div className="flex justify-between text-xs text-gray-500">
@@ -602,12 +510,12 @@ export default function BeritaPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Musyawarah Nagari</h3>
+                    <div className="bg-white text-black rounded-lg p-4 shadow-md">
+                      <h3 className="font-bold text-base mb-2">Musyawarah Nagari</h3>
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Oleh:</strong> Pemerintah Nagari
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 mb-2">
                         <strong>Di:</strong> Kantor Wali Nagari
                       </p>
                       <div className="flex justify-between text-xs text-gray-500">
@@ -615,103 +523,24 @@ export default function BeritaPage() {
                         <span>19:30 - 21:00</span>
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Festival Seni Budaya</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Sanggar Seni Nagari
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Panggung Terbuka
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>12 Juli 2025</span>
-                        <span>16:00 - 22:00</span>
-                      </div>
+                {/* Quick Stats */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                  <h3 className="text-xl font-bold mb-4">Statistik Berita</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Total Berita</span>
+                      <span className="font-bold">248</span>
                     </div>
-
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Vaksinasi Massal</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Dinkes & Puskesmas
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Balai Desa
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>10 Juli 2025</span>
-                        <span>08:00 - 14:00</span>
-                      </div>
+                    <div className="flex justify-between">
+                      <span>Bulan Ini</span>
+                      <span className="font-bold">23</span>
                     </div>
-
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Pengumpulan Zakat Fitrah</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Panitia Ramadhan
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Masjid Jami' Nagari
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>8 Juli 2025</span>
-                        <span>07:00 - 11:00</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Lomba 17 Agustus</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Karang Taruna
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Lapangan Utama
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>6 Juli 2025</span>
-                        <span>08:00 - 17:00</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Gotong Royong Masjid</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Takmir Masjid
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Masjid Al-Hidayah
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>4 Juli 2025</span>
-                        <span>06:30 - 10:00</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Pembagian Bantuan Sembako</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Tim Sosial Nagari
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Kantor Kepala Desa
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>2 Juli 2025</span>
-                        <span>09:00 - 15:00</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white text-black rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                      <h3 className="font-bold text-base mb-2 text-gray-900">Senam Sehat Lansia</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Oleh:</strong> Posyandu Lansia
-                      </p>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <strong>Di:</strong> Taman Nagari
-                      </p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>Setiap Jumat</span>
-                        <span>06:30 - 08:00</span>
-                      </div>
+                    <div className="flex justify-between">
+                      <span>Total Views</span>
+                      <span className="font-bold">15.2K</span>
                     </div>
                   </div>
                 </div>
