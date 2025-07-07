@@ -29,16 +29,16 @@ export default function SKTM() {
         {steps.map((step, i) => (
           <div
             key={i}
-            className="flex items-center bg-white/80 rounded-xl shadow px-6 py-4"
+            className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl shadow-2xl px-6 py-4 border border-white/10"
           >
-            <div className="flex-shrink-0 w-12 h-12 bg-white font-bold text-2xl text-gray-900 rounded-lg flex items-center justify-center border border-gray-300 mr-4">
+            <div className="flex-shrink-0 w-12 h-12 bg-yellow-400 font-bold text-2xl text-gray-900 rounded-lg flex items-center justify-center border border-gray-300 mr-4">
               {i + 1}
             </div>
             <div>
-              <div className="font-bold text-gray-900 text-lg">
+              <div className="font-bold text-white text-lg">
                 {step.title}
               </div>
-              <div className="text-gray-700 text-sm">{step.desc}</div>
+              <div className="text-gray-300 text-sm">{step.desc}</div>
             </div>
           </div>
         ))}
