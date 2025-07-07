@@ -63,19 +63,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <div className="relative bg-gray-900 text-white">
-      {/* Static background */}
-      <div
-        className="fixed inset-0 bg-fixed"
-        style={{
-          backgroundImage: 'url("/images/Rectangle.png")',
-          backgroundPosition: 'center',
-          backgroundSize: 'cover',
-        }}
-      />
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/60" />
-
+    <div className="relative text-white">
       <div className="relative z-10 flex flex-col pl-[80px] sm:pl-[100px] md:pl-[120px]">
         {/* Section 01 - Main Hero Section */}
         <section
