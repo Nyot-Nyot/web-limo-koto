@@ -49,7 +49,7 @@ export default function HeroSection() {
       <div
         className="fixed inset-0 bg-fixed"
         style={{
-          backgroundImage: 'url("/images/Rectangle.png")',
+          backgroundImage: 'url("/images/background.png")',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
         }}

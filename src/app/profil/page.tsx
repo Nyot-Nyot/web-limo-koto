@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
@@ -31,26 +31,24 @@ function ProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarProps) {
             onClick={() => onSectionChange(section.id)}
             className={`group relative flex items-center ${
               activeSection === section.id
-                ? 'text-white'
-                : 'text-white/60 hover:text-white/80'
+                ? "text-white"
+                : "text-white/60 hover:text-white/80"
             } transition-all duration-300`}
           >
             {/* Yellow line indicator */}
             <div
               className={`w-1 h-10 transition-all duration-300 ${
                 activeSection === section.id
-                  ? 'bg-yellow-400'
-                  : 'bg-white/20 group-hover:bg-white/40'
+                  ? "bg-yellow-400"
+                  : "bg-white/20 group-hover:bg-white/40"
               }`}
             />
-            
+
             {/* Section number */}
             <div className="ml-3 flex flex-col justify-center min-w-[45px]">
               <span
                 className={`text-xl font-bold transition-all duration-300 ${
-                  activeSection === section.id
-                    ? 'text-white'
-                    : 'text-white/40'
+                  activeSection === section.id ? "text-white" : "text-white/40"
                 }`}
               >
                 {section.id}
@@ -59,8 +57,8 @@ function ProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarProps) {
                 <span
                   className={`text-[10px] uppercase tracking-wider transition-all duration-300 ${
                     activeSection === section.id
-                      ? 'text-white'
-                      : 'text-white/60'
+                      ? "text-white"
+                      : "text-white/60"
                   }`}
                 >
                   {section.label}
@@ -74,7 +72,10 @@ function ProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarProps) {
   );
 }
 
-function MobileProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarProps) {
+function MobileProfilSidebar({
+  activeSection,
+  onSectionChange,
+}: ProfilSidebarProps) {
   const sections = [
     { id: '01', title: 'Profil Singkat', label: 'Profil' },
     { id: '02', title: 'Visi & Misi', label: 'Visi Misi' },
@@ -92,26 +93,24 @@ function MobileProfilSidebar({ activeSection, onSectionChange }: ProfilSidebarPr
             onClick={() => onSectionChange(section.id)}
             className={`group relative flex items-center ${
               activeSection === section.id
-                ? 'text-white'
-                : 'text-white/60 hover:text-white/80'
+                ? "text-white"
+                : "text-white/60 hover:text-white/80"
             } transition-all duration-300`}
           >
             {/* Yellow line indicator */}
             <div
               className={`w-1 h-6 transition-all duration-300 ${
                 activeSection === section.id
-                  ? 'bg-yellow-400'
-                  : 'bg-white/20 group-hover:bg-white/40'
+                  ? "bg-yellow-400"
+                  : "bg-white/20 group-hover:bg-white/40"
               }`}
             />
-            
+
             {/* Section number */}
             <div className="ml-2 flex flex-col justify-center min-w-[25px]">
               <span
                 className={`text-xs font-bold transition-all duration-300 ${
-                  activeSection === section.id
-                    ? 'text-white'
-                    : 'text-white/40'
+                  activeSection === section.id ? "text-white" : "text-white/40"
                 }`}
               >
                 {section.id}
@@ -168,9 +167,9 @@ export default function ProfilPage() {
     
     const section = sectionsRef.current[sectionId];
     if (section) {
-      section.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
     }
 
@@ -220,7 +219,10 @@ export default function ProfilPage() {
       }
     };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const observer = new IntersectionObserver(
+      observerCallback,
+      observerOptions
+    );
 
     // Observe all sections
     Object.values(sectionsRef.current).forEach((section) => {
@@ -238,10 +240,19 @@ export default function ProfilPage() {
   }, [isUserScrolling, activeSection]);
 
   return (
-    <div className="relative min-h-screen bg-gray-900 overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
+    <div className="relative min-h-screen overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
+      {/* Fixed Background */}
+      <div 
+        className="fixed inset-0 bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ zIndex: -2 }}
+      />
+      
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/70" style={{ zIndex: -1 }} />
+
       {/* Header */}
       <Header />
-      
+
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <ProfilSidebar 
@@ -249,7 +260,7 @@ export default function ProfilPage() {
           onSectionChange={handleSectionChange} 
         />
       </div>
-      
+
       {/* Mobile Sidebar */}
       <MobileProfilSidebar 
         activeSection={activeSection} 
@@ -257,24 +268,15 @@ export default function ProfilPage() {
       />
 
       {/* Main Content */}
-      <main className="relative">
-        {/* Background */}
-        <div 
-          className="fixed inset-0 z-0"
-          style={{
-            background: `
-              linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)),
-              url("/images/Rectangle.png") center/cover
-            `
-          }}
-        />
-        
+      <main className="relative z-10">
         {/* Content Sections */}
-        <div className="relative z-10 pl-12 md:pl-20 lg:pl-24">
+        <div className="pl-12 md:pl-20 lg:pl-24">
           {sections.map((section) => (
             <div
               key={section.id}
-              ref={(el) => { sectionsRef.current[section.id] = el; }}
+              ref={(el) => {
+                sectionsRef.current[section.id] = el;
+              }}
               data-section={section.id}
             >
               {section.component}

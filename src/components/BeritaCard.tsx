@@ -14,7 +14,7 @@ export default function BeritaCard({ berita, animated = false, animationState = 
   return (
     <Link 
       href={`/berita/${berita.id}`} 
-      className="bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition duration-300 hover:bg-white/20 flex flex-col min-h-[350px] cursor-pointer border border-white/10">
+      className="bg-white/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition duration-300 hover:bg-white/90 flex flex-col min-h-[350px] cursor-pointer">
       <div className="relative h-48 w-full">
         <Image
           src={berita.imageUrl}
@@ -24,17 +24,17 @@ export default function BeritaCard({ berita, animated = false, animationState = 
         />
       </div>
       <div className="p-5 flex flex-col flex-grow">
-        <h3 className={`font-bold text-lg text-white mb-2 line-clamp-2 overflow-hidden ${
+        <h3 className={`font-bold text-lg text-black mb-2 line-clamp-2 overflow-hidden ${
           animated ? `transition-transform duration-300 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
           {berita.title}
         </h3>
-        <p className={`text-gray-300 text-xs mb-4 line-clamp-3 overflow-hidden flex-grow ${
+        <p className={`text-gray-600 text-xs mb-4 line-clamp-3 overflow-hidden flex-grow ${
           animated ? `transition-transform duration-300 delay-75 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
           {berita.description}
         </p>
-        <div className={`flex justify-between items-center text-sm text-gray-300 mt-auto pt-2 ${
+        <div className={`flex justify-between items-center text-sm text-black mt-auto pt-2 ${
           animated ? `transition-transform duration-300 delay-150 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
           <div className="flex items-center">
