@@ -235,20 +235,20 @@ export default function BeritaDetailPage() {
 
                 {/* Share buttons */}
                 <div className="border-t border-gray-200 pt-8 mt-12">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                  <div className="flex flex-col items-start gap-4 md:gap-6">
                     <h3 className="font-semibold text-gray-900 text-lg">Bagikan artikel ini:</h3>
-                    <div className="flex gap-3">
-                      <button className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        <FaFacebook />
-                        Facebook
+                    <div className="flex flex-col sm:flex-row gap-3 w-full">
+                      <button className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base flex-1 sm:flex-none">
+                        <FaFacebook className="flex-shrink-0" />
+                        <span>Facebook</span>
                       </button>
-                      <button className="flex items-center gap-2 px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors">
-                        <FaTwitter />
-                        Twitter
+                      <button className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-sm md:text-base flex-1 sm:flex-none">
+                        <FaTwitter className="flex-shrink-0" />
+                        <span>Twitter</span>
                       </button>
-                      <button className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                        <FaWhatsapp />
-                        WhatsApp
+                      <button className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base flex-1 sm:flex-none">
+                        <FaWhatsapp className="flex-shrink-0" />
+                        <span>WhatsApp</span>
                       </button>
                     </div>
                   </div>
