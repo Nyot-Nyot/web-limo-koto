@@ -121,8 +121,17 @@ export default function BeritaDetailPage() {
   const currentNews = newsData[params.slug as string] || newsData["jam-gadang-bukittinggi"];
 
   return (
-    <main className="min-h-screen bg-[url('/images/background.png')] bg-cover bg-center text-white">
-      <div className="bg-black/80 min-h-screen">
+    <div className="relative min-h-screen">
+      {/* Fixed Background */}
+      <div 
+        className="fixed inset-0 bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ zIndex: -2 }}
+      />
+      
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/70" style={{ zIndex: -1 }} />
+      
+      <main className="relative z-10 min-h-screen text-white">
         {/* Header dengan tombol kembali */}
         <div className="px-6 py-6 border-b border-white/20 backdrop-blur-sm bg-black/20">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -292,7 +301,7 @@ export default function BeritaDetailPage() {
             </section>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

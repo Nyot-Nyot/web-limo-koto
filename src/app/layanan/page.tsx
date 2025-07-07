@@ -51,13 +51,15 @@ export default function LayananPage() {
 
   return (
     <div className="relative min-h-screen text-white pb-12 overflow-x-hidden">
-      {/* Background overlay sama seperti profil */}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('/images/Rectangle.png') center/cover`,
-        }}
+      {/* Fixed Background */}
+      <div 
+        className="fixed inset-0 bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ zIndex: -2 }}
       />
+      
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/70" style={{ zIndex: -1 }} />
+      
       <Header />
       <div className="relative z-10 max-w-5xl mx-auto pt-24 px-4 md:px-0">
         <h1
@@ -316,7 +318,7 @@ export default function LayananPage() {
               Limo Koto.
             </p>
             <textarea
-              className="w-full rounded border border-gray-500 p-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none border-gray-500 text-gray-900"
+              className="w-full rounded border border-gray-500 p-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none text-gray-900"
               rows={3}
               placeholder="Tulis ulasan Anda..."
             />

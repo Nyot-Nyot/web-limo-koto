@@ -240,7 +240,16 @@ export default function ProfilPage() {
   }, [isUserScrolling, activeSection]);
 
   return (
-    <div className="relative min-h-screen bg-gray-900 overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
+    <div className="relative min-h-screen overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
+      {/* Fixed Background */}
+      <div 
+        className="fixed inset-0 bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ zIndex: -2 }}
+      />
+      
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/70" style={{ zIndex: -1 }} />
+
       {/* Header */}
       <Header />
 
@@ -259,20 +268,9 @@ export default function ProfilPage() {
       />
 
       {/* Main Content */}
-      <main className="relative">
-        {/* Background */}
-        <div
-          className="fixed inset-0 z-0"
-          style={{
-            background: `
-              linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)),
-              url("/images/Rectangle.png") center/cover
-            `,
-          }}
-        />
-
+      <main className="relative z-10">
         {/* Content Sections */}
-        <div className="relative z-10 pl-12 md:pl-20 lg:pl-24">
+        <div className="pl-12 md:pl-20 lg:pl-24">
           {sections.map((section) => (
             <div
               key={section.id}
