@@ -2,15 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { kepalaJorongData, sekretarisData } from '@/data/pejabat';
+import { kepalaJorongData, sekretarisData, waliNagariData } from '@/data/pejabat';
 import { beritaData } from '@/data/berita';
 import BeritaCard from '@/components/BeritaCard';
 
 export default function HeroSection() {
-  const [kepalaIndex, setKepalaIndex] = useState(0);
-  const [kepalaAnimate, setKepalaAnimate] = useState<'in' | 'out'>('in');
-  const [sekretarisIndex, setSekretarisIndex] = useState(0);
-  const [sekretarisAnimate, setSekretarisAnimate] = useState<'in' | 'out'>('in');
+  // Combined state for all officials
+  const [pejabatIndex, setPejabatIndex] = useState(0);
+  const [pejabatAnimate, setPejabatAnimate] = useState<'in' | 'out'>('in');
+  const [allPejabatData, setAllPejabatData] = useState([
+    waliNagariData,
+    ...kepalaJorongData,
+    ...sekretarisData
+  ]);
+  
   const [activePage, setActivePage] = useState(0);
   const [beritaAnimate, setBeritaAnimate] = useState<'in' | 'out'>('in');
   const [expandedFaqs, setExpandedFaqs] = useState<number[]>([]);
@@ -23,31 +28,18 @@ export default function HeroSection() {
     );
   };
   
-  // Effect for Kepala Jorong rotation with slide transition
+  // Effect for Perangkat Nagari rotation with slide transition
   useEffect(() => {
     const cycle = () => {
-      setKepalaAnimate('out');
+      setPejabatAnimate('out');
       setTimeout(() => {
-        setKepalaIndex(prev => (prev + 1) % kepalaJorongData.length);
-        setKepalaAnimate('in');
+        setPejabatIndex(prev => (prev + 1) % allPejabatData.length);
+        setPejabatAnimate('in');
       }, 600); // Slower transition time
     };
-    const interval = setInterval(cycle, 6000); // More time between changes
+    const interval = setInterval(cycle, 8000); // More time between changes
     return () => clearInterval(interval);
-  }, []);
-
-  // Effect for Sekretaris rotation with slide transition
-  useEffect(() => {
-    const cycle = () => {
-      setSekretarisAnimate('out');
-      setTimeout(() => {
-        setSekretarisIndex(prev => (prev + 1) % sekretarisData.length);
-        setSekretarisAnimate('in');
-      }, 600); // Slower transition time
-    };
-    const interval = setInterval(cycle, 6000); // More time between changes
-    return () => clearInterval(interval);
-  }, []);
+  }, [allPejabatData.length]);
 
   // Effect for Berita rotation on mobile
   useEffect(() => {
@@ -231,167 +223,138 @@ export default function HeroSection() {
                 Struktur pemerintahan Nagari Lima Koto yang menjalankan pelayanan masyarakat
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-6 w-full px-1 md:px-0 mx-auto">
-              {/* Card 1 - Wali Nagari (static) */}
-              <div 
-                className="bg-white/90 backdrop-blur-sm rounded-lg p-2 md:p-4 text-center text-black h-[200px] md:h-[400px] flex flex-col transition-transform duration-300 mx-auto w-[80%] md:w-full"
-              >
-                <h3 className="text-base md:text-lg font-semibold">Wali Nagari</h3>
-                <div className="h-1 md:h-4" /> {/* Reduced spacing on mobile */}
-                <div className="relative w-full flex-1 overflow-hidden">
-                  <div className="absolute inset-0">
-                    <Image
-                      src="/images/pejabat-1.jpg"
-                      alt="Wali Nagari"
-                      fill
-                      style={{ objectFit: 'contain' }}
-                      className="rounded-md"
-                    />
-                  </div>
-                </div>
-                <div className="mt-2 md:mt-4">
-                  <p className="text-gray-600 text-xs md:text-sm">Dr. Sukirman, M.Pd</p>
-                </div>
-              </div>
-
-              {/* Card 2 - Kepala Jorong (dynamic) */}
-              {(() => {
-                const item = kepalaJorongData[kepalaIndex];
-                const nextItem = kepalaJorongData[(kepalaIndex + 1) % kepalaJorongData.length];
-                return (
-                  <div 
-                    className="bg-white/90 backdrop-blur-sm rounded-lg p-2 md:p-4 text-center text-black h-[200px] md:h-[400px] flex flex-col relative transition-transform duration-300 mx-auto w-[80%] md:w-full"
-                  >
-                    <h3 className="text-base md:text-lg font-semibold -mt-2">Kepala Jorong</h3>
-                    <div className="flex-1 relative overflow-hidden">
-                      {/* Content container with absolute positioning for proper clipping */}
-                      <div className={`absolute inset-0 flex flex-col transition-all duration-800 ease-in-out ${
-                        kepalaAnimate === 'out'
-                          ? '-translate-x-full blur-sm opacity-0' 
-                          : 'translate-x-0 blur-0 opacity-100'
+            
+            {/* Single Struktur Card with Slider */}
+            <div className="w-full px-4">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-8 md:items-stretch">
+                {/* Left side - Photo Card with fixed 3:4 aspect ratio */}
+                <div className="md:w-1/3">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg h-full">
+                    <div className="relative w-full" style={{ aspectRatio: '3/4' }}>
+                      <div className={`absolute inset-0 transition-all duration-500 ease-in-out ${
+                        pejabatAnimate === 'out' ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}>
-                        <p className="text-xs md:text-sm text-gray-700">{item.jorong}</p>
-                        <div className="h-1" />
-                        <div className="relative flex-1 overflow-hidden rounded-md">
-                          <div className="absolute inset-0">
-                            <Image
-                              src={item.image}
-                              alt={item.name}
-                              fill
-                              style={{ objectFit: 'contain' }}
-                              className="rounded-md"
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-2 md:mt-4">
-                          <p className="text-gray-600 text-xs md:text-sm">{item.name}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Incoming content from right */}
-                      <div className={`absolute inset-0 flex flex-col transition-all duration-800 ease-in-out ${
-                        kepalaAnimate === 'out'
-                          ? 'translate-x-0 blur-0 opacity-100'
-                          : 'translate-x-full blur-sm opacity-0'
-                      }`}>
-                        <p className="text-xs md:text-sm text-gray-700">{nextItem.jorong}</p>
-                        <div className="h-1" />
-                        <div className="relative flex-1 overflow-hidden rounded-md">
-                          <div className="absolute inset-0">
-                            <Image
-                              src={nextItem.image}
-                              alt={nextItem.name}
-                              fill
-                              style={{ objectFit: 'contain' }}
-                              className="rounded-md"
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-2 md:mt-4">
-                          <p className="text-gray-600 text-xs md:text-sm">{nextItem.name}</p>
-                        </div>
+                        <Image
+                          src={allPejabatData[pejabatIndex].image}
+                          alt={allPejabatData[pejabatIndex].name}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          className="rounded-lg"
+                          priority
+                        />
                       </div>
                     </div>
                   </div>
-                );
-              })()}
-
-              {/* Card 3 - Staff positions (dynamic) */}
-              {(() => {
-                const item = sekretarisData[sekretarisIndex];
-                const nextItem = sekretarisData[(sekretarisIndex + 1) % sekretarisData.length];
-                return (
-                  <div 
-                    className="bg-white/90 backdrop-blur-sm rounded-lg p-2 md:p-4 text-center text-black h-[200px] md:h-[400px] flex flex-col relative transition-transform duration-300 mx-auto w-[80%] md:w-full"
-                  >
-                    {/* Title container with relative positioning and overflow hidden */}
-                    <div className="h-8 relative overflow-hidden mb-2">
-                      {/* Outgoing title */}
-                      <div className={`absolute inset-0 flex items-center justify-center transition-all duration-800 ease-in-out ${
-                        sekretarisAnimate === 'out'
-                          ? '-translate-x-full blur-sm opacity-0'
-                          : 'translate-x-0 blur-0 opacity-100'
-                      }`}>
-                        <h3 className="text-base md:text-lg font-semibold">{item.title}</h3>
+                </div>
+                
+                {/* Right side - Details outside the card with improved hierarchy */}
+                <div className="md:w-2/3 flex flex-col justify-between text-white" style={{ minHeight: 'var(--photo-height, auto)' }}>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        {/* Badge for position type */}
+                        <div className="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-300 text-xs font-medium rounded-full mb-2">
+                          Perangkat Nagari
+                        </div>
+                        
+                        {/* Primary heading - Person name */}
+                        <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-yellow-400">
+                          {allPejabatData[pejabatIndex].name}
+                        </h3>
+                        
+                        {/* Yellow divider */}
+                        <div className="w-full h-px bg-yellow-400 my-3"></div>
+                        
+                        {/* Position title */}
+                        <p className="text-xl md:text-2xl font-bold text-white">
+                          {allPejabatData[pejabatIndex].title}
+                        </p>
+                        
+                        {/* Jorong info if available */}
+                        {allPejabatData[pejabatIndex].jorong && (
+                          <p className="text-sm text-yellow-200 font-medium tracking-wide uppercase">
+                            {allPejabatData[pejabatIndex].jorong}
+                          </p>
+                        )}
                       </div>
-                      {/* Incoming title from right */}
-                      <div className={`absolute inset-0 flex items-center justify-center transition-all duration-800 ease-in-out ${
-                        sekretarisAnimate === 'out'
-                          ? 'translate-x-0 blur-0 opacity-100'
-                          : 'translate-x-full blur-sm opacity-0'
-                      }`}>
-                        <h3 className="text-base md:text-lg font-semibold">{nextItem.title}</h3>
+                      
+                      {/* Navigation dots */}
+                      <div className="flex gap-2">
+                        {allPejabatData.map((_, idx) => (
+                          <button
+                            key={`pejabat-dot-${idx}`}
+                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                              idx === pejabatIndex 
+                                ? 'bg-yellow-500 scale-110' 
+                                : 'bg-gray-400/50 hover:bg-gray-300'
+                            }`}
+                            onClick={() => {
+                              if (idx !== pejabatIndex) {
+                                setPejabatAnimate('out');
+                                setTimeout(() => {
+                                  setPejabatIndex(idx);
+                                  setPejabatAnimate('in');
+                                }, 300);
+                              }
+                            }}
+                            aria-label={`View ${allPejabatData[idx].name}`}
+                          />
+                        ))}
                       </div>
+                    </div>
+                  </div>
+                  
+                  <div className={`flex-grow transition-all duration-500 ease-in-out ${
+                    pejabatAnimate === 'out' ? 'opacity-0' : 'opacity-100'
+                  }`}>
+                    {/* Description with improved readability */}
+                    <p className="text-base md:text-lg text-gray-100/90 leading-relaxed max-w-2xl mt-4">
+                      {allPejabatData[pejabatIndex].description}
+                    </p>
+                  </div>
+                  
+                  {/* Navigation buttons with improved styling - now aligned to bottom */}
+                  <div className="flex justify-between pt-6">
+                    <button
+                      className="flex items-center gap-2 text-yellow-100/80 hover:text-yellow-400 transition-all duration-300 group"
+                      onClick={() => {
+                        setPejabatAnimate('out');
+                        setTimeout(() => {
+                          setPejabatIndex(prev => 
+                            prev === 0 ? allPejabatData.length - 1 : prev - 1
+                          );
+                          setPejabatAnimate('in');
+                        }, 300);
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span className="font-medium">Sebelumnya</span>
+                    </button>
+                    
+                    <div className="text-sm text-gray-400">
+                      {pejabatIndex + 1} dari {allPejabatData.length}
                     </div>
                     
-                    <div className="flex-1 relative overflow-hidden">
-                      {/* Outgoing content */}
-                      <div className={`absolute inset-0 flex flex-col transition-all duration-800 ease-in-out ${
-                        sekretarisAnimate === 'out'
-                          ? '-translate-x-full blur-sm opacity-0'
-                          : 'translate-x-0 blur-0 opacity-100'
-                      }`}>
-                        <div className="relative flex-1 overflow-hidden rounded-md">
-                          <div className="absolute inset-0">
-                            <Image
-                              src={item.image}
-                              alt={item.title}
-                              fill
-                              style={{ objectFit: 'contain' }}
-                              className="rounded-md"
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-2 md:mt-4">
-                          <p className="text-gray-600 text-xs md:text-sm">{item.name}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Incoming content from right */}
-                      <div className={`absolute inset-0 flex flex-col transition-all duration-800 ease-in-out ${
-                        sekretarisAnimate === 'out'
-                          ? 'translate-x-0 blur-0 opacity-100'
-                          : 'translate-x-full blur-sm opacity-0'
-                      }`}>
-                        <div className="relative flex-1 overflow-hidden rounded-md">
-                          <div className="absolute inset-0">
-                            <Image
-                              src={nextItem.image}
-                              alt={nextItem.title}
-                              fill
-                              style={{ objectFit: 'contain' }}
-                              className="rounded-md"
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-2 md:mt-4">
-                          <p className="text-gray-600 text-xs md:text-sm">{nextItem.name}</p>
-                        </div>
-                      </div>
-                    </div>
+                    <button
+                      className="flex items-center gap-2 text-yellow-100/80 hover:text-yellow-400 transition-all duration-300 group"
+                      onClick={() => {
+                        setPejabatAnimate('out');
+                        setTimeout(() => {
+                          setPejabatIndex(prev => (prev + 1) % allPejabatData.length);
+                          setPejabatAnimate('in');
+                        }, 300);
+                      }}
+                    >
+                      <span className="font-medium">Selanjutnya</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
-                );
-              })()}
+                </div>
+              </div>
             </div>
           </div>
         </section>
