@@ -1,3 +1,4 @@
+// filepath: c:\Users\UsEr\Documents\Tugas_kuliah\Semester_5\KKN-T\Project_website_nagari\nagari-lima-koto\src\app\layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

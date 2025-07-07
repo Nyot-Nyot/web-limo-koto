@@ -1,66 +1,109 @@
 'use client';
 
-interface MobileSidebarProps {
-  activeSection: string;
-  onSectionChange: (section: string) => void;
-}
+import { useState, useEffect, useMemo } from 'react';
 
-export default function MobileSidebar({ activeSection, onSectionChange }: MobileSidebarProps) {
-  const sections = [
-    { id: '01', title: 'Beranda', label: 'BERANDA' },
-    { id: '02', title: 'Fitur-Fitur Website', label: 'FITUR-FITUR' },
-    { id: '03', title: 'Section 3', label: 'SECTION 3' },
-    { id: '04', title: 'Section 4', label: 'SECTION 4' },
-    { id: '05', title: 'Section 5', label: 'SECTION 5' },
-  ];
+export default function MobileSidebar() {
+  const sections = useMemo(() => [
+    { id: 'beranda', label: 'BERANDA' },
+    { id: 'fitur', label: 'FITUR-FITUR' },
+    { id: 'struktur', label: 'STRUKTUR' },
+    { id: 'berita', label: 'BERITA' },
+    { id: 'faq', label: 'FAQ' },
+  ], []);
+
+  const [activeSection, setActiveSection] = useState('beranda');
+
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px', // Adjust the margin to make detection more accurate
+      threshold: 0.3, // Lower the threshold to make detection more sensitive
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      // Find the entry with the highest intersection ratio
+      const visibleEntries = entries.filter(entry => entry.isIntersecting);
+      if (visibleEntries.length > 0) {
+        // Sort by intersection ratio and get the most visible section
+        const mostVisibleEntry = visibleEntries.reduce((prev, current) => 
+          prev.intersectionRatio > current.intersectionRatio ? prev : current
+        );
+        setActiveSection(mostVisibleEntry.target.id);
+      }
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    // Observe all sections
+    sections.forEach(section => {
+      const element = document.getElementById(section.id);
+      if (element) {
+        observer.observe(element);
+      } else {
+        console.warn(`Element with id ${section.id} not found`);
+      }
+    });
+
+    // Add scroll event listener as a fallback for better detection
+    const handleScroll = () => {
+      if (document.visibilityState === 'visible') {
+        sections.forEach(section => {
+          const element = document.getElementById(section.id);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            const visiblePercentage = 
+              Math.min(windowHeight, rect.bottom) - 
+              Math.max(0, rect.top);
+            
+            if (visiblePercentage > windowHeight * 0.4) {
+              setActiveSection(section.id);
+            }
+          }
+        });
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Initial check
+    setTimeout(handleScroll, 200);
+
+    return () => {
+      // Cleanup observer on unmount
+      sections.forEach(section => {
+        const element = document.getElementById(section.id);
+        if (element) observer.unobserve(element);
+      });
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [sections]);
 
   return (
-    <div className="md:hidden fixed left-0 top-1/2 transform -translate-y-1/2 z-[100]">
+    <div className="md:hidden fixed left-0 top-1/2 transform -translate-y-1/2 z-[100] pl-1">
       <div className="flex flex-col space-y-1">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => onSectionChange(section.id)}
-            className={`group relative flex items-center ${
-              activeSection === section.id
-                ? 'text-white'
-                : 'text-white/60 hover:text-white/80'
-            } transition-all duration-300`}
-          >
-            {/* Red line indicator */}
-            <div
-              className={`w-1 h-8 transition-all duration-300 ${
-                activeSection === section.id
-                  ? 'bg-red-500'
-                  : 'bg-white/20 group-hover:bg-white/40'
-              }`}
-            />
-            
-            {/* Section number */}
-            <div className="ml-2 flex flex-col justify-center min-w-[40px]">
-              <span
-                className={`text-lg font-bold transition-all duration-300 ${
-                  activeSection === section.id
-                    ? 'text-white'
-                    : 'text-white/40 group-hover:text-white'
-                }`}
-              >
-                {section.id}
-              </span>
-              {section.label && (
-                <span
-                  className={`text-xs uppercase tracking-wider transition-all duration-300 ${
-                    activeSection === section.id
-                      ? 'text-white'
-                      : 'text-white/60'
-                  }`}
-                >
-                  {section.label}
+        {sections.map((section, index) => {
+          const isActive = activeSection === section.id;
+          
+          return (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className={`group relative flex items-center ${isActive ? 'text-white' : 'text-white/60 hover:text-white'} transition-all duration-300`}
+            >
+              {/* Line indicator */}
+              <div className={`w-1 h-10 ${isActive ? 'bg-red-500' : 'bg-white/20 group-hover:bg-red-500'} transition-all duration-300`} />
+              
+              {/* Section number */}
+              <div className="ml-2 flex flex-col justify-center min-w-[40px]">
+                <span className={`text-xl font-bold ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white'} transition-all duration-300`}>
+                  {`0${index + 1}`}
                 </span>
-              )}
-            </div>
-          </button>
-        ))}
+                {/* Section labels are hidden in mobile view */}
+              </div>
+            </a>
+          );
+        })}
       </div>
     </div>
   );
