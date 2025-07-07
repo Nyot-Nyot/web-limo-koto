@@ -128,41 +128,57 @@ export default function BeritaDetailPage() {
         style={{ zIndex: -2 }}
       />
       
-      {/* Overlay */}
+      {/* Overlay - Disesuaikan dengan halaman lain */}
       <div className="fixed inset-0 bg-black/70" style={{ zIndex: -1 }} />
       
       <main className="relative z-10 min-h-screen text-white">
-        {/* Header dengan tombol kembali */}
-        <div className="px-6 py-6 border-b border-white/20 backdrop-blur-sm bg-black/20">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Header dengan tombol kembali - Glassmorphism */}
+        <div className="px-4 md:px-6 py-4 md:py-6 border-b border-white/20 backdrop-blur-lg bg-white/10">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-white hover:text-blue-300 transition-colors px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20"
+              className="flex items-center gap-2 text-white hover:text-blue-300 transition-all duration-300 px-3 md:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 shadow-lg hover:shadow-xl backdrop-blur-sm"
             >
-              <FaArrowLeft /> Kembali ke Berita
+              <FaArrowLeft className="text-sm" /> 
+              <span className="hidden sm:inline">Kembali ke Berita</span>
+              <span className="sm:hidden">Kembali</span>
             </button>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-300">Bagikan:</span>
-              <button className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors">
-                <FaShare className="text-sm" />
+            
+            {/* Social Share Buttons - Glassmorphism */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="hidden md:inline text-sm text-gray-300">Bagikan:</span>
+              <button className="p-2 md:p-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-300 text-blue-300 hover:text-blue-200 shadow-lg">
+                <FaFacebook className="w-3 h-3 md:w-4 md:h-4" />
+              </button>
+              <button className="p-2 md:p-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-300 text-cyan-300 hover:text-cyan-200 shadow-lg">
+                <FaTwitter className="w-3 h-3 md:w-4 md:h-4" />
+              </button>
+              <button className="p-2 md:p-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-300 text-green-300 hover:text-green-200 shadow-lg">
+                <FaWhatsapp className="w-3 h-3 md:w-4 md:h-4" />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Breadcrumb */}
-            <nav className="text-sm text-gray-300 mb-8">
-              <a href="/" className="hover:text-white transition-colors">Beranda</a>
-              <span className="mx-2">/</span>
-              <a href="/berita" className="hover:text-white transition-colors">Berita</a>
-              <span className="mx-2">/</span>
-              <span className="text-white">{currentNews.title}</span>
+        <div className="px-4 md:px-6 py-6 md:py-8">
+          <div className="max-w-5xl mx-auto">
+            {/* Breadcrumb - Glassmorphism */}
+            <nav className="mb-6 md:mb-8 p-3 md:p-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-lg">
+              <div className="flex items-center text-sm text-gray-300 flex-wrap gap-1">
+                <a href="/" className="hover:text-white transition-colors duration-300 hover:underline">
+                  🏠 Beranda
+                </a>
+                <span className="mx-2 text-white/60">/</span>
+                <a href="/berita" className="hover:text-white transition-colors duration-300 hover:underline">
+                  📰 Berita
+                </a>
+                <span className="mx-2 text-white/60">/</span>
+                <span className="text-white font-medium truncate">{currentNews.title}</span>
+              </div>
             </nav>
 
-            {/* Artikel */}
-            <article className="bg-white text-black rounded-2xl overflow-hidden shadow-2xl">
+            {/* Artikel - Solid White Background untuk Readability */}
+            <article className="bg-white text-black rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
               {/* Header gambar */}
               <div className="relative">
                 {currentNews.image ? (
@@ -171,24 +187,24 @@ export default function BeritaDetailPage() {
                     alt={currentNews.title}
                     width={1200}
                     height={600}
-                    className="w-full h-96 object-cover"
+                    className="w-full h-64 md:h-80 lg:h-96 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-96 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                    <span className="text-white text-6xl">🏗️</span>
+                  <div className="w-full h-64 md:h-80 lg:h-96 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                    <span className="text-white text-4xl md:text-5xl lg:text-6xl">🏗️</span>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                <div className="absolute bottom-6 left-6">
-                  <span className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium">
+                <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6">
+                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-xs md:text-sm font-semibold shadow-lg">
                     {currentNews.category}
                   </span>
                 </div>
               </div>
 
-              <div className="p-8 lg:p-12">
+              <div className="p-6 md:p-8 lg:p-12">
                 {/* Meta info */}
-                <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
+                <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-gray-600 mb-6 md:mb-8 pb-4 md:pb-6 border-b border-gray-200">
                   <div className="flex items-center gap-2">
                     <FaCalendarAlt className="text-blue-600" />
                     <span>{currentNews.date}</span>
@@ -207,13 +223,13 @@ export default function BeritaDetailPage() {
                   </div>
                 </div>
 
-                {/* Judul */}
-                <h1 className="font-bold text-4xl lg:text-5xl mb-8 leading-tight text-gray-900">
+                {/* Judul - Responsive Typography */}
+                <h1 className="font-bold text-2xl md:text-3xl lg:text-4xl xl:text-5xl mb-6 md:mb-8 leading-tight text-gray-900">
                   {currentNews.title}
                 </h1>
 
-                {/* Konten artikel */}
-                <div className="prose prose-lg max-w-none">
+                {/* Konten artikel - Optimized for Reading */}
+                <div className="prose prose-lg md:prose-xl max-w-none text-gray-800 leading-relaxed">
                   <div dangerouslySetInnerHTML={{ __html: currentNews.content }} />
                 </div>
 
@@ -252,53 +268,94 @@ export default function BeritaDetailPage() {
               </div>
             </article>
 
-            {/* Berita terkait */}
-            <section className="mt-16">
-              <h2 className="text-4xl font-bold mb-8 text-center">Berita Terkait</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <a href="/berita/festival-budaya-2025" className="bg-white text-black rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-105 group">
-                  <div className="w-full h-48 bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center">
-                    <span className="text-white text-5xl">🎭</span>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl mb-3 group-hover:text-blue-600 transition-colors">Festival Budaya Nagari 2025</h3>
-                    <p className="text-sm text-gray-600 mb-4">Festival budaya tahunan akan diselenggarakan bulan depan...</p>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>20 Juni 2025</span>
-                      <span className="flex items-center gap-1"><FaEye /> 142</span>
+            {/* Berita Terkait - Glassmorphism Sidebar */}
+            <aside className="mt-12 md:mt-16">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-8 border border-white/20 shadow-xl">
+                <div className="flex items-center gap-3 mb-6 md:mb-8">
+                  <div className="w-1 h-8 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full"></div>
+                  <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                    Berita Terkait
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                  <a href="/berita/festival-budaya-2025" className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20">
+                    <div className="w-full h-40 md:h-48 bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center relative">
+                      <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">🎭</span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                     </div>
-                  </div>
-                </a>
+                    <div className="p-4 md:p-6">
+                      <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
+                        Festival Budaya Nagari 2025
+                      </h3>
+                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
+                        Festival budaya tahunan akan diselenggarakan bulan depan dengan berbagai pertunjukan seni tradisional...
+                      </p>
+                      <div className="flex justify-between items-center text-xs text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <FaCalendarAlt className="text-blue-400" />
+                          20 Juni 2025
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FaEye className="text-green-400" />
+                          142
+                        </span>
+                      </div>
+                    </div>
+                  </a>
 
-                <a href="/berita/pembangunan-infrastruktur" className="bg-white text-black rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-105 group">
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                    <span className="text-white text-5xl">🏗️</span>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl mb-3 group-hover:text-blue-600 transition-colors">Pembangunan Infrastruktur Jalan</h3>
-                    <p className="text-sm text-gray-600 mb-4">Pemerintah nagari mulai melakukan perbaikan infrastruktur...</p>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>25 Juni 2025</span>
-                      <span className="flex items-center gap-1"><FaEye /> 95</span>
+                  <a href="/berita/pembangunan-infrastruktur" className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20">
+                    <div className="w-full h-40 md:h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center relative">
+                      <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">🏗️</span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                     </div>
-                  </div>
-                </a>
+                    <div className="p-4 md:p-6">
+                      <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
+                        Pembangunan Infrastruktur Jalan
+                      </h3>
+                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
+                        Pemerintah nagari mulai melakukan perbaikan infrastruktur jalan untuk mendukung pariwisata...
+                      </p>
+                      <div className="flex justify-between items-center text-xs text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <FaCalendarAlt className="text-blue-400" />
+                          25 Juni 2025
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FaEye className="text-green-400" />
+                          95
+                        </span>
+                      </div>
+                    </div>
+                  </a>
 
-                <a href="/berita/program-pemberdayaan-umkm" className="bg-white text-black rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-105 group">
-                  <div className="w-full h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                    <span className="text-white text-5xl">🏪</span>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl mb-3 group-hover:text-blue-600 transition-colors">Program Pemberdayaan UMKM</h3>
-                    <p className="text-sm text-gray-600 mb-4">Pelatihan dan bantuan modal untuk pelaku UMKM lokal...</p>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>18 Juni 2025</span>
-                      <span className="flex items-center gap-1"><FaEye /> 87</span>
+                  <a href="/berita/program-pemberdayaan-umkm" className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20">
+                    <div className="w-full h-40 md:h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center relative">
+                      <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">🏪</span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                     </div>
-                  </div>
-                </a>
+                    <div className="p-4 md:p-6">
+                      <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
+                        Program Pemberdayaan UMKM
+                      </h3>
+                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
+                        Program pelatihan dan pendampingan untuk meningkatkan kualitas UMKM di nagari...
+                      </p>
+                      <div className="flex justify-between items-center text-xs text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <FaCalendarAlt className="text-blue-400" />
+                          15 Juni 2025
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FaEye className="text-green-400" />
+                          87
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
               </div>
-            </section>
+            </aside>
           </div>
         </div>
       </main>
