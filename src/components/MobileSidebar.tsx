@@ -80,7 +80,7 @@ export default function MobileSidebar() {
   }, [sections]);
 
   return (
-    <div className="md:hidden fixed left-0 top-1/2 transform -translate-y-1/2 z-[100] pl-1">
+    <div className="md:hidden fixed left-2 top-1/2 transform -translate-y-1/2 z-[100]">
       <div className="flex flex-col space-y-1">
         {sections.map((section, index) => {
           const isActive = activeSection === section.id;
@@ -89,14 +89,14 @@ export default function MobileSidebar() {
             <a
               key={section.id}
               href={`#${section.id}`}
-              className={`group relative flex items-center ${isActive ? 'text-white' : 'text-white/60 hover:text-white'} transition-all duration-300`}
+              className={`group relative flex items-center ${isActive ? 'text-white' : 'text-white/60 hover:text-white/80'} transition-all duration-300`}
             >
               {/* Line indicator */}
-              <div className={`w-1 h-10 ${isActive ? 'bg-red-500' : 'bg-white/20 group-hover:bg-red-500'} transition-all duration-300`} />
+              <div className={`w-1 h-6 ${isActive ? 'bg-yellow-400' : 'bg-white/20 group-hover:bg-white/40'} transition-all duration-300`} />
               
               {/* Section number */}
-              <div className="ml-2 flex flex-col justify-center min-w-[40px]">
-                <span className={`text-xl font-bold ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white'} transition-all duration-300`}>
+              <div className="ml-2 flex flex-col justify-center min-w-[25px]">
+                <span className={`text-xs font-bold ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white'} transition-all duration-300`}>
                   {`0${index + 1}`}
                 </span>
                 {/* Section labels are hidden in mobile view */}

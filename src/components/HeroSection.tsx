@@ -76,20 +76,22 @@ export default function HeroSection() {
       {/* Overlay */}
       <div className="fixed inset-0 bg-black/60" />
 
-      <div className="relative z-10 flex flex-col pl-[80px] sm:pl-[100px] md:pl-[120px]">
+      <div className="relative z-10 flex flex-col pl-12 md:pl-20 lg:pl-24">
         {/* Section 01 - Main Hero Section */}
         <section
           id="beranda"
-          className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8"
+          className="min-h-screen flex items-center justify-center px-0 md:px-6"
         >
           {/* Content */}
           <div className="text-center text-white max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
               Selamat Datang di<br />
               <span className="text-yellow-400">Website Nagari Lima Koto</span>
             </h1>
             
-            <p className="text-lg md:text-xl mb-8 text-gray-200 max-w-3xl mx-auto leading-relaxed">
+            <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
+            
+            <p className="text-gray-200 text-lg mb-8 max-w-3xl mx-auto leading-relaxed">
               Portal Digital Resmi untuk Informasi Lengkap tentang Profil, Budaya, Berita, dan Data Statistik Nagari di Sumatera Barat
             </p>
 
@@ -107,15 +109,15 @@ export default function HeroSection() {
         {/* Section 02 - Features Section */}
         <section
           id="fitur"
-          className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8"
+          className="min-h-screen flex items-center justify-center px-0 md:px-6"
         >
           {/* Content */}
           <div className="text-center text-white max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-yellow-400">
-              Fitur-Fitur Website
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+              Fitur-Fitur <span className="text-yellow-400">Website</span>
             </h2>
-            
-            <p className="text-lg md:text-xl mb-8 text-gray-200 max-w-4xl mx-auto leading-relaxed">
+            <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
+            <p className="text-gray-200 text-lg max-w-3xl mx-auto mb-10">
               Akses mudah ke berbagai informasi dan layanan digital Nagari yang dirancang khusus untuk memudahkan masyarakat
             </p>
 
@@ -217,12 +219,18 @@ export default function HeroSection() {
         {/* Section 03 - Struktur Pemerintahan */}
         <section
           id="struktur"
-          className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-6"
+          className="min-h-screen flex items-center justify-center px-0 md:px-6 py-6"
         >
           <div className="w-full md:max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 text-yellow-400 text-center">
-              Struktur Pemerintahan
-            </h2>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+                Struktur <span className="text-yellow-400">Pemerintahan</span>
+              </h2>
+              <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
+              <p className="text-gray-200 text-lg max-w-3xl mx-auto">
+                Struktur pemerintahan Nagari Lima Koto yang menjalankan pelayanan masyarakat
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-6 w-full px-1 md:px-0 mx-auto">
               {/* Card 1 - Wali Nagari (static) */}
               <div 
@@ -391,14 +399,15 @@ export default function HeroSection() {
         {/* Section 04 - Highlight Berita */}
         <section
           id="berita"
-          className="min-h-screen px-4 sm:px-6 lg:px-8 py-16"
+          className="min-h-screen px-0 md:px-6 py-16"
         >
           <div className="max-w-7xl mx-auto">
             <div className="text-center text-white mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold mb-6 text-yellow-400">
-                BERITA
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+                <span className="text-yellow-400">Berita</span>
               </h2>
-              <p className="text-lg md:text-xl max-w-3xl mx-auto">
+              <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
+              <p className="text-gray-200 text-lg max-w-3xl mx-auto">
                 Informasi terbaru seputar kegiatan dan perkembangan di Nagari Lima Koto
               </p>
             </div>
@@ -491,12 +500,16 @@ export default function HeroSection() {
         {/* Section 05 - FAQ */}
         <section
           id="faq"
-          className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 w-full"
+          className="min-h-screen flex items-center justify-center px-0 md:px-6 w-full"
         >
-          <div className="text-center text-white w-full mx-auto">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-yellow-400">
-              FAQ (Tanya Jawab)
+          <div className="text-center text-white w-full mx-auto mb-10">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+              FAQ <span className="text-yellow-400">(Tanya Jawab)</span>
             </h2>
+            <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
+            <p className="text-gray-200 text-lg max-w-3xl mx-auto mb-12">
+              Jawaban untuk pertanyaan yang sering diajukan seputar Nagari Lima Koto
+            </p>
             <div className="text-left max-w-5xl md:w-[80%] lg:w-[75%] mx-auto">
               {/* FAQ Item 1 */}
               <div className="mb-4">

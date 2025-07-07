@@ -80,8 +80,8 @@ export default function Sidebar() {
   }, [sections]);
 
   return (
-    <div className="fixed left-0 top-0 h-full flex items-center z-40 pl-1 sm:pl-2 md:pl-4 w-[80px] sm:w-[100px] md:w-[120px]">
-      <div className="flex flex-col space-y-8 py-16 h-full justify-center">
+    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40">
+      <div className="flex flex-col space-y-1">
         {sections.map((section, index) => {
           const isActive = activeSection === section.id;
           
@@ -89,15 +89,15 @@ export default function Sidebar() {
             <a
               key={section.id}
               href={`#${section.id}`}
-              className={`group relative flex items-center ${isActive ? 'text-white' : 'text-white/60 hover:text-white'} transition-all duration-300`}
+              className={`group relative flex items-center ${isActive ? 'text-white' : 'text-white/60 hover:text-white/80'} transition-all duration-300`}
             >
-              <div className={`w-1 h-10 ${isActive ? 'bg-red-500' : 'bg-white/20 group-hover:bg-red-500'} transition-all duration-300`} />
-              <div className="ml-3 flex flex-col justify-center">
-                <span className={`text-2xl md:text-3xl font-bold ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white'} transition-all duration-300`}>
+              <div className={`w-1 h-10 ${isActive ? 'bg-yellow-400' : 'bg-white/20 group-hover:bg-white/40'} transition-all duration-300`} />
+              <div className="ml-3 flex flex-col justify-center min-w-[45px]">
+                <span className={`text-xl font-bold ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white'} transition-all duration-300`}>
                   {`0${index + 1}`}
                 </span>
                 {section.label && (
-                  <span className={`text-[10px] md:text-xs uppercase tracking-wider ${isActive ? 'text-white' : 'text-white/60'}`}>
+                  <span className={`text-[10px] uppercase tracking-wider ${isActive ? 'text-white' : 'text-white/60'}`}>
                     {section.label}
                   </span>
                 )}
