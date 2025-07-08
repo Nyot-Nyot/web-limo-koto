@@ -203,7 +203,7 @@ export default function HeroSection() {
         {/* Section 02 - Features Section */}
         <section
           id="fitur"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 mt-20 sm:mt-16 md:mt-20"
         >
           {/* Content */}
           <div className="text-center text-white max-w-6xl mx-auto">
@@ -245,7 +245,7 @@ export default function HeroSection() {
         {/* Section 03 - Struktur Pemerintahan */}
         <section
           id="struktur"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6 py-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 py-6 mt-20 sm:mt-16 md:mt-20"
         >
           <div className="w-full md:max-w-6xl mx-auto px-2 md:px-0">
             <div className="text-center mb-12">
@@ -373,7 +373,7 @@ export default function HeroSection() {
         {/* Section 04 - Highlight Berita */}
         <section
           id="berita"
-          className="min-h-screen px-2 md:px-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
+          className="min-h-screen px-2 md:px-6 mt-20 sm:mt-16 md:mt-20"
         >
           <div className="max-w-7xl mx-auto px-2 md:px-0">
             <div className="text-center text-white mb-12">
@@ -413,7 +413,7 @@ export default function HeroSection() {
         {/* Section 05 - FAQ */}
         <section
           id="faq"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6 w-full mt-20 sm:mt-16 md:mt-20 lg:mt-0"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 w-full mt-20 sm:mt-16 md:mt-20"
         >
           <div className="text-center text-white w-full mx-auto mb-10 px-2 md:px-0">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
