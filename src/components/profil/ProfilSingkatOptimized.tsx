@@ -3,9 +3,6 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { ADAT_IMAGES, PERFORMANCE_CONFIG, type AdatImageData } from './constants';
 
-const AUTO_SLIDE_INTERVAL = PERFORMANCE_CONFIG.AUTO_SLIDE_INTERVAL;
-const SWIPE_THRESHOLD = PERFORMANCE_CONFIG.TOUCH_SWIPE_THRESHOLD;
-
 // Optimized touch handlers
 const useTouchHandlers = (onPrevious: () => void, onNext: () => void) => {
   const touchStartX = useRef(0);
@@ -23,8 +20,8 @@ const useTouchHandlers = (onPrevious: () => void, onNext: () => void) => {
     if (!touchStartX.current || !touchEndX.current) return;
     
     const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > SWIPE_THRESHOLD;
-    const isRightSwipe = distance < -SWIPE_THRESHOLD;
+    const isLeftSwipe = distance > PERFORMANCE_CONFIG.TOUCH_SWIPE_THRESHOLD;
+    const isRightSwipe = distance < -PERFORMANCE_CONFIG.TOUCH_SWIPE_THRESHOLD;
 
     if (isLeftSwipe) onNext();
     if (isRightSwipe) onPrevious();
@@ -61,7 +58,7 @@ const useImageSlider = (totalImages: number) => {
     
     intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % totalImages);
-    }, AUTO_SLIDE_INTERVAL);
+    }, PERFORMANCE_CONFIG.AUTO_SLIDE_INTERVAL);
   }, [totalImages]);
 
   const goToPrevious = useCallback(() => {
