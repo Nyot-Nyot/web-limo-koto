@@ -247,7 +247,7 @@ export default function HeroSection() {
           id="struktur"
           className="min-h-screen flex items-center justify-center px-2 md:px-6 py-6 mt-20 sm:mt-16 md:mt-20"
         >
-          <div className="w-full md:max-w-6xl mx-auto px-2 md:px-0">
+          <div className="w-full md:max-w-6xl mx-auto px-2 md:px-0 overflow-hidden">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
                 Struktur <span className="text-yellow-400">Pemerintahan</span>
@@ -260,8 +260,8 @@ export default function HeroSection() {
             
             {/* Single Struktur Card with Slider */}
             {allPejabatData.length > 0 ? (
-            <div className="w-full">
-              <div className="flex flex-col md:flex-row gap-4 md:gap-8 md:items-stretch">
+            <div className="w-full overflow-hidden">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-8 md:items-stretch max-w-full">
                 {/* Left side - Photo Card with fixed 3:4 aspect ratio */}
                 <div className="md:w-1/3">
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 shadow-2xl h-full border border-white/10">
@@ -283,7 +283,7 @@ export default function HeroSection() {
                 </div>
                 
                 {/* Right side - Details outside the card with improved hierarchy */}
-                <div className="md:w-2/3 flex flex-col justify-between text-white" style={{ minHeight: 'var(--photo-height, auto)' }}>
+                <div className="md:w-2/3 flex flex-col justify-between text-white overflow-hidden min-w-0" style={{ minHeight: 'var(--photo-height, auto)' }}>
                   <div className="mb-4">
                     <div>
                       {/* Badge for position type */}
@@ -292,7 +292,7 @@ export default function HeroSection() {
                       </div>
                       
                       {/* Primary heading - Person name */}
-                      <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-yellow-400">
+                      <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-yellow-400 truncate">
                         {allPejabatData[pejabatIndex].name}
                       </h3>
                       
@@ -300,13 +300,13 @@ export default function HeroSection() {
                       <div className="w-full h-px bg-yellow-400 my-3"></div>
                       
                       {/* Position title */}
-                      <p className="text-xl md:text-2xl font-bold text-white">
+                      <p className="text-xl md:text-2xl font-bold text-white truncate">
                         {allPejabatData[pejabatIndex].title}
                       </p>
                       
                       {/* Jorong info if available */}
                       {allPejabatData[pejabatIndex].jorong && (
-                        <p className="text-sm text-yellow-200 font-medium tracking-wide uppercase">
+                        <p className="text-sm text-yellow-200 font-medium tracking-wide uppercase truncate">
                           {allPejabatData[pejabatIndex].jorong}
                         </p>
                       )}
@@ -316,8 +316,13 @@ export default function HeroSection() {
                   <div className={`flex-grow transition-all duration-500 ease-in-out ${
                     pejabatAnimate === 'out' ? 'opacity-0' : 'opacity-100'
                   }`}>
-                    {/* Description with improved readability */}
-                    <p className="text-base md:text-lg text-gray-100/90 leading-relaxed max-w-2xl mt-4">
+                    {/* Description with word wrap and truncation */}
+                    <p className="text-base md:text-lg text-gray-100/90 leading-relaxed max-w-2xl mt-4 break-words overflow-hidden" style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 6,
+                      WebkitBoxOrient: 'vertical',
+                      maxHeight: '7.5rem' // Fallback for line-clamp
+                    }}>
                       {allPejabatData[pejabatIndex].description}
                     </p>
                   </div>

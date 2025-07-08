@@ -68,9 +68,9 @@ export default function Header() {
 							/>
 							<MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
 						</div>
-						<button className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
+						<Link href="/admin/login" className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
 							<UserIcon className="w-5 h-5" />
-						</button>
+						</Link>
 					</div>
 
 					{/* Mobile menu button */}
@@ -120,10 +120,10 @@ export default function Header() {
 									/>
 									<MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
 								</div>
-								<button className="flex items-center space-x-2 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
+								<Link href="/admin/login" className="flex items-center space-x-2 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
 									<UserIcon className="w-5 h-5" />
 									<span>Profile</span>
-								</button>
+								</Link>
 							</div>
 						</nav>
 					</div>
