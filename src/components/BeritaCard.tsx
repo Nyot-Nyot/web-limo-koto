@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { BeritaItem } from '@/data/berita';
+import { FaCalendarAlt, FaEye } from 'react-icons/fa';
 
 interface BeritaCardProps {
   berita: BeritaItem;
@@ -14,49 +15,43 @@ export default function BeritaCard({ berita, animated = false, animationState = 
   return (
     <Link 
       href={`/berita/${berita.id}`} 
-      className="bg-white/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition duration-300 hover:bg-white/90 flex flex-col min-h-[350px] cursor-pointer">
-      <div className="relative h-48 w-full">
+      className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.03] group border border-white/20 block">
+      <div className="relative overflow-hidden">
         <Image
           src={berita.imageUrl}
           alt={berita.title}
-          fill
-          className={`object-cover ${animated ? `transition-opacity duration-500 ${animationState === 'in' ? 'opacity-100' : 'opacity-0'}` : ''}`}
+          width={400}
+          height={250}
+          className={`w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500 ${
+            animated ? `transition-opacity duration-500 ${animationState === 'in' ? 'opacity-100' : 'opacity-0'}` : ''
+          }`}
         />
+        <span className="absolute top-4 right-4 px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full shadow-lg">
+          Berita
+        </span>
       </div>
-      <div className="p-5 flex flex-col flex-grow">
-        <h3 className={`font-bold text-lg text-black mb-2 line-clamp-2 overflow-hidden ${
+      <div className="p-6">
+        <h3 className={`font-bold text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2 ${
           animated ? `transition-transform duration-300 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
           {berita.title}
         </h3>
-        <p className={`text-gray-600 text-xs mb-4 line-clamp-3 overflow-hidden flex-grow ${
+        <p className={`text-sm text-gray-300 mb-4 line-clamp-3 leading-relaxed ${
           animated ? `transition-transform duration-300 delay-75 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
           {berita.description}
         </p>
-        <div className={`flex justify-between items-center text-sm text-black mt-auto pt-2 ${
+        <div className={`flex justify-between items-center text-xs text-gray-400 ${
           animated ? `transition-transform duration-300 delay-150 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
-          <div className="flex items-center">
-            <Image 
-              src="/calendar-icon.svg" 
-              alt="Date" 
-              width={16} 
-              height={16} 
-              className="mr-1"
-            />
-            <span>{berita.date}</span>
-          </div>
-          <div className="flex items-center">
-            <Image 
-              src="/eye-icon.svg" 
-              alt="Views" 
-              width={16} 
-              height={16} 
-              className="mr-1"
-            />
-            <span>{berita.viewCount}</span>
-          </div>
+          <span className="flex items-center gap-1">
+            <FaCalendarAlt className="text-blue-400" />
+            {berita.date}
+          </span>
+          <span className="flex items-center gap-1">
+            <FaEye className="text-green-400" />
+            {berita.viewCount}
+          </span>
         </div>
       </div>
     </Link>

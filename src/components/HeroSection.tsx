@@ -3,24 +3,135 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { kepalaJorongData, sekretarisData, waliNagariData } from '@/data/pejabat';
-import { beritaData } from '@/data/berita';
 import { faqData } from '@/data/faq';
 import { featuresData } from '@/data/features';
-import BeritaCard from '@/components/BeritaCard';
+import { mockNewsData } from '@/data/newsData';
+import NewsCard from '@/components/berita/NewsCard';
 import FAQCard from '@/components/FAQCard';
 import FeatureCard from '@/components/FeatureCard';
+
+interface PejabatData {
+  id: number;
+  name: string;
+  title: string;
+  image: string;
+  jorong?: string;
+  description: string;
+}
+
+interface FAQData {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+}
 
 export default function HeroSection() {
   // Combined state for all officials
   const [pejabatIndex, setPejabatIndex] = useState(0);
   const [pejabatAnimate, setPejabatAnimate] = useState<'in' | 'out'>('in');
-  const allPejabatData = [
-    waliNagariData,
-    ...kepalaJorongData,
-    ...sekretarisData
-  ];
+  const [allPejabatData, setAllPejabatData] = useState<PejabatData[]>([]);
+  const [currentFaqData, setCurrentFaqData] = useState<FAQData[]>([]);
   
   const [expandedFaqs, setExpandedFaqs] = useState<number[]>([]);
+
+  // Load data from localStorage or use default data
+  useEffect(() => {
+    // Load Pejabat data
+    const savedPejabat = localStorage.getItem('pejabatData');
+    if (savedPejabat) {
+      try {
+        const parsedPejabat = JSON.parse(savedPejabat);
+        setAllPejabatData(parsedPejabat);
+      } catch (error) {
+        console.error('Error parsing pejabat data:', error);
+        // Fallback to default data
+        setAllPejabatData([
+          waliNagariData,
+          ...kepalaJorongData,
+          ...sekretarisData
+        ]);
+      }
+    } else {
+      // Use default data
+      setAllPejabatData([
+        waliNagariData,
+        ...kepalaJorongData,
+        ...sekretarisData
+      ]);
+    }
+
+    // Load FAQ data
+    const savedFaq = localStorage.getItem('faqData');
+    if (savedFaq) {
+      try {
+        const parsedFaq = JSON.parse(savedFaq);
+        setCurrentFaqData(parsedFaq);
+      } catch (error) {
+        console.error('Error parsing FAQ data:', error);
+        // Fallback to default data
+        setCurrentFaqData(faqData);
+      }
+    } else {
+      // Use default data
+      setCurrentFaqData(faqData);
+    }
+
+    // Listen for localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'pejabatData' && e.newValue) {
+        try {
+          const parsedPejabat = JSON.parse(e.newValue);
+          setAllPejabatData(parsedPejabat);
+        } catch (error) {
+          console.error('Error parsing updated pejabat data:', error);
+        }
+      }
+      if (e.key === 'faqData' && e.newValue) {
+        try {
+          const parsedFaq = JSON.parse(e.newValue);
+          setCurrentFaqData(parsedFaq);
+        } catch (error) {
+          console.error('Error parsing updated FAQ data:', error);
+        }
+      }
+    };
+
+    // Listen for custom events (for same-tab updates)
+    const handleCustomUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail.type === 'pejabat') {
+        const savedPejabat = localStorage.getItem('pejabatData');
+        if (savedPejabat) {
+          try {
+            const parsedPejabat = JSON.parse(savedPejabat);
+            setAllPejabatData(parsedPejabat);
+          } catch (error) {
+            console.error('Error parsing updated pejabat data:', error);
+          }
+        }
+      }
+      if (customEvent.detail.type === 'faq') {
+        const savedFaq = localStorage.getItem('faqData');
+        if (savedFaq) {
+          try {
+            const parsedFaq = JSON.parse(savedFaq);
+            setCurrentFaqData(parsedFaq);
+          } catch (error) {
+            console.error('Error parsing updated FAQ data:', error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('dataUpdated', handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('dataUpdated', handleCustomUpdate);
+    };
+  }, []);
 
   const toggleFaq = (index: number) => {
     setExpandedFaqs(prev => 
@@ -32,6 +143,8 @@ export default function HeroSection() {
   
   // Effect for Perangkat Nagari rotation with slide transition
   useEffect(() => {
+    if (allPejabatData.length === 0) return; // Safety check
+    
     const cycle = () => {
       setPejabatAnimate('out');
       setTimeout(() => {
@@ -61,7 +174,7 @@ export default function HeroSection() {
         {/* Section 01 - Main Hero Section */}
         <section
           id="beranda"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
         >
           {/* Content */}
           <div className="text-center text-white max-w-4xl mx-auto">
@@ -90,7 +203,7 @@ export default function HeroSection() {
         {/* Section 02 - Features Section */}
         <section
           id="fitur"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
         >
           {/* Content */}
           <div className="text-center text-white max-w-6xl mx-auto">
@@ -132,7 +245,7 @@ export default function HeroSection() {
         {/* Section 03 - Struktur Pemerintahan */}
         <section
           id="struktur"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6 py-6"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 py-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
         >
           <div className="w-full md:max-w-6xl mx-auto px-2 md:px-0">
             <div className="text-center mb-12">
@@ -146,6 +259,7 @@ export default function HeroSection() {
             </div>
             
             {/* Single Struktur Card with Slider */}
+            {allPejabatData.length > 0 ? (
             <div className="w-full">
               <div className="flex flex-col md:flex-row gap-4 md:gap-8 md:items-stretch">
                 {/* Left side - Photo Card with fixed 3:4 aspect ratio */}
@@ -171,57 +285,31 @@ export default function HeroSection() {
                 {/* Right side - Details outside the card with improved hierarchy */}
                 <div className="md:w-2/3 flex flex-col justify-between text-white" style={{ minHeight: 'var(--photo-height, auto)' }}>
                   <div className="mb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        {/* Badge for position type */}
-                        <div className="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-300 text-xs font-medium rounded-full mb-2">
-                          Perangkat Nagari
-                        </div>
-                        
-                        {/* Primary heading - Person name */}
-                        <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-yellow-400">
-                          {allPejabatData[pejabatIndex].name}
-                        </h3>
-                        
-                        {/* Yellow divider */}
-                        <div className="w-full h-px bg-yellow-400 my-3"></div>
-                        
-                        {/* Position title */}
-                        <p className="text-xl md:text-2xl font-bold text-white">
-                          {allPejabatData[pejabatIndex].title}
-                        </p>
-                        
-                        {/* Jorong info if available */}
-                        {allPejabatData[pejabatIndex].jorong && (
-                          <p className="text-sm text-yellow-200 font-medium tracking-wide uppercase">
-                            {allPejabatData[pejabatIndex].jorong}
-                          </p>
-                        )}
+                    <div>
+                      {/* Badge for position type */}
+                      <div className="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-300 text-xs font-medium rounded-full mb-2">
+                        Perangkat Nagari
                       </div>
                       
-                      {/* Navigation dots */}
-                      <div className="flex gap-2">
-                        {allPejabatData.map((_, idx) => (
-                          <button
-                            key={`pejabat-dot-${idx}`}
-                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                              idx === pejabatIndex 
-                                ? 'bg-yellow-500 scale-110' 
-                                : 'bg-gray-400/50 hover:bg-gray-300'
-                            }`}
-                            onClick={() => {
-                              if (idx !== pejabatIndex) {
-                                setPejabatAnimate('out');
-                                setTimeout(() => {
-                                  setPejabatIndex(idx);
-                                  setPejabatAnimate('in');
-                                }, 300);
-                              }
-                            }}
-                            aria-label={`View ${allPejabatData[idx].name}`}
-                          />
-                        ))}
-                      </div>
+                      {/* Primary heading - Person name */}
+                      <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-yellow-400">
+                        {allPejabatData[pejabatIndex].name}
+                      </h3>
+                      
+                      {/* Yellow divider */}
+                      <div className="w-full h-px bg-yellow-400 my-3"></div>
+                      
+                      {/* Position title */}
+                      <p className="text-xl md:text-2xl font-bold text-white">
+                        {allPejabatData[pejabatIndex].title}
+                      </p>
+                      
+                      {/* Jorong info if available */}
+                      {allPejabatData[pejabatIndex].jorong && (
+                        <p className="text-sm text-yellow-200 font-medium tracking-wide uppercase">
+                          {allPejabatData[pejabatIndex].jorong}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -233,7 +321,6 @@ export default function HeroSection() {
                       {allPejabatData[pejabatIndex].description}
                     </p>
                   </div>
-                  
                   {/* Navigation buttons with improved styling - now aligned to bottom */}
                   <div className="flex justify-between pt-6">
                     <button
@@ -253,11 +340,9 @@ export default function HeroSection() {
                       </svg>
                       <span className="font-medium">Sebelumnya</span>
                     </button>
-                    
                     <div className="text-sm text-gray-400">
                       {pejabatIndex + 1} dari {allPejabatData.length}
                     </div>
-                    
                     <button
                       className="flex items-center gap-2 text-yellow-100/80 hover:text-yellow-400 transition-all duration-300 group"
                       onClick={() => {
@@ -277,30 +362,38 @@ export default function HeroSection() {
                 </div>
               </div>
             </div>
+            ) : (
+              <div className="text-center text-white">
+                <p className="text-gray-300">Data pejabat sedang dimuat...</p>
+              </div>
+            )}
           </div>
         </section>
 
         {/* Section 04 - Highlight Berita */}
         <section
           id="berita"
-          className="min-h-screen px-2 md:px-6 py-16"
+          className="min-h-screen px-2 md:px-6 mt-20 sm:mt-16 md:mt-20 lg:mt-0"
         >
           <div className="max-w-7xl mx-auto px-2 md:px-0">
             <div className="text-center text-white mb-12">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
-                Highlight <span className="text-yellow-400">Berita</span>
+                Berita <span className="text-yellow-400">Terbaru</span>
               </h2>
               <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
               <p className="text-gray-200 text-lg max-w-3xl mx-auto">
-                Berita terpilih seputar kegiatan dan perkembangan di Nagari Lima Koto
+                Berita terbaru seputar kegiatan dan perkembangan di Nagari Lima Koto
               </p>
             </div>
             
-            {/* Show only 3 highlight news for both desktop and mobile */}
+            {/* Show only 3 latest news for both desktop and mobile */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              {beritaData.slice(0, 3).map((berita) => (
-                <BeritaCard key={berita.id} berita={berita} />
-              ))}
+              {mockNewsData
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .slice(0, 3)
+                .map((news) => (
+                  <NewsCard key={news.id} {...news} />
+                ))}
             </div>
             
             <div className="text-center mt-10">
@@ -320,7 +413,7 @@ export default function HeroSection() {
         {/* Section 05 - FAQ */}
         <section
           id="faq"
-          className="min-h-screen flex items-center justify-center px-2 md:px-6 w-full"
+          className="min-h-screen flex items-center justify-center px-2 md:px-6 w-full mt-20 sm:mt-16 md:mt-20 lg:mt-0"
         >
           <div className="text-center text-white w-full mx-auto mb-10 px-2 md:px-0">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
@@ -331,7 +424,7 @@ export default function HeroSection() {
               Jawaban untuk pertanyaan yang sering diajukan seputar Nagari Lima Koto
             </p>
             <div className="text-left max-w-5xl md:w-[80%] lg:w-[75%] mx-auto">
-              {faqData.map((faq) => (
+              {currentFaqData.map((faq) => (
                 <FAQCard
                   key={faq.id}
                   question={faq.question}

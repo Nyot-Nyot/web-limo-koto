@@ -43,7 +43,7 @@ const BackgroundLayer = React.memo(() => (
 BackgroundLayer.displayName = 'BackgroundLayer';
 
 const PageHeader = React.memo(() => (
-  <div className="text-center mb-8 md:mb-12">
+  <div className="text-center mb-8 md:mb-12 mt-8">
     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
       Berita Terkini
     </h1>
