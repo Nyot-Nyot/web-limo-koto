@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { OBSERVER_OPTIONS, SCROLL_TIMEOUT_DURATION, NAVIGATION_TIMEOUT_DURATION, PERFORMANCE_CONFIG } from './constants';
+import { OBSERVER_OPTIONS, SCROLL_TIMEOUT_DURATION, NAVIGATION_TIMEOUT_DURATION } from './constants';
 
 interface UseSectionNavigationProps {
   sections: string[];

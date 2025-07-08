@@ -64,3 +64,38 @@ export const A11Y_CONFIG = {
   SCREEN_READER_ONLY: 'sr-only',
   REDUCED_MOTION_QUERY: '(prefers-reduced-motion: reduce)',
 } as const;
+
+// Image data constants
+export interface AdatImageData {
+  src: string;
+  title: string;
+  description: string;
+}
+
+export const ADAT_IMAGES: readonly AdatImageData[] = [
+  {
+    src: "https://placehold.co/500x400",
+    title: "Rumah Gadang",
+    description: "Arsitektur tradisional"
+  },
+  {
+    src: "https://placehold.co/500x400",
+    title: "Tari Tradisional", 
+    description: "Seni budaya warisan"
+  },
+  {
+    src: "https://placehold.co/500x400",
+    title: "Upacara Adat",
+    description: "Ritual tradisional"
+  },
+  {
+    src: "https://placehold.co/500x400",
+    title: "Pakaian Adat",
+    description: "Busana tradisional"
+  },
+  {
+    src: "https://placehold.co/500x400",
+    title: "Alat Musik Tradisional",
+    description: "Instrumen budaya"
+  }
+] as const;

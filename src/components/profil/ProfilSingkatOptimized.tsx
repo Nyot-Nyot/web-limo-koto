@@ -1,33 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { ADAT_IMAGES, PERFORMANCE_CONFIG, type AdatImageData } from './constants';
 
-// Optimized image data - could be moved to constants file
-const ADAT_IMAGES = [
-  {
-    src: "https://placehold.co/500x400",
-    title: "Rumah Gadang",
-    description: "Arsitektur tradisional"
-  },
-  {
-    src: "https://placehold.co/500x400",
-    title: "Tari Tradisional", 
-    description: "Seni budaya warisan"
-  },
-  {
-    src: "https://placehold.co/500x400",
-    title: "Upacara Adat",
-    description: "Ritual tradisional"
-  },
-  {
-    src: "https://placehold.co/500x400",
-    title: "Pakaian Adat",
-    description: "Busana tradisional"
-  }
-] as const;
-
-const AUTO_SLIDE_INTERVAL = 4000;
-const SWIPE_THRESHOLD = 50;
+const AUTO_SLIDE_INTERVAL = PERFORMANCE_CONFIG.AUTO_SLIDE_INTERVAL;
+const SWIPE_THRESHOLD = PERFORMANCE_CONFIG.TOUCH_SWIPE_THRESHOLD;
 
 // Optimized touch handlers
 const useTouchHandlers = (onPrevious: () => void, onNext: () => void) => {
@@ -149,7 +126,7 @@ const ImageCard = memo(({
   isMobile,
   onClick 
 }: {
-  image: (typeof ADAT_IMAGES)[number];
+  image: AdatImageData;
   index: number;
   currentIndex: number;
   totalImages: number;
