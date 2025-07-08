@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { OBSERVER_OPTIONS, SCROLL_TIMEOUT_DURATION, NAVIGATION_TIMEOUT_DURATION, PERFORMANCE_CONFIG } from './constants';
-import { useDebouncedScroll } from './performanceHooks';
 
 interface UseSectionNavigationProps {
   sections: string[];
@@ -40,18 +39,16 @@ export function useSectionNavigation({ sections, defaultSection = '01' }: UseSec
     }
   }, [isUserScrolling, activeSection]);
 
-  // Debounced scroll handler
-  const debouncedScrollHandler = useDebouncedScroll(() => {
-    setIsUserScrolling(false);
-  }, SCROLL_TIMEOUT_DURATION);
-
+  // Consistent debounced scroll handler using scrollTimeoutRef
   useEffect(() => {
     const handleScroll = () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
       
-      debouncedScrollHandler();
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsUserScrolling(false);
+      }, SCROLL_TIMEOUT_DURATION);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -61,7 +58,7 @@ export function useSectionNavigation({ sections, defaultSection = '01' }: UseSec
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [debouncedScrollHandler]);
+  }, []);
 
   // Handle manual section change with smooth scrolling
   const handleSectionChange = useCallback((sectionId: string) => {
