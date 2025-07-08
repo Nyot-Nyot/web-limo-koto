@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { PERFORMANCE_CONFIG } from './constants';
 
 export default function ProfilSingkat() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -76,7 +77,7 @@ export default function ProfilSingkat() {
     
     intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
-    }, 4000);
+    }, PERFORMANCE_CONFIG.AUTO_SLIDE_INTERVAL);
   };
 
   // Auto-slide functionality
@@ -84,7 +85,7 @@ export default function ProfilSingkat() {
     if (isAutoSlideActive) {
       intervalRef.current = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % adatImages.length);
-      }, 4000);
+      }, PERFORMANCE_CONFIG.AUTO_SLIDE_INTERVAL);
     }
 
     return () => {
