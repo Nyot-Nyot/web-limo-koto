@@ -9,7 +9,8 @@ import {
   ArrowRightOnRectangleIcon,
   HomeIcon,
   DocumentTextIcon,
-  PhotoIcon
+  PhotoIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 
 export default function AdminDashboard() {
@@ -112,10 +113,10 @@ export default function AdminDashboard() {
           
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center">
-              <PhotoIcon className="w-8 h-8 text-purple-400" />
+              <MapPinIcon className="w-8 h-8 text-purple-400" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-400">Total Galeri</p>
-                <p className="text-2xl font-bold text-white">25</p>
+                <p className="text-sm font-medium text-gray-400">Total Jorong</p>
+                <p className="text-2xl font-bold text-white">8</p>
               </div>
             </div>
           </div>
@@ -165,6 +166,27 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Kelola Jorong */}
+          <Link href="/admin/jorong">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <MapPinIcon className="w-8 h-8 text-purple-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Jorong
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola data jorong, koordinat, fasilitas, dan informasi wilayah
+              </p>
+              <div className="flex items-center text-purple-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
           {/* Coming Soon Cards */}
           <div className="bg-gray-800 rounded-lg p-6 opacity-50">
             <div className="flex items-center mb-4">
@@ -185,11 +207,11 @@ export default function AdminDashboard() {
             <div className="flex items-center mb-4">
               <PhotoIcon className="w-8 h-8 text-gray-400" />
               <h3 className="text-xl font-semibold text-gray-400 ml-3">
-                Profil (Coming Soon)
+                Galeri (Coming Soon)
               </h3>
             </div>
             <p className="text-gray-500 mb-4">
-              Kelola konten profil nagari
+              Kelola galeri dan foto
             </p>
             <div className="flex items-center text-gray-500">
               <span className="text-sm font-medium">Segera Hadir</span>
