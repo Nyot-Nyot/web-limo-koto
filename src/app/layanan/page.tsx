@@ -1,44 +1,20 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import Header from "@/components/Header";
-import Domisili from "@/components/layanan/domisili";
-import SKTM from "@/components/layanan/sktm";
-import Usaha from "@/components/layanan/usaha";
-import PengantarNikah from "@/components/layanan/pengantar_nikah";
-import SuratKematian from "@/components/layanan/surat_kematian";
-import KartuKeluarga from "@/components/layanan/kartu_keluarga";
 
 const layananList = [
-  {
-    id: "domisili",
-    title: "Surat Keterangan Domisili",
-    component: <Domisili />,
-  },
-  {
-    id: "sktm",
-    title: "Surat Keterangan Tidak Mampu (SKTM)",
-    component: <SKTM />,
-  },
-  { id: "usaha", title: "Surat Keterangan Usaha", component: <Usaha /> },
-  {
-    id: "pengantar_nikah",
-    title: "Surat Pengantar Nikah",
-    component: <PengantarNikah />,
-  },
-  {
-    id: "surat_kematian",
-    title: "Surat Keterangan Kematian",
-    component: <SuratKematian />,
-  },
-  {
-    id: "kartu_keluarga",
-    title: "Kartu Keluarga",
-    component: <KartuKeluarga />,
-  },
+  { id: "domisili", title: "Surat Keterangan Domisili" },
+  { id: "sktm", title: "Surat Keterangan Tidak Mampu (SKTM)" },
+  { id: "usaha", title: "Surat Keterangan Usaha" },
+  { id: "pengantar_nikah", title: "Surat Pengantar Nikah" },
+  { id: "surat_kematian", title: "Surat Keterangan Kematian" },
+  { id: "surat_cerai", title: "Surat Cerai" },
 ];
 
 export default function LayananPage() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState("");
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -62,15 +38,21 @@ export default function LayananPage() {
       <div className="relative z-10 max-w-5xl mx-auto pt-24 px-4 md:px-0">
         <h1
           className="text-4xl font-bold mb-6 text-center"
-          style={{ fontFamily: "Source Serif 4, serif" }}
+          style={{ fontFamily: "'Source Serif 4', serif", fontSize: "3.75rem" }}
         >
           Layanan Publik
         </h1>
-        <p className="text-sm text-gray-300 text-center mb-4">
+        <p
+          className="text-sm text-gray-300 text-center mb-4"
+          style={{ fontFamily: "'Poppins', serif" }}
+        >
           Kantor Wali Nagari, Nagari Limo Koto
         </p>
         <div className="flex justify-center mb-10">
-          <span className="bg-white/80 text-gray-900 rounded-full px-6 py-2 text-xs font-semibold shadow">
+          <span
+            className="bg-white/80 text-gray-900 rounded-full px-6 py-2 text-xs font-semibold shadow"
+            style={{ fontFamily: "'Poppins', serif" }}
+          >
             Senin-Jumat 08:00 - 12:00 & 13:30 - 16:00 WIB
           </span>
         </div>
@@ -78,8 +60,8 @@ export default function LayananPage() {
           {layananList.map((layanan) => (
             <button
               key={layanan.id}
-              onClick={() => setActiveSection(layanan.id)}
-              className={`group w-full bg-white/80 backdrop-blur-md hover:bg-yellow-400/80 hover:text-gray-900 text-gray-900 rounded-xl p-4 shadow flex flex-col items-start transition-all duration-300 border border-gray-200`}
+              onClick={() => router.push(`/layanan/${layanan.id}`)}
+              className="group w-full bg-white/80 backdrop-blur-md hover:bg-yellow-400/80 hover:text-gray-900 text-gray-900 rounded-xl p-4 shadow flex flex-col items-start transition-all duration-300 border border-gray-200"
               style={{ minHeight: 140, textAlign: "left" }}
             >
               <h3 className="text-base font-bold mb-2 group-hover:text-black transition-colors duration-300">
@@ -130,21 +112,6 @@ export default function LayananPage() {
           ))}
         </div>
 
-        <div className="bg-white/10 rounded-lg p-6 shadow">
-          {layananList.map((layanan) => (
-            <div
-              key={layanan.id}
-              ref={(el) => {
-                sectionRefs.current[layanan.id] = el;
-              }}
-              style={{
-                display: activeSection === layanan.id ? "block" : "none",
-              }}
-            >
-              {layanan.component}
-            </div>
-          ))}
-        </div>
         {/* Kartu Kontak & Ulasan */}
         <div className="mt-16 flex flex-col items-center w-full">
           <div className="flex flex-col md:flex-row gap-6 w-full justify-center mb-6">
@@ -316,7 +283,7 @@ export default function LayananPage() {
               Limo Koto.
             </p>
             <textarea
-              className="w-full rounded border border-gray-500 p-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none border-gray-500 text-gray-900"
+              className="w-full rounded border border-gray-500 p-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none text-gray-900"
               rows={3}
               placeholder="Tulis ulasan Anda..."
             />
