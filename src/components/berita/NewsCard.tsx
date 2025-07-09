@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { FaCalendarAlt, FaEye } from "react-icons/fa";
 
 interface NewsCardProps {
@@ -30,7 +31,7 @@ export default function NewsCard({
 }: NewsCardProps) {
   if (isFeatured) {
     return (
-      <a
+      <Link
         href={href}
         className="block bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] group border border-white/20"
       >
@@ -82,12 +83,12 @@ export default function NewsCard({
             </div>
           </div>
         </div>
-      </a>
+      </Link>
     );
   }
 
   return (
-    <a
+    <Link
       href={href}
       className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.03] group border border-white/20"
     >
@@ -128,6 +129,6 @@ export default function NewsCard({
           </span>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
