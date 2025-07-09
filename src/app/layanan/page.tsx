@@ -28,7 +28,7 @@ export default function LayananPage() {
   return (
     <div className="relative min-h-screen text-white pb-12 overflow-x-hidden">
       {/* Background overlay sama seperti profil */}
-      <div
+      <div 
         className="fixed inset-0 z-0"
         style={{
           background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('/images/Rectangle.png') center/cover`,
