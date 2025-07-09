@@ -270,7 +270,7 @@ export default function ProfilPage() {
       {/* Main Content */}
       <main className="relative z-10">
         {/* Content Sections */}
-        <div className="pl-12 md:pl-20 lg:pl-24">
+        <div className="pl-12 md:pl-20 lg:pl-24 mt-5 sm:mt-5 md:mt-5 lg:mt-0">
           {sections.map((section) => (
             <div
               key={section.id}

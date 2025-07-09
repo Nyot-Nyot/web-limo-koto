@@ -43,6 +43,7 @@ export default function LayananPage() {
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
+    if (!activeSection) return;
     const section = sectionRefs.current[activeSection];
     if (section) {
       section.scrollIntoView({ behavior: "smooth", block: "start" });
