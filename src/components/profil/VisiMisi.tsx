@@ -1,6 +1,8 @@
 'use client';
 
-export default function VisiMisi() {
+import { memo } from 'react';
+
+const VisiMisi = memo(() => {
   return (
     <div className="flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
       <div className="max-w-5xl mx-auto">
@@ -64,4 +66,8 @@ export default function VisiMisi() {
       </div>
     </div>
   );
-}
+});
+
+VisiMisi.displayName = 'VisiMisi';
+
+export default VisiMisi;

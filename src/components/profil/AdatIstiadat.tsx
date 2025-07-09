@@ -1,6 +1,8 @@
 'use client';
 
-export default function AdatIstiadat() {
+import { memo } from 'react';
+
+const AdatIstiadat = memo(() => {
   const adatCategories = [
     {
       title: 'Sistem Pemerintahan Adat',
@@ -168,4 +170,8 @@ export default function AdatIstiadat() {
       </div>
     </div>
   );
-}
+});
+
+AdatIstiadat.displayName = 'AdatIstiadat';
+
+export default AdatIstiadat;
