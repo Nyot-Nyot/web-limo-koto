@@ -11,6 +11,14 @@ export interface NewsItem {
   emoji: string;
   imageSrc?: string;
   isFeatured?: boolean;
+  tags?: string[];
+  blocks?: {
+    type: 'subheading' | 'text' | 'image' | 'video' | 'quote' | 'list';
+    content?: string;
+    url?: string;
+    caption?: string;
+    items?: string[];
+  }[];
 }
 
 export interface AgendaItem {
@@ -39,7 +47,8 @@ export const mockNewsData: NewsItem[] = [
     backgroundGradient: "bg-gradient-to-br from-blue-400 to-blue-600",
     emoji: "🏛️",
     imageSrc: "/images/jamgadang.png",
-    isFeatured: true
+    isFeatured: true,
+    tags: ["trending", "pariwisata", "sejarah", "budaya"]
   },
   {
     id: "2",
@@ -51,7 +60,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Pembangunan",
     categoryColor: "bg-blue-600",
     backgroundGradient: "bg-gradient-to-br from-blue-400 to-blue-600",
-    emoji: "🏗️"
+    emoji: "🏗️",
+    tags: ["pembangunan", "infrastruktur", "pariwisata"]
   },
   {
     id: "3",
@@ -63,7 +73,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Budaya",
     categoryColor: "bg-purple-600",
     backgroundGradient: "bg-gradient-to-br from-purple-400 to-pink-600",
-    emoji: "🎭"
+    emoji: "🎭",
+    tags: ["budaya", "festival", "seni", "kuliner"]
   },
   {
     id: "4",
@@ -75,7 +86,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Ekonomi",
     categoryColor: "bg-green-600",
     backgroundGradient: "bg-gradient-to-br from-green-400 to-green-600",
-    emoji: "🏪"
+    emoji: "🏪",
+    tags: ["ekonomi", "umkm", "pemberdayaan", "pelatihan"]
   },
   {
     id: "5",
@@ -87,7 +99,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Sosial",
     categoryColor: "bg-orange-600",
     backgroundGradient: "bg-gradient-to-br from-yellow-400 to-orange-600",
-    emoji: "🧹"
+    emoji: "🧹",
+    tags: ["sosial", "gotong-royong", "kebersihan", "kemerdekaan"]
   },
   {
     id: "6",
@@ -99,7 +112,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Pertanian",
     categoryColor: "bg-green-600",
     backgroundGradient: "bg-gradient-to-br from-green-500 to-lime-600",
-    emoji: "🌱"
+    emoji: "🌱",
+    tags: ["pertanian", "organik", "pelatihan", "petani"]
   },
   {
     id: "7",
@@ -111,7 +125,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Pendidikan",
     categoryColor: "bg-indigo-600",
     backgroundGradient: "bg-gradient-to-br from-indigo-400 to-blue-600",
-    emoji: "🏫"
+    emoji: "🏫",
+    tags: ["pendidikan", "renovasi", "sekolah", "infrastruktur"]
   },
   {
     id: "8",
@@ -123,7 +138,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Kesehatan",
     categoryColor: "bg-red-600",
     backgroundGradient: "bg-gradient-to-br from-red-400 to-pink-600",
-    emoji: "🏥"
+    emoji: "🏥",
+    tags: ["kesehatan", "puskesmas", "pelayanan", "masyarakat"]
   },
   {
     id: "9",
@@ -135,7 +151,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Teknologi",
     categoryColor: "bg-cyan-600",
     backgroundGradient: "bg-gradient-to-br from-cyan-400 to-blue-600",
-    emoji: "💻"
+    emoji: "💻",
+    tags: ["teknologi", "digital", "administrasi", "pelayanan"]
   },
   {
     id: "10",
@@ -147,7 +164,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Pendidikan",
     categoryColor: "bg-purple-600",
     backgroundGradient: "bg-gradient-to-br from-violet-400 to-purple-600",
-    emoji: "🎓"
+    emoji: "🎓",
+    tags: ["pendidikan", "beasiswa", "prestasi", "pelajar"]
   },
   {
     id: "11",
@@ -159,7 +177,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Prestasi",
     categoryColor: "bg-yellow-600",
     backgroundGradient: "bg-gradient-to-br from-yellow-400 to-amber-600",
-    emoji: "🏆"
+    emoji: "🏆",
+    tags: ["prestasi", "digital", "lomba", "teknologi", "inovasi"]
   },
   {
     id: "12",
@@ -171,7 +190,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Politik",
     categoryColor: "bg-slate-600",
     backgroundGradient: "bg-gradient-to-br from-slate-400 to-gray-600",
-    emoji: "🗳️"
+    emoji: "🗳️",
+    tags: ["politik", "pemilihan", "digital", "transparansi"]
   },
   {
     id: "13",
@@ -183,7 +203,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Ekonomi",
     categoryColor: "bg-emerald-600",
     backgroundGradient: "bg-gradient-to-br from-emerald-400 to-green-600",
-    emoji: "🏪"
+    emoji: "🏪",
+    tags: ["ekonomi", "koperasi", "permodalan", "masyarakat"]
   },
   {
     id: "14",
@@ -195,7 +216,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Lingkungan",
     categoryColor: "bg-green-600",
     backgroundGradient: "bg-gradient-to-br from-green-500 to-emerald-600",
-    emoji: "🌳"
+    emoji: "🌳",
+    tags: ["lingkungan", "pohon", "pelestarian", "longsor"]
   },
   {
     id: "15",
@@ -207,7 +229,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Budaya",
     categoryColor: "bg-purple-600",
     backgroundGradient: "bg-gradient-to-br from-purple-400 to-violet-600",
-    emoji: "🎭"
+    emoji: "🎭",
+    tags: ["budaya", "randai", "tradisional", "minangkabau", "seni"]
   },
   {
     id: "16",
@@ -219,7 +242,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Ekonomi",
     categoryColor: "bg-orange-600",
     backgroundGradient: "bg-gradient-to-br from-orange-400 to-red-500",
-    emoji: "🛒"
+    emoji: "🛒",
+    tags: ["ekonomi", "pasar", "tradisional", "revitalisasi"]
   },
   {
     id: "17",
@@ -231,7 +255,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Teknologi",
     categoryColor: "bg-cyan-600",
     backgroundGradient: "bg-gradient-to-br from-cyan-400 to-blue-600",
-    emoji: "💻"
+    emoji: "💻",
+    tags: ["teknologi", "literasi", "digital", "lansia"]
   },
   {
     id: "18",
@@ -243,7 +268,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Kesehatan",
     categoryColor: "bg-pink-600",
     backgroundGradient: "bg-gradient-to-br from-pink-400 to-rose-600",
-    emoji: "👶"
+    emoji: "👶",
+    tags: ["kesehatan", "posyandu", "balita", "digital", "gizi"]
   },
   {
     id: "19",
@@ -255,7 +281,8 @@ export const mockNewsData: NewsItem[] = [
     category: "Pendidikan",
     categoryColor: "bg-teal-600",
     backgroundGradient: "bg-gradient-to-br from-teal-400 to-green-600",
-    emoji: "🌿"
+    emoji: "🌿",
+    tags: ["pendidikan", "sekolah", "alam", "kurikulum", "lokal"]
   },
   {
     id: "20",
@@ -267,19 +294,21 @@ export const mockNewsData: NewsItem[] = [
     category: "Wisata",
     categoryColor: "bg-amber-600",
     backgroundGradient: "bg-gradient-to-br from-amber-400 to-orange-600",
-    emoji: "☕"
+    emoji: "☕",
+    tags: ["wisata", "agro", "kopi", "perkebunan", "edukasi"]
   },
   {
     id: "21",
     href: "/berita/bank-sampah-mandiri",
     title: "Bank Sampah Mandiri Nagari",
-    excerpt: "Inisiatif pengelolaan sampah melalui bank sampah yang memberikan nilai ekonomi bagi warga sambil menjaga kebersihan dan kelestarian lingkungan.",
+    excerpt: "Inisiatif pengelolaan sampah melalui bank sampah yang memberikan nilai ekonomis bagi warga sambil menjaga kebersihan dan kelestarian lingkungan.",
     date: "27 Juni 2025",
     views: 154,
     category: "Lingkungan",
     categoryColor: "bg-lime-600",
     backgroundGradient: "bg-gradient-to-br from-lime-400 to-green-600",
-    emoji: "♻️"
+    emoji: "♻️",
+    tags: ["lingkungan", "sampah", "ekonomi", "kebersihan"]
   },
   {
     id: "22",

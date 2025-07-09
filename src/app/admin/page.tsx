@@ -218,37 +218,28 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Kelola Berita */}
+          <Link href="/admin/berita">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <DocumentTextIcon className="w-8 h-8 text-blue-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Berita
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola berita, artikel, dan informasi terkini nagari
+              </p>
+              <div className="flex items-center text-blue-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
           {/* Coming Soon Cards */}
-          <div className="bg-gray-800 rounded-lg p-6 opacity-50">
-            <div className="flex items-center mb-4">
-              <DocumentTextIcon className="w-8 h-8 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-400 ml-3">
-                Berita (Coming Soon)
-              </h3>
-            </div>
-            <p className="text-gray-500 mb-4">
-              Kelola berita dan artikel
-            </p>
-            <div className="flex items-center text-gray-500">
-              <span className="text-sm font-medium">Segera Hadir</span>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-6 opacity-50">
-            <div className="flex items-center mb-4">
-              <PhotoIcon className="w-8 h-8 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-400 ml-3">
-                Galeri (Coming Soon)
-              </h3>
-            </div>
-            <p className="text-gray-500 mb-4">
-              Kelola galeri dan foto
-            </p>
-            <div className="flex items-center text-gray-500">
-              <span className="text-sm font-medium">Segera Hadir</span>
-            </div>
-          </div>
-
           <div className="bg-gray-800 rounded-lg p-6 opacity-50">
             <div className="flex items-center mb-4">
               <DocumentTextIcon className="w-8 h-8 text-gray-400" />

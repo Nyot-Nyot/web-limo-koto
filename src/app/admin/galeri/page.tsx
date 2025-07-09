@@ -298,8 +298,8 @@ export default function AdminGaleriPage() {
         {/* Gallery Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredItems.map((item) => (
-            <div key={item.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg w-full max-w-sm mx-auto flex flex-col h-[500px]">
-              <div className="relative w-full h-[300px] flex-shrink-0">
+            <div key={item.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg w-full flex flex-col">
+              <div className="relative w-full aspect-[4/3] flex-shrink-0">
                 <Image
                   src={item.image}
                   alt={item.title}
@@ -308,12 +308,12 @@ export default function AdminGaleriPage() {
                   className="w-full h-full"
                 />
               </div>
-              <div className="p-4 flex flex-col h-[200px] overflow-hidden">
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  <h3 className="text-lg font-bold text-yellow-400 mb-1 line-clamp-2 overflow-hidden text-ellipsis">
+              <div className="p-4 flex flex-col flex-1">
+                <div className="flex-1 overflow-hidden">
+                  <h3 className="text-lg font-bold text-yellow-400 line-clamp-2 overflow-hidden text-ellipsis">
                     {item.title}
                   </h3>
-                  <p className="text-base font-semibold text-white mb-1 line-clamp-1 overflow-hidden text-ellipsis">
+                  <p className="text-base font-semibold text-white mb-2 line-clamp-1 overflow-hidden text-ellipsis">
                     {galeriCategories.find(cat => cat.id === item.category)?.name}
                   </p>
                   <p className="text-gray-300 text-xs line-clamp-3 overflow-hidden text-ellipsis">
@@ -427,7 +427,7 @@ export default function AdminGaleriPage() {
                   {imagePreview ? (
                     /* Image Preview with Remove Option */
                     <div className="mb-4">
-                      <div className="relative w-full h-48 bg-gray-700 rounded-lg overflow-hidden">
+                      <div className="relative w-full aspect-[4/3] bg-gray-700 rounded-lg overflow-hidden">
                         <Image
                           src={imagePreview}
                           alt="Preview"
@@ -562,7 +562,7 @@ export default function AdminGaleriPage() {
               
               <div className="mb-6 bg-gray-700 rounded-lg p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="relative w-16 h-16 bg-gray-600 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="relative w-24 bg-gray-600 rounded-lg overflow-hidden flex-shrink-0 aspect-[4/3]">
                     <Image
                       src={itemToDelete.image}
                       alt={itemToDelete.title}
