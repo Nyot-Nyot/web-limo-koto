@@ -120,6 +120,16 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
+              <PhotoIcon className="w-8 h-8 text-yellow-400" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Galeri</p>
+                <p className="text-2xl font-bold text-white">25</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Management Cards */}
@@ -179,6 +189,27 @@ export default function AdminDashboard() {
                 Kelola data jorong, koordinat, fasilitas, dan informasi wilayah
               </p>
               <div className="flex items-center text-purple-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* Kelola Galeri */}
+          <Link href="/admin/galeri">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <PhotoIcon className="w-8 h-8 text-yellow-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Galeri
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola foto galeri nagari dengan berbagai kategori
+              </p>
+              <div className="flex items-center text-yellow-400">
                 <span className="text-sm font-medium">Kelola Sekarang</span>
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
