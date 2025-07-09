@@ -270,6 +270,19 @@ export default function AdminBeritaPage() {
       return;
     }
     
+    // Validasi berita utama - pastikan hanya ada satu berita utama
+    if (formData.isFeatured) {
+      const existingFeaturedNews = newsItems.find(item => 
+        item.isFeatured && (editingItem ? item.id !== editingItem.id : true)
+      );
+      
+      if (existingFeaturedNews) {
+        setValidationError('Berita utama tidak boleh lebih dari satu');
+        setShowErrorPopup(true);
+        return;
+      }
+    }
+    
     if (editingItem) {
       // Update existing
       const updatedData = newsItems.map(item => 
@@ -555,8 +568,11 @@ export default function AdminBeritaPage() {
                 </div>
                 {item.isFeatured && (
                   <div className="absolute top-2 right-2">
-                    <span className="px-2 py-1 bg-yellow-500 text-black text-xs font-semibold rounded-full">
-                      Featured
+                    <span className="px-2 py-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold rounded-full flex items-center space-x-1 shadow-lg animate-pulse">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                      </svg>
+                      <span>Berita Utama</span>
                     </span>
                   </div>
                 )}
@@ -737,17 +753,27 @@ export default function AdminBeritaPage() {
 
 
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isFeatured"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="isFeatured" className="text-sm font-medium text-gray-300">
-                    Jadikan Berita Utama (Featured)
-                  </label>
+                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-700">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="isFeatured" className="text-sm font-medium text-gray-300">
+                      Jadikan Berita Utama (Featured)
+                    </label>
+                    {newsItems.some(item => item.isFeatured && (editingItem ? item.id !== editingItem.id : true)) && (
+                      <span className="ml-2 bg-yellow-600/20 text-yellow-400 text-xs px-2 py-0.5 rounded-md">
+                        Sudah ada berita utama
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-gray-400 italic ml-6">
+                    Berita utama akan ditampilkan paling atas di halaman berita. Hanya boleh ada satu berita utama.
+                  </p>
                 </div>
 
                 <div>
@@ -920,7 +946,7 @@ export default function AdminBeritaPage() {
                           <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path d="M2 10.5a.5.5 0 0 1 .5-.5h3.793L3.146 6.854a.5.5 0 1 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L7.293 11H2.5a.5.5 0 0 1-.5-.5zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-3zm5 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-3z"/>
-                            </svg>
+                        </svg>
                           </div>
                           <p className="text-sm text-white">Paragraf Teks</p>
                         </div>
@@ -981,7 +1007,7 @@ export default function AdminBeritaPage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
                               <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
-                            </svg>
+                        </svg>
                           </div>
                           <p className="text-sm text-white">Masukkan URL gambar (bukan thumbnail)</p>
                         </div>
@@ -1011,7 +1037,7 @@ export default function AdminBeritaPage() {
                           <div className="flex-shrink-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/>
-                            </svg>
+                        </svg>
                           </div>
                           <p className="text-sm text-white">Masukkan URL video (YouTube, dll)</p>
                         </div>
@@ -1038,7 +1064,7 @@ export default function AdminBeritaPage() {
                           <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path fillRule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                            </svg>
+                        </svg>
                           </div>
                           <p className="text-sm text-white">Daftar Item</p>
                         </div>
@@ -1280,14 +1306,20 @@ export default function AdminBeritaPage() {
 
       {/* Error Popup */}
       {showErrorPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
-          <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-red-500">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+          <div className={`bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border ${validationError.includes('Berita utama') ? 'border-yellow-500' : 'border-red-500'} animate-fade-in-up`}>
             <div className="p-6">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
+                <div className={`w-12 h-12 ${validationError.includes('Berita utama') ? 'bg-yellow-600' : 'bg-red-600'} rounded-full flex items-center justify-center flex-shrink-0`}>
+                  {validationError.includes('Berita utama') ? (
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Peringatan!</h3>
@@ -1295,10 +1327,16 @@ export default function AdminBeritaPage() {
                 </div>
               </div>
               
-              <div className="mb-6">
-                <p className="text-red-400 text-sm leading-relaxed">
+              <div className="mb-6 bg-gray-700/50 p-4 rounded-lg">
+                <p className={`${validationError.includes('Berita utama') ? 'text-yellow-400' : 'text-red-400'} text-sm leading-relaxed font-medium`}>
                   {validationError}
                 </p>
+                
+                {validationError.includes('Berita utama') && (
+                  <div className="mt-3 text-gray-300 text-xs">
+                    <p>Sudah ada berita lain yang ditetapkan sebagai berita utama. Mohon nonaktifkan status berita utama pada berita lainnya terlebih dahulu.</p>
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-end">
@@ -1307,7 +1345,7 @@ export default function AdminBeritaPage() {
                     setShowErrorPopup(false);
                     setValidationError('');
                   }}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
+                  className={`px-4 py-2 ${validationError.includes('Berita utama') ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-md transition-colors font-medium`}
                 >
                   Mengerti
                 </button>
