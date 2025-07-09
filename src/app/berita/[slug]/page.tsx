@@ -1,124 +1,113 @@
 "use client";
 import Image from "next/image";
-import { FaEye, FaCalendarAlt, FaUser, FaArrowLeft, FaShare, FaFacebook, FaTwitter, FaWhatsapp, FaTags } from "react-icons/fa";
+import Link from "next/link";
+import { FaEye, FaCalendarAlt, FaUser, FaArrowLeft, FaFacebook, FaTwitter, FaWhatsapp, FaTags } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { mockNewsData, NewsItem, createSlug } from "@/data/newsData";
 
 export default function BeritaDetailPage() {
   const router = useRouter();
   const params = useParams();
-
-  // Mock data untuk berita - dalam implementasi nyata, ini akan diambil dari API berdasarkan slug
-  const newsData: Record<string, any> = {
-    "jam-gadang-bukittinggi": {
-      title: "Jam Gadang Bukittinggi: Ikon Bersejarah yang Memukau Wisatawan",
-      image: "/images/jamgadang.png",
-      author: "Admin Nagari",
-      date: "29 Juni 2025",
-      views: 169,
-      category: "Wisata",
-      tags: ["Wisata", "Bukittinggi", "Sejarah", "Budaya", "Minangkabau"],
-      content: `
-        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-          Jam Gadang adalah menara jam yang menjadi ikon kota Bukittinggi, 
-          Sumatera Barat. Bangunan bersejarah ini tidak hanya berfungsi sebagai 
-          penunjuk waktu, tetapi juga menjadi saksi bisu perjalanan sejarah 
-          kota Bukittinggi yang kaya akan budaya Minangkabau.
-        </p>
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Sejarah dan Arsitektur</h2>
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Dibangun pada masa pemerintahan Hindia Belanda pada tahun 1926, 
-          Jam Gadang memiliki tinggi sekitar 26 meter dan menjadi landmark 
-          utama kota Bukittinggi. Arsitektur bangunan ini menggabungkan 
-          gaya kolonial Belanda dengan sentuhan budaya Minangkabau yang khas.
-        </p>
-
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Yang unik dari Jam Gadang adalah penggunaan angka Romawi IIII 
-          sebagai pengganti IV pada jam 4. Hal ini menjadi ciri khas yang 
-          membedakannya dari jam-jam lainnya di dunia. Konon, hal ini 
-          dilakukan untuk menjaga keseimbangan visual pada muka jam.
-        </p>
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Daya Tarik Wisata</h2>
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Selain sebagai penunjuk waktu, Jam Gadang juga menjadi pusat 
-          berbagai kegiatan masyarakat dan wisatawan. Area sekitar jam 
-          ini sering digunakan untuk acara-acara budaya, festival, dan 
-          perayaan hari-hari besar.
-        </p>
-
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Kawasan Jam Gadang juga dikelilingi oleh berbagai toko souvenir, 
-          restoran, dan pedagang makanan tradisional Minang. Wisatawan 
-          dapat menikmati kuliner khas sambil menikmati pemandangan 
-          menara jam yang megah.
-        </p>
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Tips Berkunjung</h2>
-        <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Waktu terbaik berkunjung adalah sore hari menjelang maghrib untuk menikmati sunset</li>
-          <li>Area parkir tersedia di sekitar lokasi, namun bisa ramai pada akhir pekan</li>
-          <li>Jangan lupa mencoba makanan khas Minang di warung-warung sekitar</li>
-          <li>Bawa kamera untuk mengabadikan momen di landmark bersejarah ini</li>
-        </ul>
-
-        <p className="text-gray-700 mb-6 leading-relaxed">
-          Jam Gadang bukan sekadar bangunan bersejarah, tetapi juga 
-          representasi dari kekayaan budaya dan sejarah Sumatera Barat. 
-          Kehadirannya di tengah kota Bukittinggi terus menjadi magnet 
-          bagi wisatawan domestik maupun mancanegara yang ingin merasakan 
-          nostalgia dan keindahan arsitektur masa lampau.
-        </p>
-      `
-    },
-    "pembangunan-infrastruktur": {
-      title: "Pembangunan Infrastruktur Jalan Menuju Kawasan Wisata",
-      image: null,
-      author: "Tim Humas",
-      date: "25 Juni 2025", 
-      views: 95,
-      category: "Pembangunan",
-      tags: ["Infrastruktur", "Pembangunan", "Wisata", "Jalan"],
-      content: `
-        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-          Pemerintah nagari telah memulai proyek pembangunan infrastruktur jalan 
-          menuju kawasan wisata utama dalam upaya meningkatkan aksesibilitas dan 
-          mendukung pengembangan sektor pariwisata lokal.
-        </p>
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Detail Proyek</h2>
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Proyek pembangunan ini meliputi perbaikan jalan sepanjang 5 kilometer 
-          dengan lebar 6 meter, pemasangan penerangan jalan umum, dan pembangunan 
-          drainase yang memadai untuk mencegah genangan air saat musim hujan.
-        </p>
-
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Anggaran yang dialokasikan untuk proyek ini mencapai Rp 2,5 miliar 
-          yang berasal dari dana desa dan bantuan pemerintah daerah. Proyek 
-          ini diharapkan selesai dalam waktu 6 bulan ke depan.
-        </p>
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Manfaat untuk Masyarakat</h2>
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Pembangunan infrastruktur ini diharapkan dapat meningkatkan jumlah 
-          kunjungan wisatawan, membuka lapangan kerja baru bagi masyarakat lokal, 
-          dan meningkatkan pendapatan ekonomi nagari dari sektor pariwisata.
-        </p>
-
-        <p className="text-gray-700 mb-6 leading-relaxed">
-          Selain itu, akses yang lebih baik juga akan memudahkan masyarakat 
-          dalam melakukan aktivitas sehari-hari dan transportasi hasil pertanian 
-          ke pasar.
-        </p>
-      `
-    }
+  const [news, setNews] = useState<NewsItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    if (!params?.slug) return;
+    
+    // Get data from localStorage if available, otherwise use mock data
+    const loadNewsData = () => {
+      const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+      let newsItems: NewsItem[] = mockNewsData;
+      
+      // Check localStorage for updated news
+      const savedData = localStorage.getItem('newsData');
+      if (savedData) {
+        try {
+          newsItems = JSON.parse(savedData);
+        } catch (error) {
+          console.error('Error parsing news data from localStorage:', error);
+        }
+      }
+      
+      // Find the news item by slug (URL), ID, or title slug
+      const foundNews = newsItems.find(item => 
+        item.href.includes(slug) || 
+        item.id === slug || 
+        createSlug(item.title) === slug
+      );
+      
+      if (foundNews) {
+        setNews(foundNews);
+        
+        // Increment view count and save back to localStorage
+        const updatedNewsItems = newsItems.map(item => 
+          item.id === foundNews.id ? {...item, views: item.views + 1} : item
+        );
+        
+        localStorage.setItem('newsData', JSON.stringify(updatedNewsItems));
+      }
+      
+      setLoading(false);
+    };
+    
+    loadNewsData();
+    
+    // Listen for data update events
+    const handleDataUpdate = (event: CustomEvent) => {
+      if (event.detail?.type === 'berita') {
+        loadNewsData();
+      }
+    };
+    
+    window.addEventListener('dataUpdated', handleDataUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('dataUpdated', handleDataUpdate as EventListener);
+    };
+  }, [params]);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat berita...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!news) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl mb-6">🔍</div>
+          <h1 className="text-2xl font-bold mb-4">Berita Tidak Ditemukan</h1>
+          <p className="text-gray-600 mb-6">Maaf, berita yang Anda cari tidak dapat ditemukan. Berita mungkin telah dihapus atau alamat URL tidak valid.</p>
+          <button 
+            onClick={() => router.push('/berita')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            <FaArrowLeft className="inline mr-2" /> Kembali ke Daftar Berita
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Use the news data directly from the state
+  const currentNews = {
+    title: news.title,
+    image: news.imageSrc || "/images/placeholder-news.jpg",
+    author: "Admin Nagari",
+    date: news.date,
+    views: news.views,
+    category: news.category,
+    tags: news.tags || [news.category],
+    href: news.href, // Pastikan URL berita juga tersedia
   };
-
-  // Get current news data based on slug
-  const currentNews = newsData[params.slug as string] || newsData["jam-gadang-bukittinggi"];
 
   return (
     <div className="relative min-h-screen">
@@ -165,13 +154,13 @@ export default function BeritaDetailPage() {
             {/* Breadcrumb - Glassmorphism */}
             <nav className="mb-6 md:mb-8 p-3 md:p-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-lg">
               <div className="flex items-center text-sm text-gray-300 flex-wrap gap-1">
-                <a href="/" className="hover:text-white transition-colors duration-300 hover:underline">
+                <Link href="/" className="hover:text-white transition-colors duration-300 hover:underline">
                   🏠 Beranda
-                </a>
+                </Link>
                 <span className="mx-2 text-white/60">/</span>
-                <a href="/berita" className="hover:text-white transition-colors duration-300 hover:underline">
+                <Link href="/berita" className="hover:text-white transition-colors duration-300 hover:underline">
                   📰 Berita
-                </a>
+                </Link>
                 <span className="mx-2 text-white/60">/</span>
                 <span className="text-white font-medium truncate">{currentNews.title}</span>
               </div>
@@ -188,15 +177,16 @@ export default function BeritaDetailPage() {
                     width={1200}
                     height={600}
                     className="w-full h-64 md:h-80 lg:h-96 object-cover"
+                    priority // Add priority for better loading performance
                   />
                 ) : (
-                  <div className="w-full h-64 md:h-80 lg:h-96 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                    <span className="text-white text-4xl md:text-5xl lg:text-6xl">🏗️</span>
+                  <div className={`w-full h-64 md:h-80 lg:h-96 ${news.backgroundGradient || 'bg-gradient-to-br from-blue-400 to-blue-600'} flex items-center justify-center`}>
+                    <span className="text-white text-4xl md:text-5xl lg:text-6xl">{news.emoji}</span>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                 <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6">
-                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-xs md:text-sm font-semibold shadow-lg">
+                  <span className={`px-3 md:px-4 py-1.5 md:py-2 ${news.categoryColor || 'bg-blue-600'} text-white rounded-full text-xs md:text-sm font-semibold shadow-lg`}>
                     {currentNews.category}
                   </span>
                 </div>
@@ -230,7 +220,80 @@ export default function BeritaDetailPage() {
 
                 {/* Konten artikel - Optimized for Reading */}
                 <div className="prose prose-lg md:prose-xl max-w-none text-gray-800 leading-relaxed">
-                  <div dangerouslySetInnerHTML={{ __html: currentNews.content }} />
+                  {news.blocks ? (
+                    // Render content based on blocks structure
+                    news.blocks.map((block, index) => {
+                      switch (block.type) {
+                        case 'subheading':
+                          return (
+                            <h2 key={index} className="text-2xl font-bold text-gray-900 mb-4 mt-8">
+                              {block.content}
+                            </h2>
+                          );
+                        case 'text':
+                          return (
+                            <p key={index} className="text-gray-700 mb-4 leading-relaxed">
+                              {block.content}
+                            </p>
+                          );
+                        case 'image':
+                          return (
+                            <figure key={index} className="my-6">
+                              <Image 
+                                src={block.url || '/images/placeholder-news.jpg'} 
+                                alt={block.caption || 'Image'} 
+                                width={800} 
+                                height={500}
+                                className="w-full rounded-lg shadow-lg"
+                              />
+                              {block.caption && (
+                                <figcaption className="text-center text-sm text-gray-500 mt-2">
+                                  {block.caption}
+                                </figcaption>
+                              )}
+                            </figure>
+                          );
+                        case 'video':
+                          return (
+                            <div key={index} className="relative my-6 w-full pt-[56.25%]">
+                              <iframe
+                                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                src={block.url}
+                                title={block.caption || 'Video content'}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              ></iframe>
+                              {block.caption && (
+                                <figcaption className="text-center text-sm text-gray-500 mt-2">
+                                  {block.caption}
+                                </figcaption>
+                              )}
+                            </div>
+                          );
+                        case 'quote':
+                          return (
+                            <blockquote key={index} className="border-l-4 border-blue-500 pl-4 my-6 italic bg-blue-50 p-4 rounded-r-lg">
+                              {block.content}
+                            </blockquote>
+                          );
+                        case 'list':
+                          return (
+                            <ul key={index} className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+                              {block.items?.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          );
+                        default:
+                          return null;
+                      }
+                    })
+                  ) : (
+                    // Default content if no blocks
+                    <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+                      {news.excerpt}
+                    </p>
+                  )}
                 </div>
 
                 {/* Share buttons */}
@@ -278,81 +341,49 @@ export default function BeritaDetailPage() {
                   </h2>
                 </div>
                 
+                {/* Dynamically show related news based on category or tags */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                  <a href="/berita/festival-budaya-2025" className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20">
-                    <div className="w-full h-40 md:h-48 bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center relative">
-                      <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">🎭</span>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                    </div>
-                    <div className="p-4 md:p-6">
-                      <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
-                        Festival Budaya Nagari 2025
-                      </h3>
-                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
-                        Festival budaya tahunan akan diselenggarakan bulan depan dengan berbagai pertunjukan seni tradisional...
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <FaCalendarAlt className="text-blue-400" />
-                          20 Juni 2025
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FaEye className="text-green-400" />
-                          142
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-
-                  <a href="/berita/pembangunan-infrastruktur" className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20">
-                    <div className="w-full h-40 md:h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center relative">
-                      <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">🏗️</span>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                    </div>
-                    <div className="p-4 md:p-6">
-                      <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
-                        Pembangunan Infrastruktur Jalan
-                      </h3>
-                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
-                        Pemerintah nagari mulai melakukan perbaikan infrastruktur jalan untuk mendukung pariwisata...
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <FaCalendarAlt className="text-blue-400" />
-                          25 Juni 2025
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FaEye className="text-green-400" />
-                          95
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-
-                  <a href="/berita/program-pemberdayaan-umkm" className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20">
-                    <div className="w-full h-40 md:h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center relative">
-                      <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">🏪</span>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                    </div>
-                    <div className="p-4 md:p-6">
-                      <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
-                        Program Pemberdayaan UMKM
-                      </h3>
-                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
-                        Program pelatihan dan pendampingan untuk meningkatkan kualitas UMKM di nagari...
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <FaCalendarAlt className="text-blue-400" />
-                          15 Juni 2025
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FaEye className="text-green-400" />
-                          87
-                        </span>
-                      </div>
-                    </div>
-                  </a>
+                  {mockNewsData
+                    .filter(item => 
+                      // Filter related news by same category or shared tags, exclude current news
+                      item.id !== news.id && 
+                      (item.category === news.category || 
+                       (news.tags && item.tags && 
+                        news.tags.some(tag => item.tags?.includes(tag))))
+                    )
+                    .slice(0, 3) // Show max 3 related articles
+                    .map(relatedNews => (
+                      <Link 
+                        key={relatedNews.id}
+                        href={relatedNews.href}
+                        className="bg-white/10 backdrop-blur-lg text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group border border-white/20"
+                      >
+                        <div className="w-full h-40 md:h-48 bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center relative">
+                          <span className="text-white text-4xl md:text-5xl filter drop-shadow-lg">
+                            {relatedNews.emoji}
+                          </span>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                        </div>
+                        <div className="p-4 md:p-6">
+                          <h3 className="font-bold text-lg md:text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
+                            {relatedNews.title}
+                          </h3>
+                          <p className="text-sm text-gray-300 mb-4 line-clamp-3">
+                            {relatedNews.excerpt}
+                          </p>
+                          <div className="flex justify-between items-center text-xs text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <FaCalendarAlt className="text-blue-400" />
+                              {relatedNews.date}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <FaEye className="text-green-400" />
+                              {relatedNews.views}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
                 </div>
               </div>
             </aside>

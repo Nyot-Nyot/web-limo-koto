@@ -1,270 +1,80 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
 
 export default function Galeri() {
   const [activeCategory, setActiveCategory] = useState('makanan');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [imageTransition, setImageTransition] = useState(false);
-  
-  const itemWidth = 320; // 18rem (288px) + gap (32px) = 320px per column
 
-  const categories = [
-    { id: 'makanan', name: 'Makanan Tradisional' },
-    { id: 'budaya', name: 'Budaya & Adat' },
-    { id: 'alam', name: 'Keindahan Alam' },
-    { id: 'arsitektur', name: 'Arsitektur' }
-  ];
+  // Load data from localStorage or use default data
+  useEffect(() => {
+    const savedGallery = localStorage.getItem('galeriData');
+    if (savedGallery) {
+      try {
+        const parsedGallery = JSON.parse(savedGallery);
+        setGalleryItems(parsedGallery);
+      } catch (error) {
+        console.error('Error parsing gallery data:', error);
+        setGalleryItems(galeriData);
+      }
+    } else {
+      setGalleryItems(galeriData);
+    }
 
-  const galleries = {
-    makanan: [
-      { 
-        id: 1, 
-        title: 'Rendang Dagiang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Rendang dagiang adalah masakan tradisional khas Minangkabau yang terbuat dari daging sapi yang dimasak dengan santan dan rempah-rempah pilihan. Proses memasaknya membutuhkan waktu yang lama hingga bumbu meresap sempurna dan daging menjadi empuk.'
-      },
-      { 
-        id: 2, 
-        title: 'Gulai Ikan Bilih', 
-        image: 'https://placehold.co/400x300',
-        description: 'Gulai ikan bilih merupakan hidangan tradisional yang menggunakan ikan bilih segar dari Danau Singkarak. Dimasak dengan kuah santan yang kaya rempah dan memberikan cita rasa yang autentik khas Sumatera Barat.'
-      },
-      { 
-        id: 3, 
-        title: 'Dendeng Batokok', 
-        image: 'https://placehold.co/400x300',
-        description: 'Dendeng batokok adalah daging sapi yang dipukul-pukul hingga tipis kemudian dijemur dan digoreng. Makanan ini memiliki tekstur yang unik dan rasa yang gurih, cocok sebagai lauk atau camilan.'
-      },
-      { 
-        id: 4, 
-        title: 'Kalio Ayam', 
-        image: 'https://placehold.co/400x300',
-        description: 'Kalio ayam adalah masakan ayam dengan bumbu rendang namun dengan kuah yang lebih banyak. Cita rasanya yang kaya dan pedas menjadikannya salah satu makanan favorit masyarakat Minang.'
-      },
-      { 
-        id: 5, 
-        title: 'Sate Padang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Sate Padang memiliki kuah kental berwarna kuning dengan bumbu yang khas. Daging yang digunakan biasanya daging sapi atau kambing yang dipotong kecil dan ditusuk dengan bambu.'
-      },
-      { 
-        id: 6, 
-        title: 'Gulai Tunjang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Gulai tunjang adalah masakan berkuah santan yang menggunakan kikil atau tulang rawan sapi. Teksturnya yang kenyal dan kuah yang gurih membuatnya menjadi favorit.'
-      },
-      { 
-        id: 7, 
-        title: 'Ayam Pop', 
-        image: 'https://placehold.co/400x300',
-        description: 'Ayam Pop adalah ayam goreng khas Padang yang dimasak dengan cara direbus terlebih dahulu dengan bumbu rempah, kemudian digoreng hingga kulitnya menjadi putih kekuningan.'
-      },
-      { 
-        id: 8, 
-        title: 'Gulai Kambing', 
-        image: 'https://placehold.co/400x300',
-        description: 'Gulai kambing dengan kuah santan yang kental dan bumbu yang meresap sempurna. Daging kambing yang empuk dipadukan dengan rempah-rempah tradisional.'
-      },
-      { 
-        id: 9, 
-        title: 'Pical Ayam', 
-        image: 'https://placehold.co/400x300',
-        description: 'Pical ayam adalah ayam yang dimasak dengan bumbu khas Minang, digoreng dengan teknik khusus sehingga menghasilkan rasa yang unik dan menggugah selera.'
-      },
-      { 
-        id: 10, 
-        title: 'Nasi Kapau', 
-        image: 'https://placehold.co/400x300',
-        description: 'Nasi Kapau adalah hidangan nasi dengan berbagai lauk pauk khas Minang yang disajikan dalam piring. Biasanya terdiri dari nasi putih dengan aneka gulai dan lauk.'
-      },
-      { 
-        id: 11, 
-        title: 'Lado Tanak', 
-        image: 'https://placehold.co/400x300',
-        description: 'Lado tanak adalah sambal khas Minang yang dimasak dengan santan dan ikan teri. Rasanya pedas dan gurih, cocok sebagai pelengkap berbagai masakan.'
-      },
-      { 
-        id: 12, 
-        title: 'Gado-gado Padang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Gado-gado Padang berbeda dengan gado-gado Betawi. Sayuran segar dicampur dengan bumbu kacang yang kental dan pedas khas Minang.'
+    // Listen for localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'galeriData' && e.newValue) {
+        try {
+          const parsedGallery = JSON.parse(e.newValue);
+          setGalleryItems(parsedGallery);
+        } catch (error) {
+          console.error('Error parsing updated gallery data:', error);
+        }
       }
-    ],
-    budaya: [
-      { 
-        id: 1, 
-        title: 'Tari Piring', 
-        image: 'https://placehold.co/400x300',
-        description: 'Tari Piring adalah tarian tradisional Minangkabau yang menggunakan piring sebagai properti utama. Tarian ini menggambarkan kegembiraan masyarakat dalam merayakan panen yang melimpah dan kehidupan yang sejahtera.'
-      },
-      { 
-        id: 2, 
-        title: 'Randai', 
-        image: 'https://placehold.co/400x300',
-        description: 'Randai adalah seni pertunjukan tradisional Minangkabau yang memadukan unsur teater, musik, tari, dan silat. Pertunjukan ini biasanya menceritakan kisah-kisah heroik atau pesan moral yang disampaikan secara interaktif.'
-      },
-      { 
-        id: 3, 
-        title: 'Saluang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Saluang adalah alat musik tiup tradisional yang terbuat dari bambu. Suara saluang yang merdu sering mengiringi lagu-lagu daerah Minang dan menciptakan suasana yang romantis dan menyentuh hati.'
-      },
-      { 
-        id: 4, 
-        title: 'Batagak Penghulu', 
-        image: 'https://placehold.co/400x300',
-        description: 'Batagak Penghulu adalah upacara adat pengangkatan penghulu atau pemimpin tradisional dalam masyarakat Minangkabau. Upacara ini penuh dengan ritual dan simbol yang mencerminkan nilai-nilai adat istiadat.'
-      },
-      { 
-        id: 5, 
-        title: 'Tari Indang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Tari Indang adalah tarian yang diiringi dengan rebana dan syair-syair Islami. Tarian ini biasanya dipentaskan pada acara-acara keagamaan dan perayaan tradisional.'
-      },
-      { 
-        id: 6, 
-        title: 'Silek Minang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Silek Minang adalah seni bela diri tradisional Minangkabau yang meniru gerakan-gerakan binatang. Setiap gerakan memiliki filosofi dan makna yang mendalam.'
-      },
-      { 
-        id: 7, 
-        title: 'Talempong', 
-        image: 'https://placehold.co/400x300',
-        description: 'Talempong adalah alat musik tradisional Minang yang terbuat dari perunggu. Dimainkan secara berkelompok dan menghasilkan harmoni yang indah.'
-      },
-      { 
-        id: 8, 
-        title: 'Tari Pasambahan', 
-        image: 'https://placehold.co/400x300',
-        description: 'Tari Pasambahan adalah tarian penyambutan tamu yang sakral dalam budaya Minang. Tarian ini menunjukkan rasa hormat dan penghargaan kepada tamu yang datang.'
-      },
-      { 
-        id: 9, 
-        title: 'Kaba Minang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Kaba adalah cerita rakyat Minang yang dituturkan secara lisan dari generasi ke generasi. Berisi nilai-nilai moral dan sejarah masyarakat Minangkabau.'
-      },
-      { 
-        id: 10, 
-        title: 'Upacara Manyambah', 
-        image: 'https://placehold.co/400x300',
-        description: 'Upacara Manyambah adalah ritual adat untuk menyambut tamu penting atau dalam acara-acara besar. Dilakukan dengan tata cara yang sangat sopan dan penuh makna.'
+    };
+
+    // Listen for custom events (for same-tab updates)
+    const handleCustomUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail.type === 'galeri') {
+        const savedGallery = localStorage.getItem('galeriData');
+        if (savedGallery) {
+          try {
+            const parsedGallery = JSON.parse(savedGallery);
+            setGalleryItems(parsedGallery);
+          } catch (error) {
+            console.error('Error parsing updated gallery data:', error);
+          }
+        }
       }
-    ],
-    alam: [
-      { 
-        id: 1, 
-        title: 'Panorama Bukit', 
-        image: 'https://placehold.co/400x300',
-        description: 'Pemandangan bukit-bukit hijau yang membentang luas menawarkan panorama alam yang memukau. Udara sejuk dan pemandangan yang indah menjadikan tempat ini ideal untuk refreshing dan menikmati keindahan alam.'
-      },
-      { 
-        id: 2, 
-        title: 'Sungai Batang Hari', 
-        image: 'https://placehold.co/400x300',
-        description: 'Sungai Batang Hari merupakan sumber kehidupan bagi masyarakat sekitar. Airnya yang jernih dan aliran yang tenang menciptakan ekosistem yang seimbang dan mendukung berbagai aktivitas masyarakat.'
-      },
-      { 
-        id: 3, 
-        title: 'Sawah Terasering', 
-        image: 'https://placehold.co/400x300',
-        description: 'Sawah terasering menunjukkan kearifan lokal dalam pengelolaan lahan pertanian. Struktur bertingkat ini tidak hanya efisien untuk bercocok tanam, tetapi juga menciptakan pemandangan yang sangat indah.'
-      },
-      { 
-        id: 4, 
-        title: 'Air Terjun Lembah', 
-        image: 'https://placehold.co/400x300',
-        description: 'Air terjun yang tersembunyi di lembah hijau menawarkan kesegaran alami. Suara gemericik air dan udara sejuk menjadikannya tempat yang sempurna untuk melepas penat.'
-      },
-      { 
-        id: 5, 
-        title: 'Hutan Bambu', 
-        image: 'https://placehold.co/400x300',
-        description: 'Hutan bambu yang rindang memberikan suasana tenang dan damai. Cahaya matahari yang menyaring melalui rumpun bambu menciptakan pemandangan yang eksotis.'
-      },
-      { 
-        id: 6, 
-        title: 'Ladang Teh', 
-        image: 'https://placehold.co/400x300',
-        description: 'Perkebunan teh yang hijau membentang di lereng bukit. Pemandangan ini menawarkan keindahan alam yang menyejukkan mata dan jiwa.'
-      },
-      { 
-        id: 7, 
-        title: 'Danau Kecil', 
-        image: 'https://placehold.co/400x300',
-        description: 'Danau kecil yang tenang dikelilingi pepohonan hijau. Permukaan air yang jernih memantulkan langit biru dan awan putih.'
-      },
-      { 
-        id: 8, 
-        title: 'Kebun Kopi', 
-        image: 'https://placehold.co/400x300',
-        description: 'Perkebunan kopi lokal yang dikelola secara tradisional. Aroma kopi yang harum berpadu dengan pemandangan hijau yang menenangkan.'
-      },
-      { 
-        id: 9, 
-        title: 'Lembah Hijau', 
-        image: 'https://placehold.co/400x300',
-        description: 'Lembah yang subur dengan vegetasi yang beragam. Tempat ini menjadi habitat berbagai flora dan fauna lokal yang dilindungi.'
-      }
-    ],
-    arsitektur: [
-      { 
-        id: 1, 
-        title: 'Rumah Gadang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Rumah Gadang adalah rumah adat Minangkabau yang memiliki atap berbentuk tanduk kerbau. Arsitektur unik ini mencerminkan filosofi dan budaya masyarakat Minang yang kaya akan nilai-nilai tradisional.'
-      },
-      { 
-        id: 2, 
-        title: 'Surau Tua', 
-        image: 'https://placehold.co/400x300',
-        description: 'Surau tua merupakan tempat ibadah dan pusat pembelajaran agama Islam yang telah berdiri sejak lama. Bangunan ini menjadi saksi sejarah perkembangan Islam di Nagari Lima Koto.'
-      },
-      { 
-        id: 3, 
-        title: 'Balai Adat', 
-        image: 'https://placehold.co/400x300',
-        description: 'Balai Adat adalah tempat berkumpul dan bermusyawarah masyarakat untuk membahas berbagai urusan adat dan kemasyarakatan. Bangunan ini memiliki nilai historis dan budaya yang tinggi.'
-      },
-      { 
-        id: 4, 
-        title: 'Rangkiang', 
-        image: 'https://placehold.co/400x300',
-        description: 'Rangkiang adalah lumbung padi tradisional Minang yang dibangun di atas tiang kayu. Struktur ini dirancang untuk melindungi padi dari hama dan kelembaban.'
-      },
-      { 
-        id: 5, 
-        title: 'Rumah Bagonjong', 
-        image: 'https://placehold.co/400x300',
-        description: 'Rumah Bagonjong memiliki atap yang menjulang tinggi dengan bentuk yang khas. Rumah ini adalah variasi dari Rumah Gadang dengan fungsi dan makna yang berbeda.'
-      },
-      { 
-        id: 6, 
-        title: 'Jembatan Kayu', 
-        image: 'https://placehold.co/400x300',
-        description: 'Jembatan kayu tradisional yang menghubungkan dua sisi sungai. Konstruksi sederhana namun kuat, menunjukkan kearifan lokal dalam arsitektur.'
-      },
-      { 
-        id: 7, 
-        title: 'Gapura Nagari', 
-        image: 'https://placehold.co/400x300',
-        description: 'Gapura sebagai pintu masuk nagari dengan ornamen khas Minang. Desainnya mencerminkan identitas dan kebanggaan masyarakat setempat.'
-      },
-      { 
-        id: 8, 
-        title: 'Masjid Tradisional', 
-        image: 'https://placehold.co/400x300',
-        description: 'Masjid dengan arsitektur Minang yang khas, memadukan elemen Islam dengan budaya lokal. Bangunan ini menjadi pusat kegiatan keagamaan masyarakat.'
-      }
-    ]
-  };
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('dataUpdated', handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('dataUpdated', handleCustomUpdate);
+    };
+  }, []);
+
+  // Group items by category
+  const galleries = galleryItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+  }, {} as Record<string, GalleryItem[]>);
 
   // Reset selected image when category changes
   useEffect(() => {
@@ -276,7 +86,7 @@ export default function Galeri() {
   }, [activeCategory]);
 
   // Get current gallery
-  const currentGallery = galleries[activeCategory as keyof typeof galleries];
+  const currentGallery = galleries[activeCategory as keyof typeof galleries] || [];
   const selectedItem = selectedImage !== null ? currentGallery[selectedImage] : null;
 
   // Handle image click with animation
@@ -392,7 +202,7 @@ export default function Galeri() {
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-12 px-2">
-          {categories.map((category) => (
+          {galeriCategories.map((category) => (
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
@@ -421,9 +231,11 @@ export default function Galeri() {
                   {/* Image Preview */}
                   <div className="mb-6">
                     <div className="aspect-[4/3] rounded-xl overflow-hidden bg-white/5 border border-white/10 relative shadow-lg">
-                      <img
-                        src={selectedItem?.image}
-                        alt={selectedItem?.title}
+                      <Image
+                        src={selectedItem?.image || 'https://placehold.co/400x300'}
+                        alt={selectedItem?.title || ''}
+                        width={400}
+                        height={300}
                         className="w-full h-full object-cover transition-transform duration-500"
                       />
                     </div>
@@ -435,7 +247,7 @@ export default function Galeri() {
                       {String(selectedImage + 1).padStart(2, '0')}
                     </span>
                     <span className="text-gray-400 ml-2 text-sm">
-                      {categories.find(cat => cat.id === activeCategory)?.name}
+                      {galeriCategories.find(cat => cat.id === activeCategory)?.name}
                     </span>
                   </div>
                   
@@ -487,7 +299,7 @@ export default function Galeri() {
             {/* Album Section Title */}
             <div className="mb-8 px-4">
               <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-                Album Kegiatan {categories.find(cat => cat.id === activeCategory)?.name}
+                Album Kegiatan {galeriCategories.find(cat => cat.id === activeCategory)?.name}
               </h3>
               <div className="w-20 h-1 bg-yellow-400 mb-4"></div>
             </div>
@@ -528,9 +340,11 @@ export default function Galeri() {
                         </div>
                       )}
                       
-                      <img
+                      <Image
                         src={item.image}
                         alt={item.title}
+                        width={400}
+                        height={300}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         loading="lazy"
                         onLoadStart={() => handleImageLoadStart(item.id)}

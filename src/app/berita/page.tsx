@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Header from "@/components/Header";
 import SearchFilter from "@/components/berita/SearchFilter";
 import NewsCard from "@/components/berita/NewsCard";
@@ -8,7 +8,7 @@ import AgendaSidebar from "@/components/berita/AgendaSidebar";
 import Pagination from "@/components/berita/Pagination";
 import SectionHeader from "@/components/berita/SectionHeader";
 import { useNewsFilter } from "@/hooks/useNewsFilter";
-import { mockNewsData, mockAgendaData } from "@/data/newsData";
+import { mockNewsData, mockAgendaData, NewsItem } from "@/data/newsData";
 
 // Constants for better maintainability
 const PAGE_CONFIG = {
@@ -43,7 +43,7 @@ const BackgroundLayer = React.memo(() => (
 BackgroundLayer.displayName = 'BackgroundLayer';
 
 const PageHeader = React.memo(() => (
-  <div className="text-center mb-8 md:mb-12">
+  <div className="text-center mb-8 md:mb-12 mt-8">
     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
       Berita Terkini
     </h1>
@@ -68,6 +68,44 @@ const NoResultsState = React.memo(() => (
 NoResultsState.displayName = 'NoResultsState';
 
 export default function BeritaPage() {
+  const [newsData, setNewsData] = useState<NewsItem[]>(mockNewsData);
+  
+  // Load news data from localStorage or use mock data
+  useEffect(() => {
+    // Check if we're in the browser environment
+    if (typeof window !== 'undefined') {
+      const savedData = localStorage.getItem('newsData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setNewsData(parsedData);
+        } catch (error) {
+          console.error('Error parsing news data from localStorage:', error);
+        }
+      }
+    }
+    
+    // Listen for data update events from admin
+    const handleDataUpdate = (event: CustomEvent) => {
+      if (event.detail?.type === 'berita') {
+        const updatedData = localStorage.getItem('newsData');
+        if (updatedData) {
+          try {
+            setNewsData(JSON.parse(updatedData));
+          } catch (error) {
+            console.error('Error parsing updated news data:', error);
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('dataUpdated', handleDataUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('dataUpdated', handleDataUpdate as EventListener);
+    };
+  }, []);
+
   const {
     searchTerm,
     setSearchTerm,
@@ -80,7 +118,7 @@ export default function BeritaPage() {
     handleSearch,
     handlePageChange,
     hasResults
-  } = useNewsFilter(mockNewsData);
+  } = useNewsFilter(newsData);
 
   // Memoize expensive computations
   const shouldShowPagination = useMemo(() => totalPages > 1, [totalPages]);
