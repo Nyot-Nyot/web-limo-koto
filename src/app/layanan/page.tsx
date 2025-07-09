@@ -38,7 +38,7 @@ export default function LayananPage() {
       <div className="relative z-10 max-w-5xl mx-auto pt-24 px-4 md:px-0">
         <h1
           className="text-4xl font-bold mb-6 text-center"
-          style={{ fontFamily: "'Source Serif 4', serif", fontSize: "3.75rem" }}
+          style={{ fontFamily: "'Poppins', serif", fontSize: "3.75rem" }}
         >
           Layanan Publik
         </h1>
