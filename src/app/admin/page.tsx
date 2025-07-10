@@ -14,9 +14,26 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline';
 
+// Import default data for each module
+import { allPejabat } from '@/data/pejabat';
+import { faqData } from '@/data/faq';
+import { mockNewsData, mockAgendaData } from '@/data/newsData';
+import { defaultJorongData } from '@/data/jorong';
+import { galeriData } from '@/data/galeri';
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
+  
+  // State for data counts
+  const [counts, setCounts] = useState({
+    pejabat: 0,
+    faq: 0,
+    berita: 0,
+    jorong: 0,
+    galeri: 0,
+    agenda: 0
+  });
 
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
@@ -24,6 +41,41 @@ export default function AdminDashboard() {
       router.push('/admin/login');
     } else {
       setIsAuthenticated(true);
+      
+      // Load data counts from localStorage or use default data
+      const pejabatData = localStorage.getItem('pejabatData') ? 
+        JSON.parse(localStorage.getItem('pejabatData')!) : 
+        allPejabat;
+      
+      const faqItems = localStorage.getItem('faqData') ? 
+        JSON.parse(localStorage.getItem('faqData')!) : 
+        faqData;
+      
+      const newsItems = localStorage.getItem('newsData') ? 
+        JSON.parse(localStorage.getItem('newsData')!) : 
+        mockNewsData;
+      
+      const jorongItems = localStorage.getItem('jorongData') ? 
+        JSON.parse(localStorage.getItem('jorongData')!) : 
+        defaultJorongData;
+      
+      const galeriItems = localStorage.getItem('galeriData') ? 
+        JSON.parse(localStorage.getItem('galeriData')!) : 
+        galeriData;
+      
+      const agendaItems = localStorage.getItem('agendaData') ? 
+        JSON.parse(localStorage.getItem('agendaData')!) : 
+        mockAgendaData;
+      
+      // Update counts
+      setCounts({
+        pejabat: pejabatData.length,
+        faq: faqItems.length,
+        berita: newsItems.length,
+        jorong: jorongItems.length,
+        galeri: galeriItems.length,
+        agenda: agendaItems.length
+      });
     }
   }, [router]);
 
@@ -87,7 +139,7 @@ export default function AdminDashboard() {
               <UserGroupIcon className="w-8 h-8 text-blue-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total Pejabat</p>
-                <p className="text-2xl font-bold text-white">12</p>
+                <p className="text-2xl font-bold text-white">{counts.pejabat}</p>
               </div>
             </div>
           </div>
@@ -97,7 +149,7 @@ export default function AdminDashboard() {
               <QuestionMarkCircleIcon className="w-8 h-8 text-green-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total FAQ</p>
-                <p className="text-2xl font-bold text-white">8</p>
+                <p className="text-2xl font-bold text-white">{counts.faq}</p>
               </div>
             </div>
           </div>
@@ -107,7 +159,7 @@ export default function AdminDashboard() {
               <DocumentTextIcon className="w-8 h-8 text-yellow-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total Berita</p>
-                <p className="text-2xl font-bold text-white">15</p>
+                <p className="text-2xl font-bold text-white">{counts.berita}</p>
               </div>
             </div>
           </div>
@@ -117,17 +169,27 @@ export default function AdminDashboard() {
               <MapPinIcon className="w-8 h-8 text-purple-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total Jorong</p>
-                <p className="text-2xl font-bold text-white">8</p>
+                <p className="text-2xl font-bold text-white">{counts.jorong}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center">
-              <PhotoIcon className="w-8 h-8 text-yellow-400" />
+              <PhotoIcon className="w-8 h-8 text-pink-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total Galeri</p>
-                <p className="text-2xl font-bold text-white">25</p>
+                <p className="text-2xl font-bold text-white">{counts.galeri}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
+              <CalendarIcon className="w-8 h-8 text-cyan-400" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Agenda</p>
+                <p className="text-2xl font-bold text-white">{counts.agenda}</p>
               </div>
             </div>
           </div>
@@ -202,7 +264,7 @@ export default function AdminDashboard() {
           <Link href="/admin/galeri">
             <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
               <div className="flex items-center mb-4">
-                <PhotoIcon className="w-8 h-8 text-yellow-400" />
+                <PhotoIcon className="w-8 h-8 text-pink-400" />
                 <h3 className="text-xl font-semibold text-white ml-3">
                   Kelola Galeri
                 </h3>
@@ -210,7 +272,7 @@ export default function AdminDashboard() {
               <p className="text-gray-400 mb-4">
                 Kelola foto galeri nagari dengan berbagai kategori
               </p>
-              <div className="flex items-center text-yellow-400">
+              <div className="flex items-center text-pink-400">
                 <span className="text-sm font-medium">Kelola Sekarang</span>
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -244,7 +306,7 @@ export default function AdminDashboard() {
           <Link href="/admin/agenda">
             <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
               <div className="flex items-center mb-4">
-                <CalendarIcon className="w-8 h-8 text-green-400" />
+                <CalendarIcon className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-semibold text-white ml-3">
                   Kelola Agenda
                 </h3>
@@ -252,7 +314,7 @@ export default function AdminDashboard() {
               <p className="text-gray-400 mb-4">
                 Kelola agenda terkini, kegiatan, dan jadwal acara nagari
               </p>
-              <div className="flex items-center text-green-400">
+              <div className="flex items-center text-cyan-400">
                 <span className="text-sm font-medium">Kelola Sekarang</span>
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
