@@ -1,6 +1,8 @@
 'use client';
 
-export default function AdatIstiadat() {
+import { memo } from 'react';
+
+const AdatIstiadat = memo(() => {
   const adatCategories = [
     {
       title: 'Sistem Pemerintahan Adat',
@@ -55,7 +57,7 @@ export default function AdatIstiadat() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-24">
+    <div className="flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -155,7 +157,7 @@ export default function AdatIstiadat() {
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-600 to-red-600 shadow-2xl">
               <img 
-                src="https://via.placeholder.com/600x450/DC2626/000000?text=Rumah+Gadang" 
+                src="https://placehold.co/600x450" 
                 alt="Adat Istiadat Nagari Lima Koto"
                 className="w-full h-full object-cover"
               />
@@ -168,4 +170,8 @@ export default function AdatIstiadat() {
       </div>
     </div>
   );
-}
+});
+
+AdatIstiadat.displayName = 'AdatIstiadat';
+
+export default AdatIstiadat;

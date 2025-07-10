@@ -15,52 +15,39 @@ export default function MobileSidebar({ activeSection, onSectionChange }: Mobile
   ];
 
   return (
-    <div className="md:hidden fixed left-0 top-1/2 transform -translate-y-1/2 z-[100]">
+    <div className="md:hidden fixed left-2 top-1/2 transform -translate-y-1/2 z-[100]">
       <div className="flex flex-col space-y-1">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => onSectionChange(section.id)}
-            className={`group relative flex items-center ${
-              activeSection === section.id
-                ? 'text-white'
-                : 'text-white/60 hover:text-white/80'
-            } transition-all duration-300`}
-          >
-            {/* Red line indicator */}
-            <div
-              className={`w-1 h-8 transition-all duration-300 ${
-                activeSection === section.id
-                  ? 'bg-red-500'
+        {sections.map((section, index) => {
+          const isActive = activeSection === section.id;
+          
+          return (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className={`group relative flex items-center ${
+                isActive 
+                  ? 'text-white' 
+                  : 'text-white/60 hover:text-white/80'
+              } transition-all duration-300`}
+            >
+              {/* Yellow line indicator */}
+              <div className={`w-1 h-6 transition-all duration-300 ${
+                isActive 
+                  ? 'bg-yellow-400' 
                   : 'bg-white/20 group-hover:bg-white/40'
-              }`}
-            />
-            
-            {/* Section number */}
-            <div className="ml-2 flex flex-col justify-center min-w-[40px]">
-              <span
-                className={`text-lg font-bold transition-all duration-300 ${
-                  activeSection === section.id
-                    ? 'text-white'
-                    : 'text-white/40 group-hover:text-white'
-                }`}
-              >
-                {section.id}
-              </span>
-              {section.label && (
-                <span
-                  className={`text-xs uppercase tracking-wider transition-all duration-300 ${
-                    activeSection === section.id
-                      ? 'text-white'
-                      : 'text-white/60'
-                  }`}
-                >
-                  {section.label}
+              }`} />
+              
+              {/* Section number */}
+              <div className="ml-2 flex flex-col justify-center min-w-[25px]">
+                <span className={`text-xs font-bold transition-all duration-300 ${
+                  isActive ? 'text-white' : 'text-white/40'
+                }`}>
+                  {`0${index + 1}`}
                 </span>
-              )}
-            </div>
-          </button>
-        ))}
+              </div>
+            </a>
+          );
+        })}
       </div>
     </div>
   );
