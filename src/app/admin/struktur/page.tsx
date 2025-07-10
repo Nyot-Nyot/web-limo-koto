@@ -1,4 +1,4 @@
-  'use client';
+'use client';
 
   import { useEffect, useState } from 'react';
   import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@
     ArrowLeftIcon,
     PhotoIcon
   } from '@heroicons/react/24/outline';
+  import NotificationModal from '@/components/admin/NotificationModal';
 
   interface PejabatData {
     id: number;
@@ -38,6 +39,8 @@
     const [pejabatData, setPejabatData] = useState<PejabatData[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPejabat, setEditingPejabat] = useState<PejabatData | null>(null);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [pejabatToDelete, setPejabatToDelete] = useState<number | null>(null);
     const [formData, setFormData] = useState({
       name: '',
       title: '',
@@ -49,6 +52,15 @@
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [validationError, setValidationError] = useState<string>('');
     const [showErrorPopup, setShowErrorPopup] = useState(false);
+    const [notification, setNotification] = useState<{
+      show: boolean;
+      type: 'success' | 'error';
+      message: string;
+    }>({
+      show: false,
+      type: 'success',
+      message: ''
+    });
     const router = useRouter();
 
     // Handle file upload
@@ -90,6 +102,11 @@
       if (file) {
         handleFileUpload(file);
       }
+    };
+    
+    const showNotification = (type: 'success' | 'error', message: string) => {
+      setNotification({ show: true, type, message });
+      setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
     };
 
     // Validate unique positions
@@ -178,6 +195,7 @@
         localStorage.setItem('pejabatData', JSON.stringify(updatedData));
         // Dispatch custom event to notify other components
         window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
+        showNotification('success', 'Data pejabat berhasil diperbarui!');
       } else {
         // Add new
         const newPejabat = {
@@ -189,6 +207,7 @@
         localStorage.setItem('pejabatData', JSON.stringify(updatedData));
         // Dispatch custom event to notify other components
         window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
+        showNotification('success', 'Data pejabat berhasil ditambahkan!');
       }
       
       setIsModalOpen(false);
@@ -211,15 +230,7 @@
       setIsModalOpen(true);
     };
 
-    const handleDelete = (id: number) => {
-      if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-        const updatedData = pejabatData.filter(p => p.id !== id);
-        setPejabatData(updatedData);
-        localStorage.setItem('pejabatData', JSON.stringify(updatedData));
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
-      }
-    };
+    // Removed duplicate handleDelete - we're using openDeleteModal in the UI
 
     const openAddModal = () => {
       setEditingPejabat(null);
@@ -227,6 +238,24 @@
       setImagePreview(null);
       setValidationError('');
       setIsModalOpen(true);
+    };
+
+    const openDeleteModal = (id: number) => {
+      setPejabatToDelete(id);
+      setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = () => {
+      if (pejabatToDelete !== null) {
+        const updatedData = pejabatData.filter(p => p.id !== pejabatToDelete);
+        setPejabatData(updatedData);
+        localStorage.setItem('pejabatData', JSON.stringify(updatedData));
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
+        showNotification('success', 'Data pejabat berhasil dihapus!');
+      }
+      setDeleteModalOpen(false);
+      setPejabatToDelete(null);
     };
 
     if (!isAuthenticated) {
@@ -307,7 +336,7 @@
                       <span>Edit</span>
                     </button>
                     <button
-                      onClick={() => handleDelete(pejabat.id)}
+                      onClick={() => openDeleteModal(pejabat.id)}
                       className="flex items-center space-x-1 px-2 py-1 bg-red-600 hover:bg-red-700 rounded-md transition-colors text-xs flex-shrink-0"
                     >
                       <TrashIcon className="w-3 h-3" />
@@ -487,6 +516,65 @@
           </div>
         )}
 
+        {/* Delete Confirmation Modal */}
+        {deleteModalOpen && pejabatToDelete !== null && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+            <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-yellow-500">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Konfirmasi Hapus</h3>
+                    <p className="text-sm text-gray-300">Apakah Anda yakin ingin menghapus data pejabat ini?</p>
+                  </div>
+                </div>
+                
+                {pejabatData.find(p => p.id === pejabatToDelete) && (
+                  <div className="mb-6 bg-gray-700 rounded-lg p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative w-24 bg-gray-600 rounded-lg overflow-hidden flex-shrink-0 aspect-[4/3]">
+                        <Image
+                          src={pejabatData.find(p => p.id === pejabatToDelete)?.image || ''}
+                          alt={pejabatData.find(p => p.id === pejabatToDelete)?.name || ''}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-semibold truncate">{pejabatData.find(p => p.id === pejabatToDelete)?.name}</h4>
+                        <p className="text-gray-400 text-sm">
+                          {pejabatData.find(p => p.id === pejabatToDelete)?.title}
+                          {pejabatData.find(p => p.id === pejabatToDelete)?.jorong && ` - ${pejabatData.find(p => p.id === pejabatToDelete)?.jorong}`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setDeleteModalOpen(false)}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors font-medium"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Popup */}
         {showErrorPopup && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
@@ -525,6 +613,14 @@
             </div>
           </div>
         )}
+
+        {/* Success/Error Notification Modal */}
+        <NotificationModal 
+          show={notification.show}
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+        />
       </div>
     );
   }

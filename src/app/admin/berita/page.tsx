@@ -13,6 +13,7 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline';
 import { mockNewsData, NewsItem } from '@/data/newsData';
+import NotificationModal from '@/components/admin/NotificationModal';
 
 
 
@@ -48,6 +49,20 @@ export default function AdminBeritaPage() {
   const [currentBlockType, setCurrentBlockType] = useState<'subheading' | 'text' | 'image' | 'video' | 'quote' | 'list'>('text');
   const [currentBlockContent, setCurrentBlockContent] = useState('');
   const [currentBlockUrl, setCurrentBlockUrl] = useState('');
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+  }>({
+    show: false,
+    type: 'success',
+    message: ''
+  });
+  
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ show: true, type, message });
+    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+  };
   const [currentBlockCaption, setCurrentBlockCaption] = useState('');
   const [currentListItems, setCurrentListItems] = useState<string[]>([]);
   const [currentListItemInput, setCurrentListItemInput] = useState('');
@@ -310,6 +325,7 @@ export default function AdminBeritaPage() {
       localStorage.setItem('newsData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+      showNotification('success', 'Berita berhasil diperbarui!');
     } else {
       // Add new
       const newItem: NewsItem = {
@@ -332,6 +348,7 @@ export default function AdminBeritaPage() {
       localStorage.setItem('newsData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+      showNotification('success', 'Berita berhasil ditambahkan!');
     }
     
     setIsModalOpen(false);
@@ -397,6 +414,7 @@ export default function AdminBeritaPage() {
       localStorage.setItem('newsData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+      showNotification('success', 'Berita berhasil dihapus!');
     }
     setShowDeleteConfirm(false);
     setItemToDelete(null);
@@ -1413,6 +1431,14 @@ export default function AdminBeritaPage() {
           </div>
         </div>
       )}
+      
+      {/* Success/Error Notification Modal */}
+      <NotificationModal 
+        show={notification.show}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+      />
     </div>
   );
 }

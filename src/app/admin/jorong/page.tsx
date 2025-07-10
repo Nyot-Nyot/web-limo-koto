@@ -37,6 +37,8 @@ export default function KelolJorong() {
     type: 'success',
     message: ''
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [jorongToDelete, setJorongToDelete] = useState<JorongData | null>(null);
   const router = useRouter();
 
   // Authentication check
@@ -173,12 +175,27 @@ export default function KelolJorong() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus data jorong ini?')) {
-      const updatedData = jorongData.filter(j => j.id !== id);
+    const jorong = jorongData.find(j => j.id === id);
+    if (jorong) {
+      setJorongToDelete(jorong);
+      setShowDeleteConfirm(true);
+    }
+  };
+  
+  const confirmDelete = () => {
+    if (jorongToDelete) {
+      const updatedData = jorongData.filter(j => j.id !== jorongToDelete.id);
       setJorongData(updatedData);
       updateJorongData(updatedData);
       showNotification('success', 'Data jorong berhasil dihapus!');
+      setShowDeleteConfirm(false);
+      setJorongToDelete(null);
     }
+  };
+  
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setJorongToDelete(null);
   };
 
   if (!isAuthenticated) {
@@ -524,6 +541,59 @@ export default function KelolJorong() {
                 >
                   OK
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && jorongToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+            <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-yellow-500">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Konfirmasi Hapus</h3>
+                    <p className="text-sm text-gray-300">Apakah Anda yakin ingin menghapus jorong ini?</p>
+                  </div>
+                </div>
+                
+                <div className="mb-6 bg-gray-700 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: jorongToDelete.color || '#EC4899' }}>
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-semibold truncate">{jorongToDelete.name}</h4>
+                      <p className="text-gray-400 text-sm">
+                        {jorongToDelete.population} Penduduk | {jorongToDelete.area}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors font-medium"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -13,6 +13,7 @@ import {
   MapPinIcon
 } from '@heroicons/react/24/outline';
 import { mockAgendaData, AgendaItem } from '@/data/newsData';
+import NotificationModal from '@/components/admin/NotificationModal';
 
 export default function AdminAgendaPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,7 +32,21 @@ export default function AdminAgendaPage() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AgendaItem | null>(null);
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+  }>({
+    show: false,
+    type: 'success',
+    message: ''
+  });
   const router = useRouter();
+  
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ show: true, type, message });
+    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+  };
 
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
@@ -86,6 +101,7 @@ export default function AdminAgendaPage() {
       localStorage.setItem('agendaData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
+      showNotification('success', 'Agenda berhasil diperbarui!');
     } else {
       // Add new
       const newItem: AgendaItem = {
@@ -97,6 +113,7 @@ export default function AdminAgendaPage() {
       localStorage.setItem('agendaData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
+      showNotification('success', 'Agenda berhasil ditambahkan!');
     }
     
     setIsModalOpen(false);
@@ -139,6 +156,7 @@ export default function AdminAgendaPage() {
       localStorage.setItem('agendaData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
+      showNotification('success', 'Agenda berhasil dihapus!');
     }
     setShowDeleteConfirm(false);
     setItemToDelete(null);
@@ -482,21 +500,33 @@ export default function AdminAgendaPage() {
       {/* Delete Confirmation */}
       {showDeleteConfirm && itemToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
-          <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-red-500">
+          <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-yellow-500">
             <div className="p-6">
-              <div className="flex items-start space-x-3 mb-4">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <TrashIcon className="w-6 h-6 text-white" />
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Konfirmasi Hapus</h3>
-                  <p className="text-sm text-gray-300 mt-1">
-                    Anda yakin ingin menghapus agenda ini?
-                  </p>
-                  <div className="mt-3 p-3 bg-gray-700 rounded-md">
-                    <p className="text-white font-medium">{itemToDelete.title}</p>
-                    <p className="text-sm text-gray-400 mt-1">Penyelenggara: {itemToDelete.organizer}</p>
-                    <p className="text-sm text-gray-400">Tanggal: {itemToDelete.date}</p>
+                  <p className="text-sm text-gray-300">Apakah Anda yakin ingin menghapus agenda ini?</p>
+                </div>
+              </div>
+              
+              <div className="mb-6 bg-gray-700 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-semibold truncate">{itemToDelete.title}</h4>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Penyelenggara: {itemToDelete.organizer}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Tanggal: {itemToDelete.date} | Waktu: {itemToDelete.time}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Lokasi: {itemToDelete.location}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -504,7 +534,7 @@ export default function AdminAgendaPage() {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={cancelDelete}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition-colors font-medium"
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors font-medium"
                 >
                   Batal
                 </button>
@@ -519,6 +549,14 @@ export default function AdminAgendaPage() {
           </div>
         </div>
       )}
+      
+      {/* Success/Error Notification Modal */}
+      <NotificationModal 
+        show={notification.show}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+      />
     </div>
   );
 }
