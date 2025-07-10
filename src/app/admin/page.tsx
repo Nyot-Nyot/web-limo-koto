@@ -10,7 +10,8 @@ import {
   HomeIcon,
   DocumentTextIcon,
   PhotoIcon,
-  MapPinIcon
+  MapPinIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 
 export default function AdminDashboard() {
@@ -231,6 +232,27 @@ export default function AdminDashboard() {
                 Kelola berita, artikel, dan informasi terkini nagari
               </p>
               <div className="flex items-center text-blue-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* Kelola Agenda */}
+          <Link href="/admin/agenda">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <CalendarIcon className="w-8 h-8 text-green-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Agenda
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola agenda terkini, kegiatan, dan jadwal acara nagari
+              </p>
+              <div className="flex items-center text-green-400">
                 <span className="text-sm font-medium">Kelola Sekarang</span>
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
