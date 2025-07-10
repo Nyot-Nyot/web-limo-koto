@@ -1,49 +1,24 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import Header from "@/components/Header";
-import Domisili from "@/components/layanan/domisili";
-import SKTM from "@/components/layanan/sktm";
-import Usaha from "@/components/layanan/usaha";
-import PengantarNikah from "@/components/layanan/pengantar_nikah";
-import SuratKematian from "@/components/layanan/surat_kematian";
-import KartuKeluarga from "@/components/layanan/kartu_keluarga";
 
 const layananList = [
-  {
-    id: "domisili",
-    title: "Surat Keterangan Domisili",
-    component: <Domisili />,
-  },
-  {
-    id: "sktm",
-    title: "Surat Keterangan Tidak Mampu (SKTM)",
-    component: <SKTM />,
-  },
-  { id: "usaha", title: "Surat Keterangan Usaha", component: <Usaha /> },
-  {
-    id: "pengantar_nikah",
-    title: "Surat Pengantar Nikah",
-    component: <PengantarNikah />,
-  },
-  {
-    id: "surat_kematian",
-    title: "Surat Keterangan Kematian",
-    component: <SuratKematian />,
-  },
-  {
-    id: "kartu_keluarga",
-    title: "Kartu Keluarga",
-    component: <KartuKeluarga />,
-  },
+  { id: "domisili", title: "Surat Keterangan Domisili" },
+  { id: "sktm", title: "Surat Keterangan Tidak Mampu (SKTM)" },
+  { id: "usaha", title: "Surat Keterangan Usaha" },
+  { id: "pengantar_nikah", title: "Surat Pengantar Nikah" },
+  { id: "surat_kematian", title: "Surat Keterangan Kematian" },
+  { id: "surat_cerai", title: "Surat Cerai" },
 ];
 
 export default function LayananPage() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState("");
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
-    if (!activeSection) return;
     const section = sectionRefs.current[activeSection];
     if (section) {
       section.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -52,28 +27,32 @@ export default function LayananPage() {
 
   return (
     <div className="relative min-h-screen text-white pb-12 overflow-x-hidden">
-      {/* Fixed Background */}
+      {/* Background overlay sama seperti profil */}
       <div 
-        className="fixed inset-0 bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat bg-fixed"
-        style={{ zIndex: -2 }}
+        className="fixed inset-0 z-0"
+        style={{
+          background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('/images/Rectangle.png') center/cover`,
+        }}
       />
-      
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/70" style={{ zIndex: -1 }} />
-      
       <Header />
       <div className="relative z-10 max-w-5xl mx-auto pt-24 px-4 md:px-0">
         <h1
           className="text-4xl font-bold mb-6 text-center"
-          style={{ fontFamily: "Source Serif 4, serif" }}
+          style={{ fontFamily: "'Poppins', serif", fontSize: "3.75rem" }}
         >
           Layanan Publik
         </h1>
-        <p className="text-sm text-gray-300 text-center mb-4">
+        <p
+          className="text-sm text-gray-300 text-center mb-4"
+          style={{ fontFamily: "'Poppins', serif" }}
+        >
           Kantor Wali Nagari, Nagari Limo Koto
         </p>
         <div className="flex justify-center mb-10">
-          <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-full px-6 py-2 text-xs font-semibold shadow-2xl">
+          <span
+            className="bg-white/80 text-gray-900 rounded-full px-6 py-2 text-xs font-semibold shadow"
+            style={{ fontFamily: "'Poppins', serif" }}
+          >
             Senin-Jumat 08:00 - 12:00 & 13:30 - 16:00 WIB
           </span>
         </div>
@@ -81,15 +60,15 @@ export default function LayananPage() {
           {layananList.map((layanan) => (
             <button
               key={layanan.id}
-              onClick={() => setActiveSection(layanan.id)}
-              className={`group w-full bg-white/10 backdrop-blur-sm hover:bg-yellow-400/20 hover:text-white text-white rounded-2xl p-4 shadow-2xl flex flex-col items-start transition-all duration-300 border border-white/10`}
+              onClick={() => router.push(`/layanan/${layanan.id}`)}
+              className="group w-full bg-white/80 backdrop-blur-md hover:bg-yellow-400/80 hover:text-gray-900 text-gray-900 rounded-xl p-4 shadow flex flex-col items-start transition-all duration-300 border border-gray-200"
               style={{ minHeight: 140, textAlign: "left" }}
             >
-              <h3 className="text-base font-bold mb-2 group-hover:text-yellow-300 transition-colors duration-300">
+              <h3 className="text-base font-bold mb-2 group-hover:text-black transition-colors duration-300">
                 {layanan.title}
               </h3>
-              <div className="w-full h-[2px] bg-white group-hover:bg-yellow-400 mb-3 mt-1 rounded transition-colors duration-300"></div>
-              <ul className="text-xs list-disc pl-4 space-y-1 transition-colors duration-300 group-hover:text-gray-200 text-gray-300">
+              <div className="w-full h-[2px] bg-black group-hover:bg-black mb-3 mt-1 rounded transition-colors duration-300"></div>
+              <ul className="text-xs list-disc pl-4 space-y-1 transition-colors duration-300 group-hover:text-black">
                 {layanan.id === "domisili" && (
                   <>
                     <li>FC KK dan KTP</li>
@@ -133,21 +112,6 @@ export default function LayananPage() {
           ))}
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/10">
-          {layananList.map((layanan) => (
-            <div
-              key={layanan.id}
-              ref={(el) => {
-                sectionRefs.current[layanan.id] = el;
-              }}
-              style={{
-                display: activeSection === layanan.id ? "block" : "none",
-              }}
-            >
-              {layanan.component}
-            </div>
-          ))}
-        </div>
         {/* Kartu Kontak & Ulasan */}
         <div className="mt-16 flex flex-col items-center w-full">
           <div className="flex flex-col md:flex-row gap-6 w-full justify-center mb-6">
