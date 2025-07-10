@@ -43,10 +43,6 @@ export interface AgendaItem {
   location: string;
   date: string;
   time: string;
-  emoji: string;
-  gradientClass: string;
-  borderClass: string;
-  dateColorClass: string;
 }
 
 export const mockNewsData: NewsItem[] = [
@@ -611,11 +607,7 @@ export const mockAgendaData: AgendaItem[] = [
     organizer: "KKN UNP 2025",
     location: "Lantai 2 Kantor Wali Nagari",
     date: "25 Juli 2025",
-    time: "08:00 - 12:00",
-    emoji: "📋",
-    gradientClass: "bg-gradient-to-br from-white to-blue-50",
-    borderClass: "border border-blue-100",
-    dateColorClass: "text-blue-600 bg-blue-100"
+    time: "08:00 - 12:00"
   },
   {
     id: "2",
@@ -623,11 +615,7 @@ export const mockAgendaData: AgendaItem[] = [
     organizer: "Badan Permusyawaratan Desa",
     location: "Balai Nagari",
     date: "22 Juli 2025",
-    time: "09:00 - 11:30",
-    emoji: "🏛️",
-    gradientClass: "bg-gradient-to-br from-white to-purple-50",
-    borderClass: "border border-purple-100",
-    dateColorClass: "text-purple-600 bg-purple-100"
+    time: "09:00 - 11:30"
   },
   {
     id: "3",
@@ -635,11 +623,7 @@ export const mockAgendaData: AgendaItem[] = [
     organizer: "Puskesmas Nagari",
     location: "Lapangan Nagari",
     date: "20 Juli 2025",
-    time: "14:00 - 16:00",
-    emoji: "🏥",
-    gradientClass: "bg-gradient-to-br from-white to-green-50",
-    borderClass: "border border-green-100",
-    dateColorClass: "text-green-600 bg-green-100"
+    time: "14:00 - 16:00"
   },
   {
     id: "4",
@@ -647,11 +631,7 @@ export const mockAgendaData: AgendaItem[] = [
     organizer: "Dinas Koperasi & UMKM",
     location: "Gedung Serbaguna",
     date: "18 Juli 2025",
-    time: "08:30 - 15:00",
-    emoji: "💼",
-    gradientClass: "bg-gradient-to-br from-white to-orange-50",
-    borderClass: "border border-orange-100",
-    dateColorClass: "text-orange-600 bg-orange-100"
+    time: "08:30 - 15:00"
   },
   {
     id: "5",
@@ -659,11 +639,7 @@ export const mockAgendaData: AgendaItem[] = [
     organizer: "Pemerintah Nagari",
     location: "Kantor Wali Nagari",
     date: "15 Juli 2025",
-    time: "19:30 - 21:00",
-    emoji: "🗣️",
-    gradientClass: "bg-gradient-to-br from-white to-red-50",
-    borderClass: "border border-red-100",
-    dateColorClass: "text-red-600 bg-red-100"
+    time: "19:30 - 21:00"
   },
   {
     id: "6",
@@ -671,10 +647,6 @@ export const mockAgendaData: AgendaItem[] = [
     organizer: "Sanggar Seni Nagari",
     location: "Panggung Terbuka",
     date: "12 Juli 2025",
-    time: "16:00 - 22:00",
-    emoji: "🎨",
-    gradientClass: "bg-gradient-to-br from-white to-pink-50",
-    borderClass: "border border-pink-100",
-    dateColorClass: "text-pink-600 bg-pink-100"
+    time: "16:00 - 22:00"
   }
 ];

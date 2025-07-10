@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
+import NotificationModal from '@/components/admin/NotificationModal';
 
 interface FAQData {
   id: number;
@@ -33,12 +34,28 @@ export default function FAQAdmin() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQData | null>(null);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [faqToDelete, setFaqToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     question: '',
     answer: '',
     category: ''
   });
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+  }>({
+    show: false,
+    type: 'success',
+    message: ''
+  });
   const router = useRouter();
+  
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ show: true, type, message });
+    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+  };
 
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
@@ -86,6 +103,7 @@ export default function FAQAdmin() {
       localStorage.setItem('faqData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'faq' } }));
+      showNotification('success', 'Data FAQ berhasil diperbarui!');
     } else {
       // Add new
       const newFAQ = {
@@ -97,6 +115,7 @@ export default function FAQAdmin() {
       localStorage.setItem('faqData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'faq' } }));
+      showNotification('success', 'Data FAQ berhasil ditambahkan!');
     }
     
     setIsModalOpen(false);
@@ -115,13 +134,21 @@ export default function FAQAdmin() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Apakah Anda yakin ingin menghapus FAQ ini?')) {
-      const updatedData = faqData.filter(f => f.id !== id);
+    setFaqToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (faqToDelete !== null) {
+      const updatedData = faqData.filter(f => f.id !== faqToDelete);
       setFaqData(updatedData);
       localStorage.setItem('faqData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'faq' } }));
+      showNotification('success', 'Data FAQ berhasil dihapus!');
     }
+    setDeleteModalOpen(false);
+    setFaqToDelete(null);
   };
 
   const openAddModal = () => {
@@ -320,6 +347,66 @@ export default function FAQAdmin() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && faqToDelete !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+          <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-yellow-500">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Konfirmasi Hapus</h3>
+                  <p className="text-sm text-gray-300">Apakah Anda yakin ingin menghapus FAQ ini?</p>
+                </div>
+              </div>
+              
+              {faqData.find(f => f.id === faqToDelete) && (
+                <div className="mb-6 bg-gray-700 rounded-lg p-4">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="inline-block px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs font-medium rounded-full mb-2">
+                        {faqData.find(f => f.id === faqToDelete)?.category}
+                      </span>
+                    </div>
+                    <h4 className="text-white font-semibold">{faqData.find(f => f.id === faqToDelete)?.question}</h4>
+                    <p className="text-gray-400 text-sm line-clamp-3">
+                      {faqData.find(f => f.id === faqToDelete)?.answer}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setDeleteModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors font-medium"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Error Notification Modal */}
+      <NotificationModal 
+        show={notification.show}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+      />
     </div>
   );
 }

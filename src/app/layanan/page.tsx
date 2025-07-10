@@ -31,7 +31,7 @@ export default function LayananPage() {
       <div 
         className="fixed inset-0 z-0"
         style={{
-          background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('/images/Rectangle.png') center/cover`,
+          background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('/images/background.png') center/cover`,
         }}
       />
       <Header />

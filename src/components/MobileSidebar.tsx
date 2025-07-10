@@ -1,76 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+interface MobileSidebarProps {
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+}
 
-export default function MobileSidebar() {
-  const sections = useMemo(() => [
-    { id: 'beranda', label: 'BERANDA' },
-    { id: 'fitur', label: 'FITUR-FITUR' },
-    { id: 'struktur', label: 'STRUKTUR' },
-    { id: 'berita', label: 'BERITA' },
-    { id: 'faq', label: 'FAQ' },
-  ], []);
-
-  const [activeSection, setActiveSection] = useState('beranda');
-
-  useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: '-20% 0px',
-      threshold: 0.3,
-    };
-
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      const visibleEntries = entries.filter(entry => entry.isIntersecting);
-      if (visibleEntries.length > 0) {
-        const mostVisibleEntry = visibleEntries.reduce((prev, current) => 
-          prev.intersectionRatio > current.intersectionRatio ? prev : current
-        );
-        setActiveSection(mostVisibleEntry.target.id);
-      }
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    
-    sections.forEach(section => {
-      const element = document.getElementById(section.id);
-      if (element) {
-        observer.observe(element);
-      } else {
-        console.warn(`Element with id ${section.id} not found`);
-      }
-    });
-
-    const handleScroll = () => {
-      if (document.visibilityState === 'visible') {
-        sections.forEach(section => {
-          const element = document.getElementById(section.id);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-            const visiblePercentage = 
-              Math.min(windowHeight, rect.bottom) - 
-              Math.max(0, rect.top);
-            
-            if (visiblePercentage > windowHeight * 0.4) {
-              setActiveSection(section.id);
-            }
-          }
-        });
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    setTimeout(handleScroll, 200);
-
-    return () => {
-      sections.forEach(section => {
-        const element = document.getElementById(section.id);
-        if (element) observer.unobserve(element);
-      });
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [sections]);
+export default function MobileSidebar({ activeSection, onSectionChange }: MobileSidebarProps) {
+  const sections = [
+    { id: '01', title: 'Beranda', label: 'BERANDA' },
+    { id: '02', title: 'Fitur-Fitur Website', label: 'FITUR-FITUR' },
+    { id: '03', title: 'Struktur', label: 'Struktur' },
+    { id: '04', title: 'Galeri', label: 'Galeri' },
+    { id: '05', title: 'Statistik', label: 'Statistik' },
+  ];
 
   return (
     <div className="md:hidden fixed left-2 top-1/2 transform -translate-y-1/2 z-[100]">

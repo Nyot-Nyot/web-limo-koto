@@ -69,18 +69,31 @@ NoResultsState.displayName = 'NoResultsState';
 
 export default function BeritaPage() {
   const [newsData, setNewsData] = useState<NewsItem[]>(mockNewsData);
+  const [agendaData, setAgendaData] = useState(mockAgendaData);
   
   // Load news data from localStorage or use mock data
   useEffect(() => {
     // Check if we're in the browser environment
     if (typeof window !== 'undefined') {
-      const savedData = localStorage.getItem('newsData');
-      if (savedData) {
+      // Load news data
+      const savedNewsData = localStorage.getItem('newsData');
+      if (savedNewsData) {
         try {
-          const parsedData = JSON.parse(savedData);
+          const parsedData = JSON.parse(savedNewsData);
           setNewsData(parsedData);
         } catch (error) {
           console.error('Error parsing news data from localStorage:', error);
+        }
+      }
+      
+      // Load agenda data
+      const savedAgendaData = localStorage.getItem('agendaData');
+      if (savedAgendaData) {
+        try {
+          const parsedData = JSON.parse(savedAgendaData);
+          setAgendaData(parsedData);
+        } catch (error) {
+          console.error('Error parsing agenda data from localStorage:', error);
         }
       }
     }
@@ -94,6 +107,15 @@ export default function BeritaPage() {
             setNewsData(JSON.parse(updatedData));
           } catch (error) {
             console.error('Error parsing updated news data:', error);
+          }
+        }
+      } else if (event.detail?.type === 'agenda') {
+        const updatedData = localStorage.getItem('agendaData');
+        if (updatedData) {
+          try {
+            setAgendaData(JSON.parse(updatedData));
+          } catch (error) {
+            console.error('Error parsing updated agenda data:', error);
           }
         }
       }
@@ -202,7 +224,7 @@ export default function BeritaPage() {
             </section>
 
             {/* Sidebar - Agenda */}
-            <AgendaSidebar agendaData={mockAgendaData} />
+            <AgendaSidebar agendaData={agendaData} />
           </div>
         </div>
       </div>
