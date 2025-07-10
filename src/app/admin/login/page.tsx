@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
+import { FaArrowLeft } from 'react-icons/fa';
 
 export default function AdminLogin() {
   const [credentials, setCredentials] = useState({
@@ -31,7 +33,18 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 relative">
+      {/* Tombol Kembali ke Beranda - Positioned at top left */}
+      <div className="absolute top-6 left-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 rounded-md hover:bg-gray-700 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+        >
+          <FaArrowLeft className="w-4 h-4" />
+          Kembali ke Beranda
+        </Link>
+      </div>
+
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Image
