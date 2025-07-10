@@ -11,6 +11,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import { JorongData, useJorongData } from '@/data/jorong';
+import NotificationModal from '@/components/admin/NotificationModal';
 
 export default function KelolJorong() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,6 +29,7 @@ export default function KelolJorong() {
     facilities: []
   });
   const [facilityInput, setFacilityInput] = useState('');
+  const [mapLinkInput, setMapLinkInput] = useState('');
   const [notification, setNotification] = useState<{
     show: boolean;
     type: 'success' | 'error';
@@ -37,6 +39,8 @@ export default function KelolJorong() {
     type: 'success',
     message: ''
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [jorongToDelete, setJorongToDelete] = useState<JorongData | null>(null);
   const router = useRouter();
 
   // Authentication check
@@ -59,9 +63,257 @@ export default function KelolJorong() {
     '#EF4444', '#8B5F99', '#F59E0B', '#3B82F6', '#8B5CF6'
   ];
 
+  // Show notification with improved visibility
   const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ show: true, type, message });
-    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+    // First ensure any existing notification is hidden
+    setNotification({ show: false, type: 'success', message: '' });
+    
+    // Use setTimeout to ensure state update happens in next tick
+    setTimeout(() => {
+      setNotification({ show: true, type, message });
+    }, 100);
+  };
+
+  // Parse coordinates from Google Maps link
+  const parseGoogleMapsLink = async (link: string) => {
+    try {
+      // Pattern for different Google Maps URL formats
+      const patterns = [
+        // https://maps.google.com/maps?q=-0.7245,101.0223
+        /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // https://www.google.com/maps/@-0.7245,101.0223,15z
+        /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // https://maps.google.com/?q=-0.7245,101.0223
+        /\?q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // https://goo.gl/maps/xyz or similar with coordinates in URL
+        /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // Alternative format
+        /center=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // Place data format
+        /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
+        // Another common format
+        /place\/[^/]*\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // Data format in URL
+        /data=.*?3d(-?\d+\.?\d*).*?4d(-?\d+\.?\d*)/,
+        // Google Maps embed format
+        /pb=.*?!2d(-?\d+\.?\d*)!3d(-?\d+\.?\d*)/,
+        // Alternative place format
+        /!1m.*?!2d(-?\d+\.?\d*)!3d(-?\d+\.?\d*)/
+      ];
+
+      let url = link;
+      
+      // If it's a shortened Google Maps link, try multiple methods to expand it
+      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl')) {
+        try {
+          // Method 1: Try using a public URL expander service
+          const expanderServices = [
+            // Try the allorigins proxy first with a different approach
+            `https://api.allorigins.win/get?url=${encodeURIComponent(link)}`,
+            // Alternative method using a different proxy
+            `https://cors-anywhere.herokuapp.com/${link}`,
+          ];
+
+          for (const service of expanderServices) {
+            try {
+              const response = await fetch(service);
+              
+              if (service.includes('allorigins.win')) {
+                const data = await response.json();
+                
+                if (data.contents) {
+                  // Look for coordinates directly in the HTML content
+                  const coordMatches = [
+                    /@(-?\d+\.?\d*),(-?\d+\.?\d*)/g,
+                    /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/g,
+                    /"lat":(-?\d+\.?\d*),"lng":(-?\d+\.?\d*)/g,
+                    /data-lat="(-?\d+\.?\d*)".*?data-lng="(-?\d+\.?\d*)"/g
+                  ];
+
+                  for (const pattern of coordMatches) {
+                    const matches = [...data.contents.matchAll(pattern)];
+                    for (const match of matches) {
+                      const lat = parseFloat(match[1]);
+                      const lng = parseFloat(match[2]);
+                      
+                      // Validate coordinates for Indonesia region
+                      if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                        return { lat, lng };
+                      }
+                    }
+                  }
+
+                  // Look for Google Maps URL in the content
+                  const mapUrlMatch = data.contents.match(/https:\/\/www\.google\.com\/maps[^"'\s]*/);
+                  if (mapUrlMatch) {
+                    url = mapUrlMatch[0];
+                    console.log('Found Google Maps URL in content:', url);
+                    break;
+                  }
+                }
+              } else {
+                // Handle other services
+                const text = await response.text();
+                const coordMatch = text.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+                if (coordMatch) {
+                  const lat = parseFloat(coordMatch[1]);
+                  const lng = parseFloat(coordMatch[2]);
+                  
+                  if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                    return { lat, lng };
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn(`Service ${service} failed:`, error);
+              continue;
+            }
+          }
+
+          // Method 2: If expansion services fail, try CORS proxy
+          if (url === link) {
+            try {
+              const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(link)}`;
+              const proxyResponse = await fetch(proxyUrl);
+              const proxyData = await proxyResponse.json();
+              
+              if (proxyData.contents) {
+                // Look for coordinates in the HTML content
+                const coordMatches = [
+                  /@(-?\d+\.?\d*),(-?\d+\.?\d*)/g,
+                  /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/g,
+                  /"lat":(-?\d+\.?\d*),"lng":(-?\d+\.?\d*)/g,
+                  /data-lat="(-?\d+\.?\d*)".*?data-lng="(-?\d+\.?\d*)"/g
+                ];
+
+                for (const pattern of coordMatches) {
+                  const matches = [...proxyData.contents.matchAll(pattern)];
+                  for (const match of matches) {
+                    const lat = parseFloat(match[1]);
+                    const lng = parseFloat(match[2]);
+                    
+                    // Validate coordinates for Indonesia region
+                    if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                      return { lat, lng };
+                    }
+                  }
+                }
+
+                // Look for Google Maps URL in the content
+                const mapUrlMatch = proxyData.contents.match(/https:\/\/www\.google\.com\/maps[^"'\s]*/);
+                if (mapUrlMatch) {
+                  url = mapUrlMatch[0];
+                  console.log('Found Google Maps URL in content:', url);
+                }
+              }
+            } catch (error) {
+              console.warn('CORS proxy failed:', error);
+            }
+          }
+
+          // Method 3: Manual construction approach for goo.gl links
+          if (url === link && link.includes('goo.gl')) {
+            // Try to construct a direct Google Maps URL
+            // This is a fallback that might work for some cases
+            const linkId = link.split('/').pop();
+            const constructedUrl = `https://www.google.com/maps/place/${linkId}`;
+            
+            try {
+              const testResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(constructedUrl)}`);
+              const testData = await testResponse.json();
+              
+              if (testData.contents) {
+                const coordMatch = testData.contents.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+                if (coordMatch) {
+                  const lat = parseFloat(coordMatch[1]);
+                  const lng = parseFloat(coordMatch[2]);
+                  
+                  if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                    return { lat, lng };
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn('Manual construction failed:', error);
+            }
+          }
+
+        } catch (error) {
+          console.warn('All expansion methods failed:', error);
+        }
+      }
+      
+      // Try to extract coordinates from the URL (original or expanded)
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) {
+          let lat, lng;
+          
+          // Handle different capture group arrangements
+          if (pattern.source.includes('!3d') && pattern.source.includes('!4d')) {
+            // For !3d!4d format
+            lat = parseFloat(match[1]);
+            lng = parseFloat(match[2]);
+          } else if (pattern.source.includes('!2d') && pattern.source.includes('!3d')) {
+            // For !2d!3d format (lng, lat order)
+            lng = parseFloat(match[1]);
+            lat = parseFloat(match[2]);
+          } else if (pattern.source.includes('data=')) {
+            // For data format
+            lat = parseFloat(match[1]);
+            lng = parseFloat(match[2]);
+          } else {
+            // For standard lat,lng format
+            lat = parseFloat(match[1]);
+            lng = parseFloat(match[2]);
+          }
+          
+          // Validate coordinates (basic validation for Indonesia region)
+          if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+            return { lat, lng };
+          }
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error parsing Google Maps link:', error);
+      return null;
+    }
+  };
+
+  const handleMapLinkSubmit = async () => {
+    if (!mapLinkInput.trim()) {
+      showNotification('error', 'Masukkan link Google Maps terlebih dahulu!');
+      return;
+    }
+
+    if (!mapLinkInput.includes('google') && !mapLinkInput.includes('goo.gl')) {
+      showNotification('error', 'Link harus berupa link Google Maps!');
+      return;
+    }
+
+    // Show loading state
+    showNotification('success', 'Sedang mengekstrak koordinat dari link Google Maps...');
+
+    try {
+      const coordinates = await parseGoogleMapsLink(mapLinkInput);
+      
+      if (coordinates) {
+        setFormData({
+          ...formData,
+          coordinates: coordinates
+        });
+        showNotification('success', `Koordinat berhasil diambil: ${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`);
+        setMapLinkInput('');
+      } else {
+        // Provide helpful instructions for manual extraction
+        showNotification('error', 'Tidak dapat mengekstrak koordinat secara otomatis. Untuk mendapatkan koordinat: 1) Buka link di browser, 2) Klik kanan pada lokasi, 3) Pilih "What\'s here?", 4) Copy koordinat yang muncul.');
+      }
+    } catch (error) {
+      console.error('Error in handleMapLinkSubmit:', error);
+      showNotification('error', 'Terjadi kesalahan saat mengekstrak koordinat. Silakan coba lagi atau masukkan koordinat secara manual.');
+    }
   };
 
   const handleOpenModal = (jorong?: JorongData) => {
@@ -104,6 +356,7 @@ export default function KelolJorong() {
       facilities: []
     });
     setFacilityInput('');
+    setMapLinkInput('');
   };
 
   const handleAddFacility = () => {
@@ -173,12 +426,27 @@ export default function KelolJorong() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus data jorong ini?')) {
-      const updatedData = jorongData.filter(j => j.id !== id);
+    const jorong = jorongData.find(j => j.id === id);
+    if (jorong) {
+      setJorongToDelete(jorong);
+      setShowDeleteConfirm(true);
+    }
+  };
+  
+  const confirmDelete = () => {
+    if (jorongToDelete) {
+      const updatedData = jorongData.filter(j => j.id !== jorongToDelete.id);
       setJorongData(updatedData);
       updateJorongData(updatedData);
       showNotification('success', 'Data jorong berhasil dihapus!');
+      setShowDeleteConfirm(false);
+      setJorongToDelete(null);
     }
+  };
+  
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setJorongToDelete(null);
   };
 
   if (!isAuthenticated) {
@@ -356,6 +624,38 @@ export default function KelolJorong() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Link Google Maps
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="url"
+                      value={mapLinkInput}
+                      onChange={(e) => setMapLinkInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleMapLinkSubmit())}
+                      className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white"
+                      placeholder="Contoh: https://maps.app.goo.gl/NLxSespFF68FgvDy9"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleMapLinkSubmit}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>Ambil Koordinat</span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Paste link Google Maps (termasuk link pendek goo.gl) untuk mengisi koordinat secara otomatis.
+                    <br />
+                    <span className="text-yellow-400">Tips:</span> Jika link pendek gagal, buka link di browser terlebih dahulu, lalu copy URL lengkap dari address bar.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -495,35 +795,61 @@ export default function KelolJorong() {
         )}
 
         {/* Notification Modal */}
-        {notification.show && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
-              <div className="flex items-center space-x-3 mb-4">
-                {notification.type === 'success' ? (
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        <NotificationModal 
+          show={notification.show}
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+        />
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && jorongToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+            <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-yellow-500">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </div>
-                ) : (
-                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Konfirmasi Hapus</h3>
+                    <p className="text-sm text-gray-300">Apakah Anda yakin ingin menghapus jorong ini?</p>
                   </div>
-                )}
-                <h3 className="text-lg font-semibold text-white">
-                  {notification.type === 'success' ? 'Berhasil' : 'Gagal'}
-                </h3>
-              </div>
-              <p className="text-gray-300 mb-6">{notification.message}</p>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setNotification({ show: false, type: 'success', message: '' })}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold"
-                >
-                  OK
-                </button>
+                </div>
+                
+                <div className="mb-6 bg-gray-700 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: jorongToDelete.color || '#EC4899' }}>
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-semibold truncate">{jorongToDelete.name}</h4>
+                      <p className="text-gray-400 text-sm">
+                        {jorongToDelete.population} Penduduk | {jorongToDelete.area}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors font-medium"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           </div>

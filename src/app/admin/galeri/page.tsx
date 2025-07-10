@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
 import ModalForm from '@/components/admin/ModalForm';
+import NotificationModal from '@/components/admin/NotificationModal';
 
 export default function AdminGaleriPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -32,7 +33,21 @@ export default function AdminGaleriPage() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+  }>({
+    show: false,
+    type: 'success',
+    message: ''
+  });
   const router = useRouter();
+  
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ show: true, type, message });
+    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+  };
 
   // Handle file upload
   const handleFileUpload = (file: File) => {
@@ -133,6 +148,7 @@ export default function AdminGaleriPage() {
       localStorage.setItem('galeriData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
+      showNotification('success', 'Data galeri berhasil diperbarui!');
     } else {
       // Add new
       const newItem = {
@@ -144,6 +160,7 @@ export default function AdminGaleriPage() {
       localStorage.setItem('galeriData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
+      showNotification('success', 'Data galeri berhasil ditambahkan!');
     }
     
     setIsModalOpen(false);
@@ -177,6 +194,7 @@ export default function AdminGaleriPage() {
       localStorage.setItem('galeriData', JSON.stringify(updatedData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
+      showNotification('success', 'Data galeri berhasil dihapus!');
     }
     setShowDeleteConfirm(false);
     setItemToDelete(null);
@@ -598,6 +616,14 @@ export default function AdminGaleriPage() {
           </div>
         </div>
       )}
+
+      {/* Success/Error Notification Modal */}
+      <NotificationModal 
+        show={notification.show}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+      />
     </div>
   );
 }
