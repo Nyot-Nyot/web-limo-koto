@@ -23,17 +23,17 @@ const FormField = memo<FormFieldProps>(({
   placeholder
 }) => (
   <div>
-    <label className="block text-gray-700 text-sm font-semibold mb-1">
+    <label htmlFor={name} className="block text-gray-700 text-sm font-semibold mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     {type === 'select' ? (
       <select
+        id={name}
         name={name}
         value={value}
         onChange={onChange}
         className="w-full rounded border border-gray-300 p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         required={required}
-      >
         <option value="">Pilih {label}</option>
         {options?.map((option) => (
           <option key={option} value={option}>
