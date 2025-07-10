@@ -66,7 +66,7 @@ export default function NewsCard({
                 {excerpt}
               </p>
             </div>
-            <div className="flex justify-between items-center mt-4">
+            <div className="flex justify-between items-center mt-4 pt-3">
               <div className="flex items-center gap-6 text-gray-400">
                 <span className="flex items-center gap-2 text-sm">
                   <FaCalendarAlt className="text-blue-400" />
@@ -90,7 +90,7 @@ export default function NewsCard({
   return (
     <Link
       href={href}
-      className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.03] group border border-white/20"
+      className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.03] group border border-white/20 flex flex-col h-full"
     >
       <div className="relative overflow-hidden">
         {imageSrc ? (
@@ -111,14 +111,16 @@ export default function NewsCard({
           {category}
         </span>
       </div>
-      <div className="p-6 flex flex-col h-full">
-        <h3 className="font-bold text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
-          {title}
-        </h3>
-        <p className="text-sm text-gray-300 mb-4 line-clamp-3 leading-relaxed flex-grow">
-          {excerpt}
-        </p>
-        <div className="flex justify-between items-center text-xs text-gray-400 pt-2 mt-auto border-t border-white/10">
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="flex-grow">
+          <h3 className="font-bold text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
+            {title}
+          </h3>
+          <p className="text-sm text-gray-300 mb-4 line-clamp-3 leading-relaxed">
+            {excerpt}
+          </p>
+        </div>
+        <div className="flex justify-between items-center text-xs text-gray-400 pt-3 mt-auto rounded-b-lg -mx-1 px-3 py-2">
           <span className="flex items-center gap-1">
             <FaCalendarAlt className="text-blue-400" />
             {date}
