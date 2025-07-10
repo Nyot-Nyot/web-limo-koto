@@ -41,14 +41,20 @@ export default function AdminBeritaPage() {
   });
   const [dragOver, setDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string>('');
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<NewsItem | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [currentBlockType, setCurrentBlockType] = useState<'subheading' | 'text' | 'image' | 'video' | 'quote' | 'list'>('text');
   const [currentBlockContent, setCurrentBlockContent] = useState('');
   const [currentBlockUrl, setCurrentBlockUrl] = useState('');
+  const [currentBlockCaption, setCurrentBlockCaption] = useState('');
+  const [currentListItems, setCurrentListItems] = useState<string[]>(['']);
+  const [currentListItemInput, setCurrentListItemInput] = useState('');
+  const [currentBlockImageFile, setCurrentBlockImageFile] = useState<File | null>(null);
+  const [currentBlockImagePreview, setCurrentBlockImagePreview] = useState<string | null>(null);
+  const [currentBlockVideoFile, setCurrentBlockVideoFile] = useState<File | null>(null);
+  const [useVideoFile, setUseVideoFile] = useState(false);
+  const [blockImageDragOver, setBlockImageDragOver] = useState(false);
   const [notification, setNotification] = useState<{
     show: boolean;
     type: 'success' | 'error';
@@ -59,27 +65,39 @@ export default function AdminBeritaPage() {
     message: ''
   });
   
+  // Show notification with improved visibility
   const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ show: true, type, message });
-    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+    // First ensure any existing notification is hidden
+    setNotification({ show: false, type: 'success', message: '' });
+    
+    // Use setTimeout to ensure state update happens in next tick
+    setTimeout(() => {
+      setNotification({ show: true, type, message });
+    }, 100);
   };
-  const [currentBlockCaption, setCurrentBlockCaption] = useState('');
-  const [currentListItems, setCurrentListItems] = useState<string[]>([]);
-  const [currentListItemInput, setCurrentListItemInput] = useState('');
+  
   const [blockDragIndex, setBlockDragIndex] = useState<number | null>(null);
   const router = useRouter();
 
+  // Client-side only code flag
+  const [isClient, setIsClient] = useState(false);
+  
+  // Make sure FileReader operations only happen client-side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   // Handle file upload
   const handleFileUpload = (file: File) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setFormData({...formData, imageSrc: result});
-        setImagePreview(result);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!isClient || !file || !file.type.startsWith('image/')) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setFormData({...formData, imageSrc: result});
+      setImagePreview(result);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle drag events
@@ -120,6 +138,71 @@ export default function AdminBeritaPage() {
         tag.length <= 25) {
       setFormData({ ...formData, tags: [...formData.tags, tag] });
       setTagInput('');
+    }
+  };
+  
+  // Handle content image file upload
+  const handleContentImageFileUpload = (file: File) => {
+    if (!isClient || !file || !file.type.startsWith('image/')) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setCurrentBlockUrl(result);
+      setCurrentBlockImagePreview(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle block image drag and drop
+  const handleBlockImageDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setBlockImageDragOver(true);
+  };
+
+  const handleBlockImageDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setBlockImageDragOver(false);
+  };
+
+  const handleBlockImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setBlockImageDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files[0]) {
+      setCurrentBlockImageFile(files[0]);
+      handleContentImageFileUpload(files[0]);
+    }
+  };
+
+  // Handle block image input change
+  const handleBlockImageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Update the currentBlockImageFile state and handle upload
+      setCurrentBlockImageFile(file);
+      handleContentImageFileUpload(file);
+    }
+  };
+
+  // Handle content video file upload
+  const handleContentVideoFileUpload = (file: File) => {
+    if (!isClient || !file || !file.type.startsWith('video/')) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setCurrentBlockUrl(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle block video input change
+  const handleBlockVideoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCurrentBlockVideoFile(file);
+      handleContentVideoFileUpload(file);
     }
   };
 
@@ -165,9 +248,40 @@ export default function AdminBeritaPage() {
         break;
       
       case 'image':
+        // Check for either URL or uploaded image
+        if (!currentBlockUrl.trim() && !currentBlockImagePreview) return;
+        newBlock.url = currentBlockImagePreview || currentBlockUrl; // Prefer uploaded image
+        newBlock.caption = currentBlockCaption;
+        break;
+        
       case 'video':
+        // Check for either URL or uploaded video
         if (!currentBlockUrl.trim()) return;
-        newBlock.url = currentBlockUrl;
+        
+        // For YouTube links, ensure they're in the right format
+        if (!useVideoFile && (currentBlockUrl.includes('youtube.com') || currentBlockUrl.includes('youtu.be'))) {
+          // Normalize YouTube URLs to standard format
+          let videoId = '';
+          
+          if (currentBlockUrl.includes('v=')) {
+            // Handle youtube.com/watch?v=ID format
+            videoId = currentBlockUrl.split('v=')[1]?.split('&')[0] || '';
+          } else if (currentBlockUrl.includes('youtu.be/')) {
+            // Handle youtu.be/ID format
+            videoId = currentBlockUrl.split('youtu.be/')[1]?.split('?')[0] || '';
+          }
+          
+          if (videoId) {
+            // Use the standard YouTube URL format
+            newBlock.url = `https://www.youtube.com/watch?v=${videoId}`;
+          } else {
+            newBlock.url = currentBlockUrl;
+          }
+        } else {
+          // Use as-is for uploaded videos or other video platforms
+          newBlock.url = currentBlockUrl;
+        }
+        
         newBlock.caption = currentBlockCaption;
         break;
       
@@ -186,8 +300,12 @@ export default function AdminBeritaPage() {
     setCurrentBlockContent('');
     setCurrentBlockUrl('');
     setCurrentBlockCaption('');
-    setCurrentListItems([]);
+    setCurrentListItems(['']);
     setCurrentListItemInput('');
+    setCurrentBlockImageFile(null);
+    setCurrentBlockImagePreview(null);
+    setCurrentBlockVideoFile(null);
+    setUseVideoFile(false);
   };
   
   // Handle removing a block
@@ -259,17 +377,15 @@ export default function AdminBeritaPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError('');
     
     if (!formData.title.trim() || !formData.excerpt.trim()) {
-      setValidationError('<span class="font-semibold text-white">Judul dan excerpt harus diisi!</span>');
-      setShowErrorPopup(true);
+      // Use notification system for error messages instead of popup
+      showNotification('error', 'Judul dan excerpt harus diisi!');
       return;
     }
 
     if (formData.tags.length === 0) {
-      setValidationError('<span class="font-semibold text-white">Minimal harus ada 1 tag!</span>');
-      setShowErrorPopup(true);
+      showNotification('error', 'Minimal harus ada 1 tag!');
       return;
     }
 
@@ -280,8 +396,7 @@ export default function AdminBeritaPage() {
     );
 
     if (isDuplicate) {
-      setValidationError(`<span class="font-semibold text-white">Berita dengan judul "${formData.title}" sudah ada!</span>`);
-      setShowErrorPopup(true);
+      showNotification('error', `Berita dengan judul "${formData.title}" sudah ada!`);
       return;
     }
     
@@ -292,83 +407,94 @@ export default function AdminBeritaPage() {
       );
       
       if (existingFeatured) {
-        setValidationError(`
-          <span class="font-semibold text-yellow-400">Hanya dapat memiliki 1 berita utama!</span>
-          <br/><br/>
-          Artikel "<span class="font-semibold text-yellow-400">${existingFeatured.title}</span>" saat ini ditetapkan sebagai berita utama.
-          <br/><br/>
-          Untuk mengubah berita utama, silakan edit artikel tersebut terlebih dahulu dan nonaktifkan status berita utamanya.
-        `);
-        setShowErrorPopup(true);
+        showNotification('error', `Hanya dapat memiliki 1 berita utama! Artikel "${existingFeatured.title}" saat ini ditetapkan sebagai berita utama.`);
         return;
       }
     }
     
-    if (editingItem) {
-      // Update existing
-      const updatedData = newsItems.map(item => 
-        item.id === editingItem.id 
-          ? { 
-              ...formData, 
-              id: editingItem.id,
-              href: `/berita/${editingItem.id}`,
-              date: editingItem.date, // Keep original date
-              views: editingItem.views, // Keep original views
-              category: formData.tags[0] || 'trending', // Use first tag as main category
-              backgroundGradient: item.backgroundGradient || 'bg-gradient-to-br from-blue-400 to-blue-600', // Keep existing backgroundGradient
-              emoji: item.emoji || '📰', // Keep existing emoji
-              blocks: formData.blocks // Save the blocks content
-            }
-          : item
-      );
-      setNewsItems(updatedData);
-      localStorage.setItem('newsData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
-      showNotification('success', 'Berita berhasil diperbarui!');
-    } else {
-      // Add new
-      const newItem: NewsItem = {
-        ...formData,
-        id: Date.now().toString(),
-        href: `/berita/${Date.now()}`,
-        date: new Date().toLocaleDateString('id-ID', { 
-          day: 'numeric', 
-          month: 'long', 
-          year: 'numeric' 
-        }),
-        views: 0,
-        category: formData.tags[0] || 'trending', // Use first tag as main category
-        backgroundGradient: 'bg-gradient-to-br from-blue-400 to-blue-600', // Default backgroundGradient
-        emoji: '📰', // Default emoji
-        blocks: formData.blocks // Save the blocks content
-      };
-      const updatedData = [...newsItems, newItem];
-      setNewsItems(updatedData);
-      localStorage.setItem('newsData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
-      showNotification('success', 'Berita berhasil ditambahkan!');
-    }
-    
+    // First close the modal to avoid UI conflicts
     setIsModalOpen(false);
-    setEditingItem(null);
-    setImagePreview(null);
-    setFormData({
-      title: '',
-      excerpt: '',
-      tags: [],
-      categoryColor: 'bg-gradient-to-r from-red-500 to-pink-600',
-      imageSrc: '',
-      isFeatured: false,
-      blocks: []
-    });
-    setTagInput('');
-    setCurrentBlockContent('');
-    setCurrentBlockUrl('');
-    setCurrentBlockCaption('');
-    setCurrentListItems([]);
-    setCurrentListItemInput('');
+    
+    // Wait a brief moment before continuing with the save operation
+    setTimeout(() => {
+      if (editingItem) {
+        // Update existing
+        const updatedData = newsItems.map(item => 
+          item.id === editingItem.id 
+            ? { 
+                ...formData, 
+                id: editingItem.id,
+                href: `/berita/${editingItem.id}`,
+                date: editingItem.date, // Keep original date
+                views: editingItem.views, // Keep original views
+                category: formData.tags[0] || 'trending', // Use first tag as main category
+                backgroundGradient: item.backgroundGradient || 'bg-gradient-to-br from-blue-400 to-blue-600', // Keep existing backgroundGradient
+                emoji: item.emoji || '📰', // Keep existing emoji
+                blocks: formData.blocks // Save the blocks content
+              }
+            : item
+        );
+        setNewsItems(updatedData);
+        localStorage.setItem('newsData', JSON.stringify(updatedData));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+        
+        // Show notification after updating data
+        showNotification('success', `Berita "${formData.title}" berhasil diperbarui!`);
+      } else {
+        // Add new
+        const newItem: NewsItem = {
+          ...formData,
+          id: Date.now().toString(),
+          href: `/berita/${Date.now()}`,
+          date: new Date().toLocaleDateString('id-ID', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          }),
+          views: 0,
+          category: formData.tags[0] || 'trending', // Use first tag as main category
+          backgroundGradient: 'bg-gradient-to-br from-blue-400 to-blue-600', // Default backgroundGradient
+          emoji: '📰', // Default emoji
+          blocks: formData.blocks // Save the blocks content
+        };
+        const updatedData = [...newsItems, newItem];
+        setNewsItems(updatedData);
+        localStorage.setItem('newsData', JSON.stringify(updatedData));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+        
+        // Show notification after updating data
+        showNotification('success', `Berita "${formData.title}" berhasil ditambahkan!`);
+      }
+    }, 300);
+    // State reset is handled separately after the modal is closed
+    // to prevent conflicts with notifications
+    setTimeout(() => {
+      setEditingItem(null);
+      setImagePreview(null);
+      setFormData({
+        title: '',
+        excerpt: '',
+        tags: [],
+        categoryColor: 'bg-gradient-to-r from-red-500 to-pink-600',
+        imageSrc: '',
+        isFeatured: false,
+        blocks: []
+      });
+      setTagInput('');
+      setCurrentBlockContent('');
+      setCurrentBlockUrl('');
+      setCurrentBlockCaption('');
+      setCurrentListItems(['']);
+      setCurrentListItemInput('');
+      setCurrentBlockImageFile(null);
+      setCurrentBlockImagePreview(null);
+      setCurrentBlockVideoFile(null);
+      setUseVideoFile(false);
+    }, 500);
   };
 
   const handleEdit = (item: NewsItem) => {
@@ -392,12 +518,11 @@ export default function AdminBeritaPage() {
     });
     
     setImagePreview(item.imageSrc || null);
-    setValidationError('');
     setCurrentBlockType('text');
     setCurrentBlockContent('');
     setCurrentBlockUrl('');
     setCurrentBlockCaption('');
-    setCurrentListItems([]);
+    setCurrentListItems(['']);
     setCurrentListItemInput('');
     setIsModalOpen(true);
   };
@@ -407,17 +532,29 @@ export default function AdminBeritaPage() {
     setShowDeleteConfirm(true);
   };
 
+  // Improved delete confirmation with proper notification
   const confirmDelete = () => {
     if (itemToDelete) {
+      // First hide the confirmation dialog
+      setShowDeleteConfirm(false);
+      
+      // Then update the data
       const updatedData = newsItems.filter(item => item.id !== itemToDelete.id);
       setNewsItems(updatedData);
       localStorage.setItem('newsData', JSON.stringify(updatedData));
+      
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
-      showNotification('success', 'Berita berhasil dihapus!');
+      
+      // Show notification after a brief delay to ensure modal is closed
+      setTimeout(() => {
+        showNotification('success', `Berita "${itemToDelete.title}" berhasil dihapus!`);
+      }, 300);
+      
+      setItemToDelete(null);
+    } else {
+      setShowDeleteConfirm(false);
     }
-    setShowDeleteConfirm(false);
-    setItemToDelete(null);
   };
 
   const cancelDelete = () => {
@@ -437,14 +574,17 @@ export default function AdminBeritaPage() {
       blocks: []
     });
     setImagePreview(null);
-    setValidationError('');
     setTagInput('');
     setCurrentBlockType('text');
     setCurrentBlockContent('');
     setCurrentBlockUrl('');
     setCurrentBlockCaption('');
-    setCurrentListItems([]);
+    setCurrentListItems(['']);
     setCurrentListItemInput('');
+    setCurrentBlockImageFile(null);
+    setCurrentBlockImagePreview(null);
+    setCurrentBlockVideoFile(null);
+    setUseVideoFile(false);
     setIsModalOpen(true);
   };
 
@@ -969,7 +1109,7 @@ export default function AdminBeritaPage() {
                           <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path d="M2 10.5a.5.5 0 0 1 .5-.5h3.793L3.146 6.854a.5.5 0 1 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L7.293 11H2.5a.5.5 0 0 1-.5-.5zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-3zm5 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-3z"/>
-                            </svg>
+                        </svg>
                           </div>
                           <p className="text-sm text-white">Paragraf Teks</p>
                         </div>
@@ -1030,17 +1170,71 @@ export default function AdminBeritaPage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
                               <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
-                            </svg>
+                        </svg>
                           </div>
-                          <p className="text-sm text-white">Masukkan URL gambar (bukan thumbnail)</p>
+                          <p className="text-sm text-white">Tambahkan Gambar Konten</p>
                         </div>
-                        <input
-                          type="text"
-                          value={currentBlockUrl}
-                          onChange={(e) => setCurrentBlockUrl(e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white mb-2"
-                          placeholder="Contoh: https://example.com/gambar.jpg"
-                        />
+                        {/* Drag & Drop Area for Content Images */}
+                        <div
+                          onDragOver={handleBlockImageDragOver}
+                          onDragLeave={handleBlockImageDragLeave}
+                          onDrop={handleBlockImageDrop}
+                          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors mb-4 ${
+                            blockImageDragOver 
+                              ? 'border-blue-400 bg-blue-400/10' 
+                              : 'border-gray-600 bg-gray-700/50'
+                          }`}
+                        >
+                          {currentBlockImagePreview ? (
+                            <div className="space-y-4">
+                              <div className="relative w-48 h-48 mx-auto">
+                                <Image
+                                  src={currentBlockImagePreview}
+                                  alt="Preview"
+                                  fill
+                                  style={{ objectFit: 'contain' }}
+                                  className="rounded-md"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <p className="text-sm text-green-400">✓ Gambar berhasil dipilih</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCurrentBlockImageFile(null);
+                                    setCurrentBlockImagePreview(null);
+                                    setCurrentBlockUrl('');
+                                  }}
+                                  className="text-xs text-red-400 hover:text-red-300"
+                                >
+                                  Hapus gambar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <PhotoIcon className="w-12 h-12 text-gray-400 mx-auto" />
+                              <div className="space-y-2">
+                                <p className="text-sm text-gray-300">
+                                  Drag & drop gambar di sini atau
+                                </p>
+                                <label className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md cursor-pointer transition-colors">
+                                  <span className="text-sm">Pilih gambar</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleBlockImageInputChange}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+                              <p className="text-xs text-gray-400">
+                                Format yang didukung: JPG, PNG, GIF (Max 5MB)
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        
                         <input
                           type="text"
                           value={currentBlockCaption}
@@ -1060,22 +1254,88 @@ export default function AdminBeritaPage() {
                           <div className="flex-shrink-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/>
-                            </svg>
+                        </svg>
                           </div>
-                          <p className="text-sm text-white">Masukkan URL video (YouTube, dll)</p>
+                          <p className="text-sm text-white">Tambahkan Video</p>
                         </div>
-                        <input
-                          type="text"
-                          value={currentBlockUrl}
-                          onChange={(e) => setCurrentBlockUrl(e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white mb-2"
-                          placeholder="Contoh: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                        />
+                        <div className="flex items-center justify-center space-x-4 mb-4">
+                          <button
+                            type="button"
+                            onClick={() => setUseVideoFile(false)}
+                            className={`px-4 py-2 rounded-md ${!useVideoFile ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                          >
+                            URL Video
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUseVideoFile(true)}
+                            className={`px-4 py-2 rounded-md ${useVideoFile ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                          >
+                            Upload Video
+                          </button>
+                        </div>
+                        
+                        {!useVideoFile ? (
+                          <div className="mb-4">
+                            <input
+                              type="text"
+                              value={currentBlockUrl}
+                              onChange={(e) => setCurrentBlockUrl(e.target.value)}
+                              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white mb-2"
+                              placeholder="Contoh: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                            />
+                            <p className="text-xs text-gray-400 mt-1 mb-4">
+                              Masukkan URL video dari YouTube, Vimeo, atau platform lainnya.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="mb-4">
+                            {currentBlockVideoFile ? (
+                              <div className="p-4 bg-gray-700 rounded-md mb-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm text-green-400">✓ Video berhasil dipilih</p>
+                                    <p className="text-xs text-gray-300">{currentBlockVideoFile.name}</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCurrentBlockVideoFile(null);
+                                      setCurrentBlockUrl('');
+                                    }}
+                                    className="text-xs text-red-400 hover:text-red-300"
+                                  >
+                                    Hapus video
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center p-6 bg-gray-700 rounded-md mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <label className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md cursor-pointer transition-colors">
+                                  <span className="text-sm">Pilih video</span>
+                                  <input
+                                    type="file"
+                                    accept="video/*"
+                                    onChange={handleBlockVideoInputChange}
+                                    className="hidden"
+                                  />
+                                </label>
+                                <p className="text-xs text-gray-400 mt-2">
+                                  Format yang didukung: MP4, WebM, OGG (Max 100MB)
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
                         <input
                           type="text"
                           value={currentBlockCaption}
                           onChange={(e) => setCurrentBlockCaption(e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white"
+                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white"
                           placeholder="Masukkan keterangan video (opsional)"
                         />
                       </div>
@@ -1087,7 +1347,7 @@ export default function AdminBeritaPage() {
                           <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
                               <path fillRule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                            </svg>
+                        </svg>
                           </div>
                           <p className="text-sm text-white">Daftar Item</p>
                         </div>
@@ -1144,7 +1404,8 @@ export default function AdminBeritaPage() {
                               </ul>
                             ) : (
                               <p className="text-sm text-gray-400 text-center py-2">Belum ada item dalam daftar</p>
-                            )}
+                            )
+                          }
                           </div>
                         </div>
                       </div>
@@ -1234,28 +1495,74 @@ export default function AdminBeritaPage() {
                             
                             {block.type === 'video' && block.url && (
                               <div className="relative aspect-video bg-gray-600 rounded-lg overflow-hidden">
-                                {/* Video thumbnail or player can be embedded here */}
-                                <Image
-                                  src={`https://img.youtube.com/vi/${block.url.split('v=')[1]?.split('&')[0] || 'dQw4w9WgXcQ'}/hqdefault.jpg`}
-                                  alt="Video thumbnail"
-                                  fill
-                                  style={{ objectFit: 'cover' }}
-                                  className="w-full h-full"
-                                />
-                                <a
-                                  href={block.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 hover:bg-opacity-40 text-white font-semibold rounded-lg"
-                                >
-                                  <div className="flex flex-col items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" className="mb-2" viewBox="0 0 16 16">
+                                {/* Handle YouTube or uploaded video */}
+                                {block.url.includes('youtube.com') || block.url.includes('youtu.be') ? (
+                                  <>
+                                    <Image
+                                      src={`https://img.youtube.com/vi/${
+                                        block.url.includes('v=') 
+                                          ? block.url.split('v=')[1]?.split('&')[0] 
+                                          : block.url.split('youtu.be/')[1]?.split('?')[0] || 'dQw4w9WgXcQ'
+                                      }/hqdefault.jpg`}
+                                      alt="Video thumbnail"
+                                      fill
+                                      style={{ objectFit: 'cover' }}
+                                      className="w-full h-full"
+                                    />
+                                    <a
+                                      href={block.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 hover:bg-opacity-40 text-white font-semibold rounded-lg"
+                                    >
+                                      <div className="flex flex-col items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" className="mb-2" viewBox="0 0 16 16">
+                                          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                          <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
+                                        </svg>
+                                        <span>Tonton di YouTube</span>
+                                      </div>
+                                    </a>
+                                  </>
+                                ) : block.url.includes('vimeo.com') ? (
+                                  <>
+                                    <div className="bg-blue-900 w-full h-full flex items-center justify-center">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="white" viewBox="0 0 16 16">
+                                        <path d="M15.992 4.204c-.071 1.556-1.158 3.687-3.262 6.393-2.175 2.829-4.016 4.243-5.522 4.243-.933 0-1.722-.861-2.367-2.583L3.55 7.523C3.07 5.8 2.556 4.94 2.007 4.94c-.118 0-.537.253-1.254.754L0 4.724a209.56 209.56 0 0 0 2.334-2.081c1.054-.91 1.845-1.388 2.373-1.437 1.243-.123 2.01.728 2.298 2.553.31 1.968.526 3.19.646 3.666.36 1.631.756 2.446 1.186 2.445.334 0 .836-.53 1.508-1.587.671-1.058 1.03-1.863 1.077-2.415.096-.913-.263-1.37-1.077-1.37a3.022 3.022 0 0 0-1.185.261c.789-2.573 2.291-3.825 4.508-3.756 1.644.05 2.419 1.117 2.324 3.2z"/>
+                                      </svg>
+                                    </div>
+                                    <a
+                                      href={block.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 hover:bg-opacity-40 text-white font-semibold rounded-lg"
+                                    >
+                                      <div className="flex flex-col items-center">
+                                        <span>Tonton di Vimeo</span>
+                                      </div>
+                                    </a>
+                                  </>
+                                ) : block.url.startsWith('data:video/') ? (
+                                  <video controls className="w-full h-full">
+                                    <source src={block.url} type="video/mp4" />
+                                    Browser Anda tidak mendukung tag video.
+                                  </video>
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="white" viewBox="0 0 16 16">
                                       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                                       <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
                                     </svg>
-                                    <span>Tonton Video</span>
+                                    <a
+                                      href={block.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute inset-0 flex items-center justify-center"
+                                    >
+                                      <span className="sr-only">Tonton Video</span>
+                                    </a>
                                   </div>
-                                </a>
+                                )}
                                 {block.caption && (
                                   <p className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-sm p-2 text-center">
                                     {block.caption}
@@ -1279,7 +1586,7 @@ export default function AdminBeritaPage() {
                           <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-600">
                             <div className="flex items-center space-x-2 text-gray-400 cursor-grab bg-gray-800 px-3 py-1 rounded-md">
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grip-vertical" viewBox="0 0 16 16">
-                                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                <path d="M7 7 2a1 1 0 1 1-2  0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                               </svg>
                               <span className="text-xs">Seret</span>
                             </div>
@@ -1327,48 +1634,7 @@ export default function AdminBeritaPage() {
           </div>
         )}
 
-      {/* Error Popup */}
-      {showErrorPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
-          <div className="bg-gray-800 rounded-lg max-w-md w-full shadow-2xl border border-red-500">
-            <div className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Peringatan!</h3>
-                  <p className="text-sm text-gray-300">
-                    {validationError.includes('berita utama') ? 
-                      'Validasi Berita Utama Gagal' : 'Data tidak dapat disimpan'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <div 
-                  className="text-red-400 text-sm leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: validationError }}
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowErrorPopup(false);
-                    setValidationError('');
-                  }}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
-                >
-                  Mengerti
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Error handling is now done through the notification system */}
 
       {/* Delete Confirmation Popup */}
       {showDeleteConfirm && itemToDelete && (
@@ -1432,13 +1698,15 @@ export default function AdminBeritaPage() {
         </div>
       )}
       
-      {/* Success/Error Notification Modal */}
-      <NotificationModal 
-        show={notification.show}
-        type={notification.type}
-        message={notification.message}
-        onClose={() => setNotification({ show: false, type: 'success', message: '' })}
-      />
+      {/* Success/Error Notification Modal - Positioned at root level with highest z-index */}
+      <div className="relative" style={{ zIndex: 9999 }}>
+        <NotificationModal 
+          show={notification.show}
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification({ show: false, type: 'success', message: '' })}
+        />
+      </div>
     </div>
   );
 }

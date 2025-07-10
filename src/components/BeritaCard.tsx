@@ -41,7 +41,7 @@ export default function BeritaCard({ berita, animated = false, animationState = 
         }`}>
           {berita.description}
         </p>
-        <div className={`flex justify-between items-center text-sm text-gray-300 mt-auto pt-2 ${
+        <div className={`flex justify-between items-center text-sm text-gray-300 mt-auto pt-2 border-t border-white/10 ${
           animated ? `transition-transform duration-300 delay-150 ${animationState === 'in' ? 'translate-x-0' : 'translate-x-10 opacity-0'}` : ''
         }`}>
           <span className="flex items-center gap-1">
@@ -50,7 +50,7 @@ export default function BeritaCard({ berita, animated = false, animationState = 
           </span>
           <span className="flex items-center gap-1">
             <FaEye className="text-green-400" />
-            {berita.viewCount}
+            {berita.viewCount} views
           </span>
         </div>
       </div>

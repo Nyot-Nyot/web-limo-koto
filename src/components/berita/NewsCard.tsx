@@ -57,8 +57,8 @@ export default function NewsCard({
               </span>
             </div>
           </div>
-          <div className="p-8 flex flex-col justify-between">
-            <div>
+          <div className="p-8 flex flex-col h-full">
+            <div className="flex-grow">
               <h3 className="font-bold text-2xl lg:text-3xl mb-4 group-hover:text-blue-300 transition-colors duration-300 leading-tight">
                 {title}
               </h3>
@@ -66,7 +66,7 @@ export default function NewsCard({
                 {excerpt}
               </p>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mt-4">
               <div className="flex items-center gap-6 text-gray-400">
                 <span className="flex items-center gap-2 text-sm">
                   <FaCalendarAlt className="text-blue-400" />
@@ -77,7 +77,7 @@ export default function NewsCard({
                   {views} views
                 </span>
               </div>
-              <span className="text-blue-300 font-semibold hover:text-blue-200 transition-colors">
+              <span className="text-blue-300 font-semibold hover:text-blue-200 transition-colors hidden md:inline-block">
                 Baca Selengkapnya →
               </span>
             </div>
@@ -111,21 +111,21 @@ export default function NewsCard({
           {category}
         </span>
       </div>
-      <div className="p-6">
+      <div className="p-6 flex flex-col h-full">
         <h3 className="font-bold text-xl mb-3 group-hover:text-blue-300 transition-colors line-clamp-2">
           {title}
         </h3>
-        <p className="text-sm text-gray-300 mb-4 line-clamp-3 leading-relaxed">
+        <p className="text-sm text-gray-300 mb-4 line-clamp-3 leading-relaxed flex-grow">
           {excerpt}
         </p>
-        <div className="flex justify-between items-center text-xs text-gray-400">
+        <div className="flex justify-between items-center text-xs text-gray-400 pt-2 mt-auto border-t border-white/10">
           <span className="flex items-center gap-1">
             <FaCalendarAlt className="text-blue-400" />
             {date}
           </span>
           <span className="flex items-center gap-1">
             <FaEye className="text-green-400" />
-            {views}
+            {views} views
           </span>
         </div>
       </div>
