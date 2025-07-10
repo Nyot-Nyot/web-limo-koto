@@ -247,13 +247,13 @@ export default function AdminBeritaPage() {
     setValidationError('');
     
     if (!formData.title.trim() || !formData.excerpt.trim()) {
-      setValidationError('Judul dan excerpt harus diisi!');
+      setValidationError('<span class="font-semibold text-white">Judul dan excerpt harus diisi!</span>');
       setShowErrorPopup(true);
       return;
     }
 
     if (formData.tags.length === 0) {
-      setValidationError('Minimal harus ada 1 tag!');
+      setValidationError('<span class="font-semibold text-white">Minimal harus ada 1 tag!</span>');
       setShowErrorPopup(true);
       return;
     }
@@ -265,9 +265,28 @@ export default function AdminBeritaPage() {
     );
 
     if (isDuplicate) {
-      setValidationError(`Berita dengan judul "${formData.title}" sudah ada!`);
+      setValidationError(`<span class="font-semibold text-white">Berita dengan judul "${formData.title}" sudah ada!</span>`);
       setShowErrorPopup(true);
       return;
+    }
+    
+    // Check if there's already a featured article when trying to set a new one
+    if (formData.isFeatured) {
+      const existingFeatured = newsItems.find(item => 
+        item.isFeatured && (!editingItem || item.id !== editingItem.id)
+      );
+      
+      if (existingFeatured) {
+        setValidationError(`
+          <span class="font-semibold text-yellow-400">Hanya dapat memiliki 1 berita utama!</span>
+          <br/><br/>
+          Artikel "<span class="font-semibold text-yellow-400">${existingFeatured.title}</span>" saat ini ditetapkan sebagai berita utama.
+          <br/><br/>
+          Untuk mengubah berita utama, silakan edit artikel tersebut terlebih dahulu dan nonaktifkan status berita utamanya.
+        `);
+        setShowErrorPopup(true);
+        return;
+      }
     }
     
     if (editingItem) {
@@ -737,17 +756,29 @@ export default function AdminBeritaPage() {
 
 
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isFeatured"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="isFeatured" className="text-sm font-medium text-gray-300">
-                    Jadikan Berita Utama (Featured)
-                  </label>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="isFeatured" className="text-sm font-medium text-gray-300">
+                      Jadikan Berita Utama (Featured)
+                    </label>
+                  </div>
+                  <p className="text-xs text-yellow-500 mt-1 ml-6">
+                    {editingItem && editingItem.isFeatured ? 
+                      'Artikel ini saat ini ditampilkan sebagai berita utama di halaman berita.' :
+                      `Hanya bisa memiliki 1 berita utama. ${
+                        newsItems.some(item => item.isFeatured) ? 
+                        'Saat ini sudah ada berita utama yang ditetapkan.' : 
+                        'Saat ini belum ada berita utama.'
+                      }`
+                    }
+                  </p>
                 </div>
 
                 <div>
@@ -1291,14 +1322,18 @@ export default function AdminBeritaPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Peringatan!</h3>
-                  <p className="text-sm text-gray-300">Data tidak dapat disimpan</p>
+                  <p className="text-sm text-gray-300">
+                    {validationError.includes('berita utama') ? 
+                      'Validasi Berita Utama Gagal' : 'Data tidak dapat disimpan'}
+                  </p>
                 </div>
               </div>
               
               <div className="mb-6">
-                <p className="text-red-400 text-sm leading-relaxed">
-                  {validationError}
-                </p>
+                <div 
+                  className="text-red-400 text-sm leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: validationError }}
+                />
               </div>
               
               <div className="flex justify-end">

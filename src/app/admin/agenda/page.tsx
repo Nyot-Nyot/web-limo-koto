@@ -25,33 +25,13 @@ export default function AdminAgendaPage() {
     organizer: '',
     location: '',
     date: '',
-    time: '',
-    emoji: '📅',
-    gradientClass: 'bg-gradient-to-br from-white to-blue-50',
-    borderClass: 'border border-blue-100',
-    dateColorClass: 'text-blue-600 bg-blue-100'
+    time: ''
   });
   const [validationError, setValidationError] = useState<string>('');
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AgendaItem | null>(null);
-  const [selectedEmoji, setSelectedEmoji] = useState('📅');
-  const [selectedColor, setSelectedColor] = useState('blue');
   const router = useRouter();
-
-  // Predefined emojis and color themes for easy selection
-  const emojiOptions = ['📅', '🏛️', '🏥', '🎓', '🏆', '🎭', '🎉', '📣', '🎤', '🏃‍♂️', '🌱', '🤝', '👨‍👩‍👧‍👦', '🙏', '💼', '⚽', '🧠'];
-  
-  const colorOptions = [
-    { name: 'blue', gradientClass: 'bg-gradient-to-br from-white to-blue-50', borderClass: 'border border-blue-100', dateColorClass: 'text-blue-600 bg-blue-100' },
-    { name: 'purple', gradientClass: 'bg-gradient-to-br from-white to-purple-50', borderClass: 'border border-purple-100', dateColorClass: 'text-purple-600 bg-purple-100' },
-    { name: 'green', gradientClass: 'bg-gradient-to-br from-white to-green-50', borderClass: 'border border-green-100', dateColorClass: 'text-green-600 bg-green-100' },
-    { name: 'red', gradientClass: 'bg-gradient-to-br from-white to-red-50', borderClass: 'border border-red-100', dateColorClass: 'text-red-600 bg-red-100' },
-    { name: 'yellow', gradientClass: 'bg-gradient-to-br from-white to-yellow-50', borderClass: 'border border-yellow-100', dateColorClass: 'text-yellow-600 bg-yellow-100' },
-    { name: 'indigo', gradientClass: 'bg-gradient-to-br from-white to-indigo-50', borderClass: 'border border-indigo-100', dateColorClass: 'text-indigo-600 bg-indigo-100' },
-    { name: 'pink', gradientClass: 'bg-gradient-to-br from-white to-pink-50', borderClass: 'border border-pink-100', dateColorClass: 'text-pink-600 bg-pink-100' },
-    { name: 'gray', gradientClass: 'bg-gradient-to-br from-white to-gray-50', borderClass: 'border border-gray-100', dateColorClass: 'text-gray-600 bg-gray-100' },
-  ];
 
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
@@ -71,23 +51,7 @@ export default function AdminAgendaPage() {
     }
   }, [router]);
 
-  const handleEmojiSelect = (emoji: string) => {
-    setSelectedEmoji(emoji);
-    setFormData({ ...formData, emoji });
-  };
-
-  const handleColorSelect = (colorName: string) => {
-    setSelectedColor(colorName);
-    const selectedColorOption = colorOptions.find(option => option.name === colorName);
-    if (selectedColorOption) {
-      setFormData({ 
-        ...formData, 
-        gradientClass: selectedColorOption.gradientClass,
-        borderClass: selectedColorOption.borderClass,
-        dateColorClass: selectedColorOption.dateColorClass
-      });
-    }
-  };
+  // No emoji or color selection needed anymore
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,14 +110,8 @@ export default function AdminAgendaPage() {
       organizer: '',
       location: '',
       date: '',
-      time: '',
-      emoji: '📅',
-      gradientClass: 'bg-gradient-to-br from-white to-blue-50',
-      borderClass: 'border border-blue-100',
-      dateColorClass: 'text-blue-600 bg-blue-100'
+      time: ''
     });
-    setSelectedEmoji('📅');
-    setSelectedColor('blue');
   };
 
   const handleEdit = (item: AgendaItem) => {
@@ -163,21 +121,8 @@ export default function AdminAgendaPage() {
       organizer: item.organizer,
       location: item.location,
       date: item.date,
-      time: item.time,
-      emoji: item.emoji,
-      gradientClass: item.gradientClass,
-      borderClass: item.borderClass,
-      dateColorClass: item.dateColorClass
+      time: item.time
     });
-    setSelectedEmoji(item.emoji);
-    
-    // Find the matching color option
-    const colorOption = colorOptions.find(option => option.gradientClass === item.gradientClass);
-    if (colorOption) {
-      setSelectedColor(colorOption.name);
-    } else {
-      setSelectedColor('blue');
-    }
     
     setIsModalOpen(true);
   };
@@ -282,12 +227,12 @@ export default function AdminAgendaPage() {
         {/* Agenda Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map((item) => (
-            <div key={item.id} className={`${item.gradientClass} rounded-lg overflow-hidden shadow-lg text-black`}>
+            <div key={item.id} className="bg-gradient-to-br from-white to-blue-50 rounded-lg overflow-hidden shadow-lg text-black">
               {/* Agenda Content */}
-              <div className={`p-5 ${item.borderClass}`}>
+              <div className="p-5 border border-blue-100">
                 <div className="flex justify-between mb-3">
                   <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                    <span className="text-2xl">{item.emoji}</span> {item.title}
+                    <span className="text-2xl text-blue-600">📅</span> {item.title}
                   </h3>
                 </div>
                 
@@ -297,11 +242,11 @@ export default function AdminAgendaPage() {
                     <span className="font-medium">Oleh:</span> {item.organizer}
                   </p>
                   <p className="text-sm text-gray-600 flex items-center gap-2">
-                    <MapPinIcon className="w-5 h-5 text-green-500" />
+                    <MapPinIcon className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">Di:</span> {item.location}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    <p className={`${item.dateColorClass} text-sm flex items-center gap-1 px-3 py-1 rounded-full`}>
+                    <p className="text-blue-600 bg-blue-100 text-sm flex items-center gap-1 px-3 py-1 rounded-full">
                       <CalendarIcon className="w-4 h-4" />
                       {item.date}
                     </p>
@@ -442,67 +387,16 @@ export default function AdminAgendaPage() {
                   />
                 </div>
                 
-                {/* Emoji Selector */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Ikon (Emoji)
-                  </label>
-                  <div className="bg-gray-700 border border-gray-600 rounded-lg p-3">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {emojiOptions.map((emoji, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleEmojiSelect(emoji)}
-                          className={`w-10 h-10 text-xl flex items-center justify-center rounded ${
-                            selectedEmoji === emoji 
-                              ? 'bg-blue-600 text-white' 
-                              : 'bg-gray-800 hover:bg-gray-600'
-                          }`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">Emoji yang dipilih:</span>
-                      <span className="text-2xl">{selectedEmoji}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Color Selector */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Warna Tema
-                  </label>
-                  <div className="bg-gray-700 border border-gray-600 rounded-lg p-3">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {colorOptions.map((color) => (
-                        <button
-                          key={color.name}
-                          type="button"
-                          onClick={() => handleColorSelect(color.name)}
-                          className={`w-8 h-8 rounded-full border ${
-                            selectedColor === color.name 
-                              ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-gray-700' 
-                              : ''
-                          }`}
-                          style={{ background: `var(--${color.name}-500)` }}
-                        ></button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                {/* No emoji or color selectors needed anymore */}
                 
                 {/* Preview */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     Preview
                   </label>
-                  <div className={`${formData.gradientClass} rounded-lg p-4 text-black ${formData.borderClass}`}>
+                  <div className="bg-gradient-to-br from-white to-blue-50 rounded-lg p-4 text-black border border-blue-100">
                     <h3 className="font-bold text-base mb-2 text-gray-800 flex items-center gap-2">
-                      {formData.emoji} {formData.title || 'Judul Agenda'}
+                      <span className="text-blue-600">📅</span> {formData.title || 'Judul Agenda'}
                     </h3>
                     <div className="space-y-1 mb-3 text-sm">
                       <p className="text-xs text-gray-600 flex items-center gap-1">
@@ -510,12 +404,12 @@ export default function AdminAgendaPage() {
                         <strong>Oleh:</strong> {formData.organizer || 'Penyelenggara'}
                       </p>
                       <p className="text-xs text-gray-600 flex items-center gap-1">
-                        <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                        <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
                         <strong>Di:</strong> {formData.location || 'Lokasi'}
                       </p>
                     </div>
                     <div className="flex justify-between items-center text-xs">
-                      <span className={`${formData.dateColorClass} font-semibold px-2 py-1 rounded-full`}>
+                      <span className="text-blue-600 bg-blue-100 font-semibold px-2 py-1 rounded-full">
                         {formData.date || 'Tanggal'}
                       </span>
                       <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
