@@ -73,6 +73,8 @@ export class DocxGenerator {
         return this.prepareMeninggalData(commonData);
       case 'SKPindah':
         return this.preparePindahData(commonData);
+      case 'SKTempatTinggal':
+        return this.prepareTempatTinggalData(commonData);
       default:
         return commonData;
     }
@@ -197,6 +199,26 @@ export class DocxGenerator {
     };
   }
 
+  private prepareTempatTinggalData(data: any) {
+    const currentDate = new Date();
+    
+    return {
+      // Placeholder yang sesuai dengan template tempat tinggal
+      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_2: data.nama_orang_2 || '',
+      tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
+      nik: data.nik || '',
+      jenis_kelamin: data.jenis_kelamin || '',
+      agama: data.agama || '',
+      pekerjaan: data.pekerjaan || '',
+      status: data.status || '',
+      alamat: data.alamat || '',
+      jorong: data.jorong || '',
+      tanggal: this.formatDate(currentDate)
+    };
+  }
+
   private formatDate(date: Date): string {
     const months = [
       'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -232,6 +254,7 @@ export class DocxGenerator {
       'SKKelahiran': '470/SKK',
       'SKMeninggalDunia': '470/SKM',
       'SKPindah': '470/SKP',
+      'SKTempatTinggal': '470/SKTT',
     };
     
     return prefixes[serviceType] || '470/SK';

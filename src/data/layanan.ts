@@ -58,14 +58,15 @@ export const layananList: LayananItem[] = [
     hasForm: true
   },
   {
-    id: "surat_cerai",
-    title: "Surat Cerai",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
-    description: "Surat keterangan untuk administrasi perceraian",
+    id: "tempat_tinggal",
+    title: "Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal",
+    items: ["KK", "Fotokopi KTP", "Surat Permohonan Pengajuan"],
+    description: "Surat keterangan untuk administrasi bagi yang tidak memiliki rumah/tempat tinggal tetap",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
-    icon: "📄",
-    color: "from-orange-500 to-orange-600"
+    icon: "🏘️",
+    color: "from-orange-500 to-red-600",
+    hasForm: true
   },
 ];
 
