@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -15,8 +15,9 @@ import NotificationModal from '@/components/admin/NotificationModal';
 
 export default function KelolJorong() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { getJorongData, updateJorongData } = useJorongData();
-  const [jorongData, setJorongData] = useState<JorongData[]>(getJorongData());
+  // Use useRef to prevent re-renders
+  const jorongDataServiceRef = useRef(useJorongData());
+  const [jorongData, setJorongData] = useState<JorongData[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingJorong, setEditingJorong] = useState<JorongData | null>(null);
   const [formData, setFormData] = useState<Partial<JorongData>>({
@@ -53,10 +54,11 @@ export default function KelolJorong() {
     }
   }, [router]);
 
-  // Update local state when data changes
+  // Load data once when component mounts
   useEffect(() => {
-    setJorongData(getJorongData());
-  }, [getJorongData]);
+    const data = jorongDataServiceRef.current.getJorongData();
+    setJorongData(data);
+  }, []);
 
   const availableColors = [
     '#EC4899', '#DC2626', '#06B6D4', '#84CC16', '#10B981',
@@ -420,7 +422,7 @@ export default function KelolJorong() {
 
     // Update data and persist to localStorage
     setJorongData(updatedData);
-    updateJorongData(updatedData);
+    jorongDataServiceRef.current.updateJorongData(updatedData);
 
     handleCloseModal();
   };
@@ -437,7 +439,7 @@ export default function KelolJorong() {
     if (jorongToDelete) {
       const updatedData = jorongData.filter(j => j.id !== jorongToDelete.id);
       setJorongData(updatedData);
-      updateJorongData(updatedData);
+      jorongDataServiceRef.current.updateJorongData(updatedData);
       showNotification('success', 'Data jorong berhasil dihapus!');
       setShowDeleteConfirm(false);
       setJorongToDelete(null);
