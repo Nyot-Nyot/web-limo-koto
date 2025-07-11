@@ -1,19 +1,28 @@
 'use client';
 
-  import { useEffect, useState } from 'react';
-  import { useRouter } from 'next/navigation';
-  import Image from 'next/image';
-  import {
-    PlusIcon,
-    PencilIcon,
-    TrashIcon,
-    ArrowLeftIcon,
-    PhotoIcon
-  } from '@heroicons/react/24/outline';
-  import NotificationModal from '@/components/admin/NotificationModal';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import {
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  ArrowLeftIcon,
+  PhotoIcon
+} from '@heroicons/react/24/outline';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  getDocs,
+  deleteDoc
+} from 'firebase/firestore';
+import NotificationModal from '@/components/admin/NotificationModal';
 
   interface PejabatData {
-    id: number;
+    id: number | string;
     name: string;
     title: string;
     jorong?: string;
@@ -36,11 +45,12 @@
 
   export default function StrukturAdmin() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [pejabatData, setPejabatData] = useState<PejabatData[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPejabat, setEditingPejabat] = useState<PejabatData | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [pejabatToDelete, setPejabatToDelete] = useState<number | null>(null);
+    const [pejabatToDelete, setPejabatToDelete] = useState<string | number | null>(null);
     const [formData, setFormData] = useState({
       name: '',
       title: '',
@@ -54,7 +64,7 @@
     const [showErrorPopup, setShowErrorPopup] = useState(false);
     const [notification, setNotification] = useState<{
       show: boolean;
-      type: 'success' | 'error';
+      type: 'success' | 'error' | 'warning';
       message: string;
     }>({
       show: false,
@@ -63,14 +73,223 @@
     });
     const router = useRouter();
 
-    // Handle file upload
+    // Function to fetch pejabat data from Firestore
+    const fetchPejabatFromFirestore = async () => {
+      setIsLoading(true);
+      try {
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        // Retry mechanism for network issues
+        while (retryCount < maxRetries) {
+          try {
+            console.log('Fetching pejabat data from Firestore, attempt:', retryCount + 1);
+            const snapshot = await getDocs(collection(db, 'pejabat'));
+            
+            if (!snapshot.docs || snapshot.docs.length === 0) {
+              console.log('No pejabat data found in Firestore, using default data');
+              // If no data in Firestore, use default data
+              const defaultData = [
+                {
+                  id: 1,
+                  name: "H. Ahmad Syafrizal",
+                  title: "Wali Nagari",
+                  image: "/images/pejabat-1.jpg",
+                  description: "Memimpin pemerintahan Nagari Lima Koto dengan komitmen untuk kesejahteraan masyarakat."
+                },
+                {
+                  id: 2,
+                  name: "Budi Santoso",
+                  title: "Kepala Jorong",
+                  jorong: "Jorong Balai Cacang",
+                  image: "/images/pejabat-2.jpg",
+                  description: "Mengelola administrasi dan pelayanan masyarakat di Jorong Balai Cacang."
+                }
+              ];
+              setPejabatData(defaultData);
+              localStorage.setItem('pejabatData', JSON.stringify(defaultData));
+              break;
+            }
+            
+            const data = snapshot.docs.map(doc => {
+              const docData = doc.data();
+              return {
+                id: doc.id,
+                name: typeof docData.name === 'string' ? docData.name : '',
+                title: typeof docData.title === 'string' ? docData.title : '',
+                jorong: typeof docData.jorong === 'string' ? docData.jorong : undefined,
+                image: typeof docData.image === 'string' ? docData.image : '',
+                description: typeof docData.description === 'string' ? docData.description : ''
+              } as PejabatData;
+            });
+            
+            // Check if there are any items with extremely large image data
+            const isDataTooLarge = data.some(item => {
+              // Check if base64 image is too large (over 1MB)
+              if (item.image && item.image.length > 1000000) {
+                console.warn(`Large image detected in item '${item.name}'. Consider optimizing.`);
+                return true;
+              }
+              return false;
+            });
+            
+            if (isDataTooLarge) {
+              console.warn('Some images are very large. This may cause performance issues.');
+            }
+            
+            setPejabatData(data);
+            console.log('Successfully fetched', data.length, 'pejabat items from Firestore');
+            
+            // Update localStorage for offline fallback - but be careful with large data
+            try {
+              localStorage.setItem('pejabatData', JSON.stringify(data));
+            } catch (storageError) {
+              console.error('Failed to store pejabat data in localStorage (likely too large):', storageError);
+              // Try to store without images if it fails
+              const dataWithoutImages = data.map(item => ({
+                ...item,
+                image: item.image.substring(0, 100) + '...' // Store just the beginning to keep the format
+              }));
+              localStorage.setItem('pejabatData', JSON.stringify(dataWithoutImages));
+            }
+            
+            break; // Exit the retry loop if successful
+          } catch (fetchError) {
+            retryCount++;
+            if (retryCount >= maxRetries) throw fetchError;
+            console.log(`Fetch attempt ${retryCount} failed. Retrying in ${1000 * retryCount}ms...`, fetchError);
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Wait before retry with increasing delay
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching pejabat data after all retries:', error);
+        showNotification('error', 'Gagal mengambil data pejabat dari server');
+        
+        // Fall back to localStorage if Firestore fails
+        const savedData = localStorage.getItem('pejabatData');
+        if (savedData) {
+          try {
+            console.log('Using data from localStorage instead');
+            const parsedData = JSON.parse(savedData);
+            setPejabatData(parsedData);
+            showNotification('warning', 'Menggunakan data lokal karena masalah jaringan');
+          } catch (e) {
+            console.error('Error parsing localStorage data:', e);
+            // Use default data as last resort
+            console.log('Using default pejabat data as last resort');
+            const defaultData = [
+              {
+                id: 1,
+                name: "H. Ahmad Syafrizal",
+                title: "Wali Nagari",
+                image: "/images/pejabat-1.jpg",
+                description: "Memimpin pemerintahan Nagari Lima Koto dengan komitmen untuk kesejahteraan masyarakat."
+              },
+              {
+                id: 2,
+                name: "Budi Santoso",
+                title: "Kepala Jorong",
+                jorong: "Jorong Balai Cacang",
+                image: "/images/pejabat-2.jpg",
+                description: "Mengelola administrasi dan pelayanan masyarakat di Jorong Balai Cacang."
+              }
+            ];
+            setPejabatData(defaultData);
+            showNotification('warning', 'Menggunakan data default');
+          }
+        } else {
+          // Set default data if no localStorage data
+          const defaultData = [
+            {
+              id: 1,
+              name: "H. Ahmad Syafrizal",
+              title: "Wali Nagari",
+              image: "/images/pejabat-1.jpg",
+              description: "Memimpin pemerintahan Nagari Lima Koto dengan komitmen untuk kesejahteraan masyarakat."
+            },
+            {
+              id: 2,
+              name: "Budi Santoso",
+              title: "Kepala Jorong",
+              jorong: "Jorong Balai Cacang",
+              image: "/images/pejabat-2.jpg",
+              description: "Mengelola administrasi dan pelayanan masyarakat di Jorong Balai Cacang."
+            }
+          ];
+          console.log('No data in localStorage, using default pejabat data');
+          setPejabatData(defaultData);
+          showNotification('warning', 'Menggunakan data default');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Handle file upload with image optimization
     const handleFileUpload = (file: File) => {
       if (file && file.type.startsWith('image/')) {
+        // Check file size before processing
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          showNotification('error', 'Ukuran gambar terlalu besar. Maksimal 5MB.');
+          return;
+        }
+        
         const reader = new FileReader();
         reader.onload = (e) => {
           const result = e.target?.result as string;
-          setFormData({...formData, image: result});
-          setImagePreview(result);
+          
+          // Image optimization for large images
+          if (result.length > 1000000) { // If over ~1MB in base64
+            // Create an image element to resize
+            const img = document.createElement('img');
+            img.onload = () => {
+              // Create canvas for resizing
+              const canvas = document.createElement('canvas');
+              // Calculate new dimensions (maintain aspect ratio)
+              const MAX_WIDTH = 1200;
+              const MAX_HEIGHT = 1200;
+              let width = img.width;
+              let height = img.height;
+              
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height *= MAX_WIDTH / width;
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width *= MAX_HEIGHT / height;
+                  height = MAX_HEIGHT;
+                }
+              }
+              
+              // Set canvas dimensions
+              canvas.width = width;
+              canvas.height = height;
+              
+              // Draw resized image to canvas
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Get optimized image as base64 (JPEG with quality 0.8)
+                const optimizedImage = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Update form data with optimized image
+                setFormData({...formData, image: optimizedImage});
+                setImagePreview(optimizedImage);
+              } else {
+                // Fallback if canvas context isn't available
+                setFormData({...formData, image: result});
+                setImagePreview(result);
+              }
+            };
+            img.src = result;
+          } else {
+            // Small image, use as is
+            setFormData({...formData, image: result});
+            setImagePreview(result);
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -104,7 +323,7 @@
       }
     };
     
-    const showNotification = (type: 'success' | 'error', message: string) => {
+    const showNotification = (type: 'success' | 'error' | 'warning', message: string) => {
       setNotification({ show: true, type, message });
       setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
     };
@@ -143,38 +362,66 @@
         router.push('/admin/login');
       } else {
         setIsAuthenticated(true);
-        // Load existing data from localStorage or set default
-        const savedData = localStorage.getItem('pejabatData');
-        if (savedData) {
-          setPejabatData(JSON.parse(savedData));
-        } else {
-          // Set default data from the existing pejabat data
-          const defaultData = [
-            {
-              id: 1,
-              name: "H. Ahmad Syafrizal",
-              title: "Wali Nagari",
-              image: "/images/pejabat-1.jpg",
-              description: "Memimpin pemerintahan Nagari Lima Koto dengan komitmen untuk kesejahteraan masyarakat."
-            },
-            {
-              id: 2,
-              name: "Budi Santoso",
-              title: "Kepala Jorong",
-              jorong: "Jorong Balai Cacang",
-              image: "/images/pejabat-2.jpg",
-              description: "Mengelola administrasi dan pelayanan masyarakat di Jorong Balai Cacang."
+        setIsLoading(true);
+        
+        // First try to load data from Firestore
+        const loadData = async () => {
+          try {
+            await fetchPejabatFromFirestore();
+          } catch (error) {
+            console.error('Failed to fetch from Firestore:', error);
+            // Fall back to localStorage if Firestore fails
+            const savedData = localStorage.getItem('pejabatData');
+            if (savedData) {
+              try {
+                const parsedData = JSON.parse(savedData);
+                setPejabatData(parsedData);
+                showNotification('warning', 'Menggunakan data lokal karena masalah jaringan');
+              } catch (e) {
+                console.error('Error parsing localStorage data:', e);
+                showNotification('error', 'Terjadi kesalahan saat memuat data');
+              }
+            } else {
+              // Set default data if no localStorage data
+              const defaultData = [
+                {
+                  id: 1,
+                  name: "H. Ahmad Syafrizal",
+                  title: "Wali Nagari",
+                  image: "/images/pejabat-1.jpg",
+                  description: "Memimpin pemerintahan Nagari Lima Koto dengan komitmen untuk kesejahteraan masyarakat."
+                },
+                {
+                  id: 2,
+                  name: "Budi Santoso",
+                  title: "Kepala Jorong",
+                  jorong: "Jorong Balai Cacang",
+                  image: "/images/pejabat-2.jpg",
+                  description: "Mengelola administrasi dan pelayanan masyarakat di Jorong Balai Cacang."
+                }
+              ];
+              setPejabatData(defaultData);
+              localStorage.setItem('pejabatData', JSON.stringify(defaultData));
+              showNotification('warning', 'Menggunakan data default karena masalah jaringan');
             }
-          ];
-          setPejabatData(defaultData);
-          localStorage.setItem('pejabatData', JSON.stringify(defaultData));
-        }
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        loadData();
       }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       setValidationError('');
+      
+      // Check image size - warn if large but allow submission
+      if (formData.image && formData.image.length > 1000000) {
+        console.warn(`Large image detected (${Math.round(formData.image.length/1024)}KB). This may cause performance issues.`);
+      }
       
       // Validate unique positions
       const validationResult = validateUniquePosition(formData.title, formData.jorong);
@@ -184,36 +431,47 @@
         return;
       }
       
-      if (editingPejabat) {
-        // Update existing
-        const updatedData = pejabatData.map(p => 
-          p.id === editingPejabat.id 
-            ? { ...formData, id: editingPejabat.id }
-            : p
-        );
-        setPejabatData(updatedData);
-        localStorage.setItem('pejabatData', JSON.stringify(updatedData));
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
-        showNotification('success', 'Data pejabat berhasil diperbarui!');
-      } else {
-        // Add new
-        const newPejabat = {
-          ...formData,
-          id: Date.now() // Simple ID generation
+      try {
+        // Show loading indicator before saving to Firestore
+        setIsLoading(true);
+        
+        // Prepare the data to save
+        const pejabatData = {
+          name: formData.name,
+          title: formData.title,
+          description: formData.description,
+          image: formData.image,
+          ...(formData.title === 'Kepala Jorong' && { jorong: formData.jorong })
         };
-        const updatedData = [...pejabatData, newPejabat];
-        setPejabatData(updatedData);
-        localStorage.setItem('pejabatData', JSON.stringify(updatedData));
+        
+        if (editingPejabat && typeof editingPejabat.id === 'string') {
+          // Update existing pejabat in Firestore
+          const pejabatRef = doc(db, 'pejabat', editingPejabat.id);
+          await updateDoc(pejabatRef, pejabatData);
+          showNotification('success', 'Data pejabat berhasil diperbarui!');
+        } else {
+          // Add new pejabat to Firestore
+          await addDoc(collection(db, 'pejabat'), pejabatData);
+          showNotification('success', 'Data pejabat berhasil ditambahkan!');
+        }
+        
+        // Refresh data from Firestore
+        await fetchPejabatFromFirestore();
+        
         // Dispatch custom event to notify other components
         window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
-        showNotification('success', 'Data pejabat berhasil ditambahkan!');
+        
+        // Clean up state
+        setIsModalOpen(false);
+        setEditingPejabat(null);
+        setImagePreview(null);
+        setFormData({ name: '', title: '', jorong: '', image: '', description: '' });
+      } catch (error) {
+        console.error('Error saving pejabat data:', error);
+        showNotification('error', 'Terjadi kesalahan saat menyimpan data pejabat');
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsModalOpen(false);
-      setEditingPejabat(null);
-      setImagePreview(null);
-      setFormData({ name: '', title: '', jorong: '', image: '', description: '' });
     };
 
     const handleEdit = (pejabat: PejabatData) => {
@@ -240,19 +498,45 @@
       setIsModalOpen(true);
     };
 
-    const openDeleteModal = (id: number) => {
+    const openDeleteModal = (id: number | string) => {
       setPejabatToDelete(id);
       setDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
       if (pejabatToDelete !== null) {
-        const updatedData = pejabatData.filter(p => p.id !== pejabatToDelete);
-        setPejabatData(updatedData);
-        localStorage.setItem('pejabatData', JSON.stringify(updatedData));
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
-        showNotification('success', 'Data pejabat berhasil dihapus!');
+        try {
+          setIsLoading(true);
+          
+          if (typeof pejabatToDelete === 'string') {
+            // Delete from Firestore
+            const docRef = doc(db, 'pejabat', pejabatToDelete);
+            await deleteDoc(docRef);
+            
+            // Refresh data from Firestore
+            await fetchPejabatFromFirestore();
+            
+            // Dispatch custom event to notify other components
+            window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
+            
+            showNotification('success', 'Data pejabat berhasil dihapus!');
+          } else {
+            // For backwards compatibility with numeric IDs (local only)
+            const updatedData = pejabatData.filter(p => p.id !== pejabatToDelete);
+            setPejabatData(updatedData);
+            localStorage.setItem('pejabatData', JSON.stringify(updatedData));
+            
+            // Dispatch custom event to notify other components
+            window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'pejabat' } }));
+            
+            showNotification('success', 'Data pejabat berhasil dihapus dari penyimpanan lokal!');
+          }
+        } catch (error) {
+          console.error('Error deleting pejabat data:', error);
+          showNotification('error', 'Terjadi kesalahan saat menghapus data pejabat');
+        } finally {
+          setIsLoading(false);
+        }
       }
       setDeleteModalOpen(false);
       setPejabatToDelete(null);
@@ -297,56 +581,66 @@
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Pejabat List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {pejabatData.map((pejabat) => (
-              <div key={pejabat.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg w-full max-w-sm mx-auto flex flex-col h-[500px]">
-                <div className="relative w-full h-[300px] flex-shrink-0">
-                  <Image
-                    src={pejabat.image}
-                    alt={pejabat.name}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    className="w-full h-full"
-                  />
-                </div>
-                <div className="p-4 flex flex-col h-[200px] overflow-hidden">
-                  <div className="flex-1 min-h-0 overflow-hidden">
-                    <h3 className="text-lg font-bold text-yellow-400 mb-1 line-clamp-2 overflow-hidden text-ellipsis">
-                      {pejabat.name}
-                    </h3>
-                    <p className="text-base font-semibold text-white mb-1 line-clamp-1 overflow-hidden text-ellipsis">
-                      {pejabat.title}
-                    </p>
-                    {pejabat.jorong && (
-                      <p className="text-xs text-yellow-200 mb-2 line-clamp-1 overflow-hidden text-ellipsis">
-                        {pejabat.jorong}
-                      </p>
-                    )}
-                    <p className="text-gray-300 text-xs line-clamp-3 overflow-hidden text-ellipsis">
-                      {pejabat.description}
-                    </p>
+          {/* Loading indicator */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-300">Memuat data pejabat...</p>
+            </div>
+          ) : (
+            <>
+              {/* Pejabat List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {pejabatData.map((pejabat) => (
+                  <div key={pejabat.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg w-full max-w-sm mx-auto flex flex-col h-[500px]">
+                    <div className="relative w-full h-[300px] flex-shrink-0">
+                      <Image
+                        src={pejabat.image}
+                        alt={pejabat.name}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        className="w-full h-full"
+                      />
+                    </div>
+                    <div className="p-4 flex flex-col h-[200px] overflow-hidden">
+                      <div className="flex-1 min-h-0 overflow-hidden">
+                        <h3 className="text-lg font-bold text-yellow-400 mb-1 line-clamp-2 overflow-hidden text-ellipsis">
+                          {pejabat.name}
+                        </h3>
+                        <p className="text-base font-semibold text-white mb-1 line-clamp-1 overflow-hidden text-ellipsis">
+                          {pejabat.title}
+                        </p>
+                        {pejabat.jorong && (
+                          <p className="text-xs text-yellow-200 mb-2 line-clamp-1 overflow-hidden text-ellipsis">
+                            {pejabat.jorong}
+                          </p>
+                        )}
+                        <p className="text-gray-300 text-xs line-clamp-3 overflow-hidden text-ellipsis">
+                          {pejabat.description}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2 mt-auto pt-2 border-t border-gray-700 flex-shrink-0">
+                        <button
+                          onClick={() => handleEdit(pejabat)}
+                          className="flex items-center space-x-1 px-2 py-1 bg-green-600 hover:bg-green-700 rounded-md transition-colors text-xs flex-shrink-0"
+                        >
+                          <PencilIcon className="w-3 h-3" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(pejabat.id)}
+                          className="flex items-center space-x-1 px-2 py-1 bg-red-600 hover:bg-red-700 rounded-md transition-colors text-xs flex-shrink-0"
+                        >
+                          <TrashIcon className="w-3 h-3" />
+                          <span>Hapus</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex space-x-2 mt-auto pt-2 border-t border-gray-700 flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(pejabat)}
-                      className="flex items-center space-x-1 px-2 py-1 bg-green-600 hover:bg-green-700 rounded-md transition-colors text-xs flex-shrink-0"
-                    >
-                      <PencilIcon className="w-3 h-3" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => openDeleteModal(pejabat.id)}
-                      className="flex items-center space-x-1 px-2 py-1 bg-red-600 hover:bg-red-700 rounded-md transition-colors text-xs flex-shrink-0"
-                    >
-                      <TrashIcon className="w-3 h-3" />
-                      <span>Hapus</span>
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
 
         {/* Modal */}
