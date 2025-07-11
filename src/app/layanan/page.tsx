@@ -16,6 +16,7 @@ const OperationalHours = dynamic(() => import("@/components/layanan/OperationalH
 const ReviewSection = dynamic(() => import("@/components/layanan/ReviewSection"));
 const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliForm"), { ssr: false });
 const SKTMForm = dynamic(() => import("@/components/layanan/SKTMForm"), { ssr: false });
+const SKUForm = dynamic(() => import("@/components/layanan/SKUForm"), { ssr: false });
 const StepsForm = dynamic(() => import("@/components/layanan/StepsForm"), { ssr: false });
 
 // Constants
@@ -55,6 +56,7 @@ export default function LayananPage() {
       case 'sktm':
         return <SKTMForm onClose={closeModal} />;
       case 'usaha':
+        return <SKUForm onClose={closeModal} />;
       case 'pengantar_nikah':
       case 'surat_kematian':
       case 'surat_cerai':

@@ -8,6 +8,7 @@ export interface LayananItem {
   biaya: string;
   icon: string;
   color: string;
+  hasForm?: boolean;
 }
 
 export interface ContactItem {
@@ -53,4 +54,27 @@ export interface ModalState {
   isOpen: boolean;
   type: string;
   title: string;
+}
+
+export interface SKUFormData {
+  nama: string;
+  nik: string;
+  tempat_lahir: string;
+  tanggal_lahir: string;
+  jenis_kelamin: string;
+  alamat: string;
+  rt: string;
+  rw: string;
+  dusun: string;
+  agama: string;
+  pekerjaan: string;
+  status_perkawinan: string;
+  nama_usaha: string;
+  jenis_usaha: string;
+  alamat_usaha: string;
+  modal_usaha: string;
+  lama_usaha: string;
+  omzet_perbulan: string;
+  keperluan: string;
+  no_hp: string;
 }
