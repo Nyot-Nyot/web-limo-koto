@@ -5,22 +5,24 @@ export const layananList: LayananItem[] = [
   {
     id: "domisili",
     title: "Surat Keterangan Domisili",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
+    items: ["Kartu Keluarga (KK)", "Fotokopi KTP", "Surat Permohonan Pengajuan SK Domisili"],
     description: "Surat keterangan tempat tinggal untuk keperluan administrasi",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
     icon: "🏠",
-    color: "from-blue-500 to-blue-600"
+    color: "from-blue-500 to-blue-600",
+    hasForm: true
   },
   {
-    id: "sktm",
-    title: "Surat Keterangan Tidak Mampu (SKTM)",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
-    description: "Surat keterangan untuk bantuan sosial atau beasiswa",
+    id: "kelahiran",
+    title: "Surat Keterangan Kelahiran",
+    items: ["Surat Pengantar RT/RW", "Fotocopy Surat dari Bidan/Rumah Sakit", "Fotocopy Kartu Keluarga", "Fotocopy KTP Orangtua"],
+    description: "Surat keterangan kelahiran untuk administrasi akte kelahiran",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
-    icon: "📋",
-    color: "from-green-500 to-green-600"
+    icon: "�",
+    color: "from-pink-500 to-purple-600",
+    hasForm: true
   },
   {
     id: "usaha",

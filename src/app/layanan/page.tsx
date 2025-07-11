@@ -14,8 +14,8 @@ const PageHeader = dynamic(() => import("@/components/layanan/PageHeader"));
 const BackgroundLayer = dynamic(() => import("@/components/layanan/BackgroundLayer"));
 const OperationalHours = dynamic(() => import("@/components/layanan/OperationalHours"));
 const ReviewSection = dynamic(() => import("@/components/layanan/ReviewSection"));
-const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliForm"), { ssr: false });
-const SKTMForm = dynamic(() => import("@/components/layanan/SKTMForm"), { ssr: false });
+const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliFormNew"), { ssr: false });
+const SKKelahiranForm = dynamic(() => import("@/components/layanan/SKKelahiranForm"), { ssr: false });
 const SKUForm = dynamic(() => import("@/components/layanan/SKUForm"), { ssr: false });
 const StepsForm = dynamic(() => import("@/components/layanan/StepsForm"), { ssr: false });
 
@@ -53,8 +53,8 @@ export default function LayananPage() {
     switch (modalState.type) {
       case 'domisili':
         return <DomisiliForm onClose={closeModal} />;
-      case 'sktm':
-        return <SKTMForm onClose={closeModal} />;
+      case 'kelahiran':
+        return <SKKelahiranForm onClose={closeModal} />;
       case 'usaha':
         return <SKUForm onClose={closeModal} />;
       case 'pengantar_nikah':

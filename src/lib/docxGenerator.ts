@@ -65,6 +65,10 @@ export class DocxGenerator {
     switch (serviceType) {
       case 'SKU_AN':
         return this.prepareUsahaData(commonData);
+      case 'SKDomisili':
+        return this.prepareDomisiliData(commonData);
+      case 'SKKelahiran':
+        return this.prepareKelahiranData(commonData);
       default:
         return commonData;
     }
@@ -91,6 +95,50 @@ export class DocxGenerator {
       nama_kabupaten: data.nama_kabupaten || 'Kabupaten Sijunjung',
       nama_sekretaris: '[Akan diisi admin]',
       tanggal: this.formatDate(currentDate)
+    };
+  }
+
+  private prepareDomisiliData(data: any) {
+    const currentDate = new Date();
+    
+    return {
+      // Placeholder yang sesuai dengan template domisili
+      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_2: data.nama_orang_2 || '',
+      tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
+      nik: data.nik || '',
+      jenis_kelamin: data.jenis_kelamin || '',
+      agama: data.agama || '',
+      status: data.status || '',
+      pekerjaan: data.pekerjaan || '',
+      alamat: data.alamat || '',
+      nama_jorong: data.nama_jorong || '',
+      nama_nagari: data.nama_nagari || 'Nagari Limo Koto',
+      nama_kecamatan: data.nama_kecamatan || 'Koto IV',
+      nama_kabupaten: data.nama_kabupaten || 'Kabupaten Sijunjung',
+      tujuan: data.tujuan || '',
+      tanggal: this.formatDate(currentDate)
+    };
+  }
+
+  private prepareKelahiranData(data: any) {
+    const currentDate = new Date();
+    
+    return {
+      // Placeholder yang sesuai dengan template kelahiran
+      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      hari: data.hari || '',
+      tanggal: data.tanggal || '',
+      jam: data.jam || '',
+      tempat: data.tempat || '',
+      nama_orang_2: data.nama_orang_2 || '', // nama bayi
+      jenis_kelamin: data.jenis_kelamin || '',
+      nama_ibu: data.nama_ibu || '',
+      nama_ayah: data.nama_ayah || '',
+      alamat: data.alamat || '',
+      tanggal_saat_ini: this.formatDate(currentDate)
     };
   }
 
@@ -125,6 +173,8 @@ export class DocxGenerator {
   private getSuratPrefix(serviceType: string): string {
     const prefixes: Record<string, string> = {
       'SKU_AN': '470/SKU',
+      'SKDomisili': '470/SKD',
+      'SKKelahiran': '470/SKK',
     };
     
     return prefixes[serviceType] || '470/SK';
