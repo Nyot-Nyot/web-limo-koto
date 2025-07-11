@@ -25,7 +25,7 @@ export const layananList: LayananItem[] = [
   {
     id: "usaha",
     title: "Surat Keterangan Usaha",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW", "Foto tempat usaha", "Keterangan modal usaha"],
+    items: ["FC KK dan KTP", "Surat pengantar RT/RW", "Foto tempat usaha"],
     description: "Surat keterangan untuk legalisasi usaha mikro dan kecil",
     estimasi: "2-3 hari kerja",
     biaya: "Gratis",

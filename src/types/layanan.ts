@@ -57,24 +57,21 @@ export interface ModalState {
 }
 
 export interface SKUFormData {
-  nama: string;
+  nama_orang_2: string;
+  tempat_tanggal_lahir: string;
   nik: string;
-  tempat_lahir: string;
-  tanggal_lahir: string;
-  jenis_kelamin: string;
-  alamat: string;
-  rt: string;
-  rw: string;
-  dusun: string;
   agama: string;
   pekerjaan: string;
-  status_perkawinan: string;
+  status: string;
+  alamat: string;
   nama_usaha: string;
-  jenis_usaha: string;
-  alamat_usaha: string;
-  modal_usaha: string;
-  lama_usaha: string;
-  omzet_perbulan: string;
-  keperluan: string;
-  no_hp: string;
+  tempat_usaha: string;
+  nama_nagari: string;
+  nama_kecamatan: string;
+  nama_kabupaten: string;
+  // File uploads
+  ktp?: File | null;
+  kk?: File | null;
+  pengantar_rt_rw?: File | null;
+  foto_tempat_usaha?: File | null;
 }

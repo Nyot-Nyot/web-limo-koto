@@ -71,36 +71,26 @@ export class DocxGenerator {
   }
 
   private prepareUsahaData(data: any) {
-    // Format tanggal lahir dari format YYYY-MM-DD ke format DD-MM-YYYY
-    const formatTanggalLahir = (tanggal: string, tempat: string) => {
-      if (!tanggal) return '';
-      const date = new Date(tanggal);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${tempat}, ${day}-${month}-${year}`;
-    };
-
+    const currentDate = new Date();
+    
     return {
-      // Placeholder yang ada di template
-      nama_orang_1: '', // Akan diisi admin
-      jabatan_orang_1: '', // Akan diisi admin
-      nama_orang_2: data.nama || '',
-      tempat_tanggal_lahir: formatTanggalLahir(data.tanggal_lahir, data.tempat_lahir),
+      // Placeholder yang sesuai dengan template
+      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_2: data.nama_orang_2 || '',
+      tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
       nik: data.nik || '',
-      islam: data.agama || 'Islam',
-      pekerjaan: data.pekerjaan || 'Wiraswasta',
-      status: data.status_perkawinan || 'Belum Kawin',
-      alamat: `${data.alamat}, RT ${data.rt}/RW ${data.rw}${data.dusun ? ', ' + data.dusun : ''}`,
+      agama: data.agama || '',
+      pekerjaan: data.pekerjaan || '',
+      status: data.status || '',
+      alamat: data.alamat || '',
       nama_usaha: data.nama_usaha || '',
-      tempat_usaha: data.alamat_usaha || data.alamat,
-      nama_nagari: 'Limo Koto',
-      nama_kecamatan: 'Sijunjung',
-      nama_kabupaten: 'Sijunjung',
-      nama_sekretaris: '', // Akan diisi admin
-      
-      // Data tambahan untuk keperluan internal
-      ...data
+      tempat_usaha: data.tempat_usaha || '',
+      nama_nagari: data.nama_nagari || 'Nagari Limo Koto',
+      nama_kecamatan: data.nama_kecamatan || 'Kecamatan Sijunjung',
+      nama_kabupaten: data.nama_kabupaten || 'Kabupaten Sijunjung',
+      nama_sekretaris: '[Akan diisi admin]',
+      tanggal: this.formatDate(currentDate)
     };
   }
 

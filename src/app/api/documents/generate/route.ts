@@ -3,10 +3,39 @@ import { DocxGenerator } from '@/lib/docxGenerator';
 
 export async function POST(request: NextRequest) {
   try {
-    const { serviceType, formData } = await request.json();
+    const contentType = request.headers.get('content-type') || '';
+    
+    let serviceType: string;
+    let formDataObj: Record<string, any>;
+    let files: Record<string, File> = {};
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData (with file uploads)
+      const formData = await request.formData();
+      
+      serviceType = formData.get('serviceType') as string;
+      formDataObj = {};
+      
+      // Extract form fields and files
+      for (const [key, value] of formData.entries()) {
+        if (key !== 'serviceType') {
+          if (value instanceof File && value.size > 0) {
+            files[key] = value;
+            console.log(`Uploaded file ${key}: ${value.name} (${value.size} bytes)`);
+          } else if (typeof value === 'string') {
+            formDataObj[key] = value;
+          }
+        }
+      }
+    } else {
+      // Handle JSON (legacy support)
+      const body = await request.json();
+      serviceType = body.serviceType;
+      formDataObj = body.formData;
+    }
     
     // Validate required fields
-    if (!serviceType || !formData) {
+    if (!serviceType || !formDataObj) {
       return NextResponse.json({ 
         success: false, 
         error: 'Missing required fields: serviceType and formData' 
@@ -15,11 +44,11 @@ export async function POST(request: NextRequest) {
 
     // Generate document
     const docxGenerator = new DocxGenerator();
-    const docxBuffer = await docxGenerator.generateDocument(serviceType, formData);
+    const docxBuffer = await docxGenerator.generateDocument(serviceType, formDataObj);
     
     // Create filename
     const timestamp = Date.now();
-    const filename = `${formData.nama || 'document'}-${serviceType}-${timestamp}.docx`;
+    const filename = `${formDataObj.nama_orang_2 || formDataObj.nama || 'document'}-${serviceType}-${timestamp}.docx`;
     
     // Return the file as download
     const uint8Array = new Uint8Array(docxBuffer);
