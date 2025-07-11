@@ -3,6 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  getDocs,
+  deleteDoc
+} from 'firebase/firestore';
 import {
   PlusIcon,
   PencilIcon,
@@ -19,6 +28,7 @@ import NotificationModal from '@/components/admin/NotificationModal';
 
 export default function AdminBeritaPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
@@ -187,12 +197,31 @@ export default function AdminBeritaPage() {
 
   // Handle content video file upload
   const handleContentVideoFileUpload = (file: File) => {
-    if (!isClient || !file || !file.type.startsWith('video/')) return;
+    if (!isClient || !file || !file.type.startsWith('video/')) {
+      console.warn('Invalid video file:', file);
+      return;
+    }
+    
+    // Check file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      showNotification('error', 'Ukuran video terlalu besar. Maksimal 100MB.');
+      return;
+    }
     
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      setCurrentBlockUrl(result);
+      if (result && result.startsWith('data:video/')) {
+        setCurrentBlockUrl(result);
+        console.log('Video file successfully converted to base64');
+      } else {
+        console.error('Failed to convert video file to base64');
+        showNotification('error', 'Gagal memproses file video. Silakan coba lagi.');
+      }
+    };
+    reader.onerror = () => {
+      console.error('Error reading video file');
+      showNotification('error', 'Gagal membaca file video. Silakan coba lagi.');
     };
     reader.readAsDataURL(file);
   };
@@ -201,8 +230,12 @@ export default function AdminBeritaPage() {
   const handleBlockVideoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log('Video file selected:', file.name, file.type, file.size);
       setCurrentBlockVideoFile(file);
       handleContentVideoFileUpload(file);
+      
+      // Reset the file input to allow selecting the same file again if needed
+      e.target.value = '';
     }
   };
 
@@ -228,7 +261,7 @@ export default function AdminBeritaPage() {
   };
 
   // Handle adding a new block
-  const handleAddBlock = () => {
+  const handleAddBlock = async () => {
     const newBlock: {
       type: 'subheading' | 'text' | 'image' | 'video' | 'quote' | 'list';
       content?: string;
@@ -278,8 +311,15 @@ export default function AdminBeritaPage() {
             newBlock.url = currentBlockUrl;
           }
         } else {
-          // Use as-is for uploaded videos or other video platforms
-          newBlock.url = currentBlockUrl;
+          // For uploaded videos or other video platforms, ensure we use the processed URL
+          // Make sure we don't have any File objects here
+          if (currentBlockUrl.startsWith('data:video/')) {
+            // This is already a base64 string, use as is
+            newBlock.url = currentBlockUrl;
+          } else {
+            // This is a regular URL
+            newBlock.url = currentBlockUrl;
+          }
         }
         
         newBlock.caption = currentBlockCaption;
@@ -363,23 +403,158 @@ export default function AdminBeritaPage() {
       router.push('/admin/login');
     } else {
       setIsAuthenticated(true);
+      setIsLoading(true);
       
-      // Load news data from localStorage or set default
-      const savedData = localStorage.getItem('newsData');
-      if (savedData) {
-        setNewsItems(JSON.parse(savedData));
-      } else {
-        setNewsItems(mockNewsData);
-        localStorage.setItem('newsData', JSON.stringify(mockNewsData));
-      }
+      // First try to load data from Firestore
+      const loadData = async () => {
+        try {
+          await fetchNewsFromFirestore();
+        } catch (error) {
+          console.error('Failed to fetch from Firestore:', error);
+          // Fall back to localStorage if Firestore fails
+          const savedData = localStorage.getItem('newsData');
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setNewsItems(parsedData);
+              showNotification('error', 'Menggunakan data lokal karena masalah jaringan');
+            } catch (e) {
+              console.error('Error parsing localStorage data:', e);
+              showNotification('error', 'Terjadi kesalahan saat memuat data');
+            }
+          } else {
+            // Set default data if no localStorage data
+            setNewsItems(mockNewsData);
+            localStorage.setItem('newsData', JSON.stringify(mockNewsData));
+            showNotification('error', 'Menggunakan data default karena masalah jaringan');
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Function to fetch news data from Firestore
+  const fetchNewsFromFirestore = async () => {
+    setIsLoading(true);
+    try {
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      // Retry mechanism for network issues
+      while (retryCount < maxRetries) {
+        try {
+          console.log('Fetching news data from Firestore, attempt:', retryCount + 1);
+          const snapshot = await getDocs(collection(db, 'berita'));
+          
+          if (!snapshot.docs || snapshot.docs.length === 0) {
+            console.log('No news data found in Firestore, using default data');
+            // If no data in Firestore, use default data
+            setNewsItems(mockNewsData);
+            localStorage.setItem('newsData', JSON.stringify(mockNewsData));
+            break;
+          }
+          
+          const data = snapshot.docs.map(doc => {
+            const docData = doc.data();
+            return {
+              id: doc.id,
+              title: typeof docData.title === 'string' ? docData.title : '',
+              excerpt: typeof docData.excerpt === 'string' ? docData.excerpt : '',
+              tags: Array.isArray(docData.tags) ? docData.tags : [],
+              categoryColor: typeof docData.categoryColor === 'string' ? docData.categoryColor : 'bg-gradient-to-r from-red-500 to-pink-600',
+              imageSrc: typeof docData.imageSrc === 'string' ? docData.imageSrc : '',
+              isFeatured: typeof docData.isFeatured === 'boolean' ? docData.isFeatured : false,
+              blocks: Array.isArray(docData.blocks) ? docData.blocks : [],
+              href: typeof docData.href === 'string' ? docData.href : `/berita/${doc.id}`,
+              date: typeof docData.date === 'string' ? docData.date : new Date().toLocaleDateString('id-ID', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              }),
+              views: typeof docData.views === 'number' ? docData.views : 0,
+              category: typeof docData.category === 'string' ? docData.category : 'trending',
+              backgroundGradient: typeof docData.backgroundGradient === 'string' ? docData.backgroundGradient : 'bg-gradient-to-br from-blue-400 to-blue-600',
+              emoji: typeof docData.emoji === 'string' ? docData.emoji : '📰'
+            } as NewsItem;
+          });
+          
+          // Check if there are any items with extremely large image data
+          const isDataTooLarge = data.some(item => {
+            // Check if base64 image is too large (over 1MB)
+            if (item.imageSrc && item.imageSrc.length > 1000000) {
+              console.warn(`Large image detected in item '${item.title}'. Consider optimizing.`);
+              return true;
+            }
+            return false;
+          });
+          
+          if (isDataTooLarge) {
+            console.warn('Some images are very large. This may cause performance issues.');
+          }
+          
+          setNewsItems(data);
+          console.log('Successfully fetched', data.length, 'news items from Firestore');
+          
+          // Update localStorage for offline fallback - but be careful with large data
+          try {
+            localStorage.setItem('newsData', JSON.stringify(data));
+          } catch (storageError) {
+            console.error('Failed to store news data in localStorage (likely too large):', storageError);
+            // Try to store without images if it fails
+            const dataWithoutImages = data.map(item => ({
+              ...item,
+              imageSrc: item.imageSrc ? item.imageSrc.substring(0, 100) + '...' : '' // Store just the beginning to keep the format
+            }));
+            localStorage.setItem('newsData', JSON.stringify(dataWithoutImages));
+          }
+          
+          break; // Exit the retry loop if successful
+        } catch (fetchError) {
+          retryCount++;
+          if (retryCount >= maxRetries) throw fetchError;
+          console.log(`Fetch attempt ${retryCount} failed. Retrying in ${1000 * retryCount}ms...`, fetchError);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Wait before retry with increasing delay
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching news data after all retries:', error);
+      showNotification('error', 'Gagal mengambil data berita dari server');
+      
+      // Fall back to localStorage if Firestore fails
+      const savedData = localStorage.getItem('newsData');
+      if (savedData) {
+        try {
+          console.log('Using data from localStorage instead');
+          const parsedData = JSON.parse(savedData);
+          setNewsItems(parsedData);
+          showNotification('error', 'Menggunakan data lokal karena masalah jaringan');
+        } catch (e) {
+          console.error('Error parsing localStorage data:', e);
+          // Use default data as last resort
+          console.log('Using default news data as last resort');
+          setNewsItems(mockNewsData);
+          showNotification('error', 'Menggunakan data default');
+        }
+      } else {
+        // Set default data if no localStorage data
+        console.log('No data in localStorage, using default news data');
+        setNewsItems(mockNewsData);
+        showNotification('error', 'Menggunakan data default');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.excerpt.trim()) {
-      // Use notification system for error messages instead of popup
       showNotification('error', 'Judul dan excerpt harus diisi!');
       return;
     }
@@ -415,86 +590,196 @@ export default function AdminBeritaPage() {
     // First close the modal to avoid UI conflicts
     setIsModalOpen(false);
     
-    // Wait a brief moment before continuing with the save operation
-    setTimeout(() => {
-      if (editingItem) {
-        // Update existing
-        const updatedData = newsItems.map(item => 
-          item.id === editingItem.id 
-            ? { 
-                ...formData, 
-                id: editingItem.id,
-                href: `/berita/${editingItem.id}`,
-                date: editingItem.date, // Keep original date
-                views: editingItem.views, // Keep original views
-                category: formData.tags[0] || 'trending', // Use first tag as main category
-                backgroundGradient: item.backgroundGradient || 'bg-gradient-to-br from-blue-400 to-blue-600', // Keep existing backgroundGradient
-                emoji: item.emoji || '📰', // Keep existing emoji
-                blocks: formData.blocks // Save the blocks content
-              }
-            : item
-        );
-        setNewsItems(updatedData);
-        localStorage.setItem('newsData', JSON.stringify(updatedData));
-        
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
-        
-        // Show notification after updating data
-        showNotification('success', `Berita "${formData.title}" berhasil diperbarui!`);
-      } else {
-        // Add new
-        const newItem: NewsItem = {
-          ...formData,
-          id: Date.now().toString(),
-          href: `/berita/${Date.now()}`,
-          date: new Date().toLocaleDateString('id-ID', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-          }),
-          views: 0,
-          category: formData.tags[0] || 'trending', // Use first tag as main category
-          backgroundGradient: 'bg-gradient-to-br from-blue-400 to-blue-600', // Default backgroundGradient
-          emoji: '📰', // Default emoji
-          blocks: formData.blocks // Save the blocks content
-        };
-        const updatedData = [...newsItems, newItem];
-        setNewsItems(updatedData);
-        localStorage.setItem('newsData', JSON.stringify(updatedData));
-        
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
-        
-        // Show notification after updating data
-        showNotification('success', `Berita "${formData.title}" berhasil ditambahkan!`);
+    try {
+      // Show loading indicator before saving to Firestore
+      setIsLoading(true);
+      
+      // Process blocks to ensure all data is properly formatted and no File objects remain
+      console.log('Processing blocks before saving to Firestore:', formData.blocks);
+      
+      const processedBlocks = await Promise.all(
+        formData.blocks.map(async (block) => {
+          const processedBlock = { ...block };
+          
+          // Remove any File objects and ensure proper data format
+          if (block.type === 'video' && block.url) {
+            console.log('Processing video block:', block.url.substring(0, 50) + '...');
+            // For video blocks, ensure we only save the URL string, not File objects
+            if (block.url.startsWith('data:video/')) {
+              // This is a base64 video, keep as is
+              processedBlock.url = block.url;
+            } else {
+              // This is a URL, keep as is
+              processedBlock.url = block.url;
+            }
+          }
+          
+          if (block.type === 'image' && block.url) {
+            console.log('Processing image block:', block.url.substring(0, 50) + '...');
+            // For image blocks, ensure we only save the URL string, not File objects
+            if (block.url.startsWith('data:image/')) {
+              // This is a base64 image, keep as is
+              processedBlock.url = block.url;
+            } else {
+              // This is a URL, keep as is
+              processedBlock.url = block.url;
+            }
+          }
+          
+          // Ensure no File objects or other complex objects remain
+          Object.keys(processedBlock).forEach(key => {
+            const value = processedBlock[key as keyof typeof processedBlock];
+            if (value && typeof value === 'object' && value.constructor === File) {
+              console.warn(`File object detected in block ${key}, removing...`);
+              delete processedBlock[key as keyof typeof processedBlock];
+            }
+          });
+          
+          return processedBlock;
+        })
+      );
+      
+      console.log('Processed blocks:', processedBlocks);
+      
+      // Additional validation: check for any remaining File objects in the entire structure
+      const validateNoFileObjects = (obj: unknown, path = ''): boolean => {
+        if (obj && typeof obj === 'object') {
+          if (obj.constructor === File) {
+            console.error(`File object found at path: ${path}`);
+            return false;
+          }
+          if (Array.isArray(obj)) {
+            return obj.every((item, index) => validateNoFileObjects(item, `${path}[${index}]`));
+          }
+          return Object.keys(obj).every(key => validateNoFileObjects((obj as Record<string, unknown>)[key], `${path}.${key}`));
+        }
+        return true;
+      };
+      
+      if (!validateNoFileObjects(processedBlocks, 'blocks')) {
+        throw new Error('File objects detected in blocks array. Please try again.');
       }
-    }, 300);
-    // State reset is handled separately after the modal is closed
-    // to prevent conflicts with notifications
-    setTimeout(() => {
-      setEditingItem(null);
-      setImagePreview(null);
-      setFormData({
-        title: '',
-        excerpt: '',
-        tags: [],
-        categoryColor: 'bg-gradient-to-r from-red-500 to-pink-600',
-        imageSrc: '',
-        isFeatured: false,
-        blocks: []
+      
+      // Log the final data structure before saving
+      console.log('Final news data structure:', {
+        title: formData.title.trim(),
+        excerpt: formData.excerpt.trim(),
+        tags: formData.tags.map(tag => tag.trim()),
+        blocks: processedBlocks,
+        blocksCount: processedBlocks.length
       });
-      setTagInput('');
-      setCurrentBlockContent('');
-      setCurrentBlockUrl('');
-      setCurrentBlockCaption('');
-      setCurrentListItems(['']);
-      setCurrentListItemInput('');
-      setCurrentBlockImageFile(null);
-      setCurrentBlockImagePreview(null);
-      setCurrentBlockVideoFile(null);
-      setUseVideoFile(false);
-    }, 500);
+      
+      // Prepare the data to save including href property
+      const newsData: Omit<NewsItem, 'id'> = {
+        title: formData.title.trim(),
+        excerpt: formData.excerpt.trim(),
+        tags: formData.tags.map(tag => tag.trim()),
+        categoryColor: formData.categoryColor || 'bg-gradient-to-r from-red-500 to-pink-600',
+        imageSrc: formData.imageSrc || '',
+        isFeatured: Boolean(formData.isFeatured),
+        blocks: processedBlocks,
+        category: formData.tags[0]?.trim() || 'trending',
+        backgroundGradient: 'bg-gradient-to-br from-blue-400 to-blue-600',
+        emoji: '📰',
+        date: editingItem?.date || new Date().toLocaleDateString('id-ID', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        }),
+        views: editingItem?.views || 0,
+        href: ''  // Will be set later based on document ID
+      };
+
+      let docRef;
+      
+      if (editingItem && typeof editingItem.id === 'string') {
+        // Update existing news item in Firestore
+        docRef = doc(db, 'berita', editingItem.id);
+        newsData.href = `/berita/${editingItem.id}`;
+        await updateDoc(docRef, newsData);
+        showNotification('success', 'Data berita berhasil diperbarui!');
+      } else {
+        // Add new news item to Firestore
+        const collectionRef = collection(db, 'berita');
+        docRef = await addDoc(collectionRef, {
+          ...newsData,
+          href: '' // Temporary value, will be updated after getting document ID
+        });
+        
+        // Update with the new href after getting document ID
+        const newHref = `/berita/${docRef.id}`;
+        await updateDoc(docRef, { href: newHref });
+        showNotification('success', 'Data berita berhasil ditambahkan!');
+      }
+      
+      // Refresh data from Firestore with retry mechanism
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await fetchNewsFromFirestore();
+          break;
+        } catch (error) {
+          retries--;
+          if (retries === 0) {
+            throw error;
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+      
+      // Clean up state with extra care for file references
+      setTimeout(() => {
+        setEditingItem(null);
+        setImagePreview(null);
+        setFormData({
+          title: '',
+          excerpt: '',
+          tags: [],
+          categoryColor: 'bg-gradient-to-r from-red-500 to-pink-600',
+          imageSrc: '',
+          isFeatured: false,
+          blocks: []
+        });
+        setTagInput('');
+        setCurrentBlockContent('');
+        setCurrentBlockUrl('');
+        setCurrentBlockCaption('');
+        setCurrentListItems(['']);
+        setCurrentListItemInput('');
+        setCurrentBlockImageFile(null);
+        setCurrentBlockImagePreview(null);
+        setCurrentBlockVideoFile(null);
+        setUseVideoFile(false);
+        
+        // Additional cleanup for any remaining file references
+        console.log('Form state cleaned up after successful save');
+      }, 500);
+    } catch (error) {
+      console.error('Error saving news data:', error);
+      
+      // Provide more specific error messages based on the error type
+      let errorMessage = 'Terjadi kesalahan saat menyimpan data berita. Silakan coba lagi.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('File objects detected')) {
+          errorMessage = 'Terjadi kesalahan dengan file yang diunggah. Silakan coba unggah ulang file dan simpan kembali.';
+        } else if (error.message.includes('invalid nested entity')) {
+          errorMessage = 'Terjadi kesalahan dengan format data. Silakan periksa kembali file gambar/video yang diunggah.';
+        } else if (error.message.includes('document to update')) {
+          errorMessage = 'Dokumen yang akan diperbarui tidak ditemukan. Silakan refresh halaman dan coba lagi.';
+        }
+      }
+      
+      showNotification('error', errorMessage);
+      
+      // Reopen modal if there was an error
+      setIsModalOpen(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleEdit = (item: NewsItem) => {
@@ -533,28 +818,34 @@ export default function AdminBeritaPage() {
   };
 
   // Improved delete confirmation with proper notification
-  const confirmDelete = () => {
-    if (itemToDelete) {
-      // First hide the confirmation dialog
-      setShowDeleteConfirm(false);
-      
-      // Then update the data
-      const updatedData = newsItems.filter(item => item.id !== itemToDelete.id);
-      setNewsItems(updatedData);
-      localStorage.setItem('newsData', JSON.stringify(updatedData));
-      
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
-      
-      // Show notification after a brief delay to ensure modal is closed
-      setTimeout(() => {
+  const confirmDelete = async () => {
+    if (itemToDelete && typeof itemToDelete.id === 'string') {
+      try {
+        // First hide the confirmation dialog
+        setShowDeleteConfirm(false);
+        
+        // Delete from Firestore
+        const docRef = doc(db, 'berita', itemToDelete.id);
+        await deleteDoc(docRef);
+        
+        // Update local state
+        const updatedData = newsItems.filter(item => item.id !== itemToDelete.id);
+        setNewsItems(updatedData);
+        
+        // Update localStorage for fallback
+        localStorage.setItem('newsData', JSON.stringify(updatedData));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'berita' } }));
+        
         showNotification('success', `Berita "${itemToDelete.title}" berhasil dihapus!`);
-      }, 300);
-      
-      setItemToDelete(null);
-    } else {
-      setShowDeleteConfirm(false);
+      } catch (error) {
+        console.error('Error deleting news item:', error);
+        showNotification('error', 'Gagal menghapus data berita');
+      }
     }
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
   };
 
   const cancelDelete = () => {
@@ -598,7 +889,7 @@ export default function AdminBeritaPage() {
     return matchesTag && matchesSearch;
   });
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">Loading...</div>
@@ -637,6 +928,14 @@ export default function AdminBeritaPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Loading indicator */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-lg text-white font-medium">Memuat data berita...</p>
+          </div>
+        ) : (
+          <>
         {/* Filter & Search Controls */}
         <div className="mb-8 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -812,6 +1111,8 @@ export default function AdminBeritaPage() {
               }
             </div>
           </div>
+        )}
+        </>
         )}
       </div>
 
@@ -1148,7 +1449,7 @@ export default function AdminBeritaPage() {
                         <div className="flex items-center gap-2 mb-2">
                           <div className="flex-shrink-0 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                              <path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 9 7.558V11a1 1 0 0 0 1 1h2Zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992a4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 3 7.558V11a1 1 0 0 0 1 1h2Z"/>
+                              <path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 9 7.558V11a1 1 0 0 0 1 1h2Zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 3 7.558V11a1 1 0 0 0 1 1h2Z"/>
                             </svg>
                           </div>
                           <p className="text-sm text-white">Kutipan</p>
@@ -1258,6 +1559,7 @@ export default function AdminBeritaPage() {
                           </div>
                           <p className="text-sm text-white">Tambahkan Video</p>
                         </div>
+                       
                         <div className="flex items-center justify-center space-x-4 mb-4">
                           <button
                             type="button"
@@ -1586,7 +1888,7 @@ export default function AdminBeritaPage() {
                           <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-600">
                             <div className="flex items-center space-x-2 text-gray-400 cursor-grab bg-gray-800 px-3 py-1 rounded-md">
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grip-vertical" viewBox="0 0 16 16">
-                                <path d="M7 7 2a1 1 0 1 1-2  0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7 2a1 1 0 1 1-2  0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                               </svg>
                               <span className="text-xs">Seret</span>
                             </div>
@@ -1710,3 +2012,4 @@ export default function AdminBeritaPage() {
     </div>
   );
 }
+// End of AdminBeritaPage component
