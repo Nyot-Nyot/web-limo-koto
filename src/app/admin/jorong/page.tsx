@@ -56,7 +56,8 @@ export default function KelolJorong() {
   // Update local state when data changes
   useEffect(() => {
     setJorongData(getJorongData());
-  }, [getJorongData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const availableColors = [
     '#EC4899', '#DC2626', '#06B6D4', '#84CC16', '#10B981',

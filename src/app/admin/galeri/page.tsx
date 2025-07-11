@@ -338,7 +338,7 @@ export default function AdminGaleriPage() {
                     {item.description}
                   </p>
                 </div>
-                <div className="flex space-x-2 mt-auto pt-2 border-t border-gray-700 flex-shrink-0">
+                <div className="flex space-x-2 mt-3 pt-2 flex-shrink-0">
                   <button
                     onClick={() => handleEdit(item)}
                     className="flex items-center space-x-1 px-2 py-1 bg-green-600 hover:bg-green-700 rounded-md transition-colors text-xs flex-shrink-0"
