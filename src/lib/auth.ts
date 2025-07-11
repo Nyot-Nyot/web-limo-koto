@@ -1,4 +1,5 @@
 import { auth } from './firebase';
+import { db } from './firebase';
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -8,11 +9,18 @@ import {
   updateProfile,
   onAuthStateChanged
 } from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { User as AdminUser } from './models';
 
 // Fungsi untuk login admin
 export const loginWithEmail = async (email: string, password: string): Promise<User> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Update last login timestamp
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
+    
     return userCredential.user;
   } catch (error: unknown) {
     // Tangani error dengan lebih baik
@@ -35,7 +43,8 @@ export const loginWithEmail = async (email: string, password: string): Promise<U
 export const registerWithEmail = async (
   email: string, 
   password: string, 
-  displayName?: string
+  displayName?: string,
+  role: 'admin' | 'super-admin' | 'editor' = 'admin'
 ): Promise<User> => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -44,6 +53,18 @@ export const registerWithEmail = async (
     if (displayName && userCredential.user) {
       await updateProfile(userCredential.user, { displayName });
     }
+    
+    // Buat data admin di Firestore
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    await setDoc(userRef, {
+      email: email,
+      displayName: displayName || email.split('@')[0],
+      role: role,
+      isActive: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastLogin: serverTimestamp()
+    });
     
     return userCredential.user;
   } catch (error: unknown) {
@@ -97,4 +118,23 @@ export const getCurrentUser = (): User | null => {
 // Fungsi untuk memantau perubahan status auth
 export const onAuthChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
+};
+
+// Fungsi untuk mendapatkan data user dari Firestore (termasuk role)
+export const getUserData = async (userId: string): Promise<AdminUser | null> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      return {
+        id: userSnap.id,
+        ...userSnap.data()
+      } as AdminUser;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    return null;
+  }
 };

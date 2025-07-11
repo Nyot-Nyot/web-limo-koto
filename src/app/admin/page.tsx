@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { logoutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -79,10 +80,15 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+  try {
+    await logoutUser();
     localStorage.removeItem('adminAuth');
     router.push('/admin/login');
-  };
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+};
 
   if (!isAuthenticated) {
     return (
