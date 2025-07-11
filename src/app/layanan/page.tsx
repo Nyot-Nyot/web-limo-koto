@@ -17,6 +17,8 @@ const ReviewSection = dynamic(() => import("@/components/layanan/ReviewSection")
 const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliFormNew"), { ssr: false });
 const SKKelahiranForm = dynamic(() => import("@/components/layanan/SKKelahiranForm"), { ssr: false });
 const SKUForm = dynamic(() => import("@/components/layanan/SKUForm"), { ssr: false });
+const SKMeninggalForm = dynamic(() => import("@/components/layanan/SKMeninggalForm"), { ssr: false });
+const SKPindahForm = dynamic(() => import("@/components/layanan/SKPindahForm"), { ssr: false });
 const StepsForm = dynamic(() => import("@/components/layanan/StepsForm"), { ssr: false });
 
 // Constants
@@ -57,8 +59,10 @@ export default function LayananPage() {
         return <SKKelahiranForm onClose={closeModal} />;
       case 'usaha':
         return <SKUForm onClose={closeModal} />;
-      case 'pengantar_nikah':
       case 'surat_kematian':
+        return <SKMeninggalForm onClose={closeModal} />;
+      case 'pindah':
+        return <SKPindahForm onClose={closeModal} />;
       case 'surat_cerai':
         return <StepsForm serviceTitle={layananList.find(l => l.id === modalState.type)?.title || ''} onClose={closeModal} />;
       default:

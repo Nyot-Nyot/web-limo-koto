@@ -69,6 +69,10 @@ export class DocxGenerator {
         return this.prepareDomisiliData(commonData);
       case 'SKKelahiran':
         return this.prepareKelahiranData(commonData);
+      case 'SKMeninggalDunia':
+        return this.prepareMeninggalData(commonData);
+      case 'SKPindah':
+        return this.preparePindahData(commonData);
       default:
         return commonData;
     }
@@ -142,6 +146,57 @@ export class DocxGenerator {
     };
   }
 
+  private prepareMeninggalData(data: any) {
+    const currentDate = new Date();
+    
+    return {
+      // Placeholder yang sesuai dengan template meninggal dunia
+      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_2: data.nama_orang_2 || '', // nama almarhum
+      tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
+      nik: data.nik || '',
+      agama: data.agama || '',
+      jenis_kelamin: data.jenis_kelamin || '',
+      alamat: data.alamat || '',
+      hari_tanggal_meninggal: data.hari_tanggal_meninggal || '',
+      jam: data.jam || '',
+      meninggal_di: data.meninggal_di || '',
+      disebabkan: data.disebabkan || '',
+      dikebumikan_di: data.dikebumikan_di || '',
+      tanggal: this.formatDate(currentDate)
+    };
+  }
+
+  private preparePindahData(data: any) {
+    const currentDate = new Date();
+    
+    return {
+      // Placeholder yang sesuai dengan template pindah
+      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nomor_kk: data.nomor_kk || '',
+      nama_orang_2: data.nama_orang_2 || '', // nama yang pindah
+      nik: data.nik || '',
+      
+      // Data daerah asal
+      desa_kelurahan_asal: data.desa_kelurahan_asal || '',
+      kecamatan_asal: data.kecamatan_asal || '',
+      kabupaten_kota_asal: data.kabupaten_kota_asal || '',
+      provinsi_asal: data.provinsi_asal || '',
+      
+      // Data kepindahan
+      alasan_pindah: data.alasan_pindah || '',
+      klasifikasi_pindah: data.klasifikasi_pindah || '',
+      desa_kelurahan_tujuan: data.desa_kelurahan_tujuan || '',
+      kecamatan_tujuan: data.kecamatan_tujuan || '',
+      kabupaten_kota_tujuan: data.kabupaten_kota_tujuan || '',
+      provinsi_tujuan: data.provinsi_tujuan || '',
+      
+      tanggal: this.formatDate(currentDate)
+    };
+  }
+
   private formatDate(date: Date): string {
     const months = [
       'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -175,6 +230,8 @@ export class DocxGenerator {
       'SKU_AN': '470/SKU',
       'SKDomisili': '470/SKD',
       'SKKelahiran': '470/SKK',
+      'SKMeninggalDunia': '470/SKM',
+      'SKPindah': '470/SKP',
     };
     
     return prefixes[serviceType] || '470/SK';

@@ -36,24 +36,26 @@ export const layananList: LayananItem[] = [
     hasForm: true
   },
   {
-    id: "pengantar_nikah",
-    title: "Surat Pengantar Nikah",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
-    description: "Surat pengantar untuk pendaftaran pernikahan di KUA",
-    estimasi: "1 hari kerja",
+    id: "pindah",
+    title: "Surat Keterangan Pindah",
+    items: ["KK", "KTP", "Pas Photo"],
+    description: "Surat keterangan untuk keperluan pindah domisili",
+    estimasi: "2-3 hari kerja",
     biaya: "Gratis",
-    icon: "💒",
-    color: "from-pink-500 to-pink-600"
+    icon: "�",
+    color: "from-blue-500 to-green-600",
+    hasForm: true
   },
   {
     id: "surat_kematian",
-    title: "Surat Keterangan Kematian",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW", "Surat keterangan dokter/RS"],
-    description: "Surat keterangan untuk administrasi kematian",
+    title: "Surat Keterangan Meninggal Dunia",
+    items: ["Surat pengantar RT/RW", "KTP dan KK almarhum", "Surat dari rumah sakit (jika diperlukan)", "KTP pelapor"],
+    description: "Surat keterangan untuk administrasi kematian dan keperluan pemakaman",
     estimasi: "1 hari kerja",
     biaya: "Gratis",
-    icon: "📃",
-    color: "from-gray-500 to-gray-600"
+    icon: "�️",
+    color: "from-gray-500 to-gray-600",
+    hasForm: true
   },
   {
     id: "surat_cerai",
