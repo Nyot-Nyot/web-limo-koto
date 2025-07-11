@@ -1,5 +1,14 @@
 'use client';
 
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  getDocs,
+  deleteDoc
+} from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -11,11 +20,11 @@ import {
   PhotoIcon
 } from '@heroicons/react/24/outline';
 import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
-import ModalForm from '@/components/admin/ModalForm';
 import NotificationModal from '@/components/admin/NotificationModal';
 
 export default function AdminGaleriPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
@@ -35,7 +44,7 @@ export default function AdminGaleriPage() {
   const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
   const [notification, setNotification] = useState<{
     show: boolean;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'warning';
     message: string;
   }>({
     show: false,
@@ -44,19 +53,76 @@ export default function AdminGaleriPage() {
   });
   const router = useRouter();
   
-  const showNotification = (type: 'success' | 'error', message: string) => {
+  const showNotification = (type: 'success' | 'error' | 'warning', message: string) => {
     setNotification({ show: true, type, message });
     setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
   };
 
-  // Handle file upload
+  // Handle file upload with image optimization
   const handleFileUpload = (file: File) => {
     if (file && file.type.startsWith('image/')) {
+      // Check file size before processing
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        showNotification('error', 'Ukuran gambar terlalu besar. Maksimal 5MB.');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setFormData({...formData, image: result});
-        setImagePreview(result);
+        
+        // Image optimization for large images
+        if (result.length > 1000000) { // If over ~1MB in base64
+          // Create an image element to resize
+          const img = document.createElement('img');
+          img.onload = () => {
+            // Create canvas for resizing
+            const canvas = document.createElement('canvas');
+            // Calculate new dimensions (maintain aspect ratio)
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw resized image to canvas
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Get optimized image as base64 (JPEG with quality 0.8)
+              const optimizedImage = canvas.toDataURL('image/jpeg', 0.8);
+              
+              // Update form data with optimized image
+              setFormData({...formData, image: optimizedImage});
+              setImagePreview(optimizedImage);
+            } else {
+              // Fallback if canvas context isn't available
+              setFormData({...formData, image: result});
+              setImagePreview(result);
+            }
+          };
+          img.src = result;
+        } else {
+          // Small image, use as is
+          setFormData({...formData, image: result});
+          setImagePreview(result);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -90,25 +156,148 @@ export default function AdminGaleriPage() {
     }
   };
 
+  // Function to fetch gallery data from Firestore
+  const fetchGalleryFromFirestore = async () => {
+    setIsLoading(true);
+    try {
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      // Retry mechanism for network issues
+      while (retryCount < maxRetries) {
+        try {
+          console.log('Fetching gallery data from Firestore, attempt:', retryCount + 1);
+          const snapshot = await getDocs(collection(db, 'galeri'));
+          
+          if (!snapshot.docs || snapshot.docs.length === 0) {
+            console.log('No gallery data found in Firestore, using default data');
+            // If no data in Firestore, use default data
+            setGalleryItems(galeriData);
+            localStorage.setItem('galeriData', JSON.stringify(galeriData));
+            break;
+          }
+          
+          const data = snapshot.docs.map(doc => {
+            const docData = doc.data();
+            return {
+              id: doc.id,
+              title: typeof docData.title === 'string' ? docData.title : '',
+              description: typeof docData.description === 'string' ? docData.description : '',
+              category: typeof docData.category === 'string' ? docData.category : 'makanan',
+              image: typeof docData.image === 'string' ? docData.image : ''
+            } as GalleryItem;
+          });
+          
+          // Check if there are any items with extremely large image data
+          const isDataTooLarge = data.some(item => {
+            // Check if base64 image is too large (over 1MB)
+            if (item.image && item.image.length > 1000000) {
+              console.warn(`Large image detected in item '${item.title}'. Consider optimizing.`);
+              return true;
+            }
+            return false;
+          });
+          
+          if (isDataTooLarge) {
+            console.warn('Some images are very large. This may cause performance issues.');
+          }
+          
+          setGalleryItems(data);
+          console.log('Successfully fetched', data.length, 'gallery items from Firestore');
+          
+          // Update localStorage for offline fallback - but be careful with large data
+          try {
+            localStorage.setItem('galeriData', JSON.stringify(data));
+          } catch (storageError) {
+            console.error('Failed to store gallery data in localStorage (likely too large):', storageError);
+            // Try to store without images if it fails
+            const dataWithoutImages = data.map(item => ({
+              ...item,
+              image: item.image.substring(0, 100) + '...' // Store just the beginning to keep the format
+            }));
+            localStorage.setItem('galeriData', JSON.stringify(dataWithoutImages));
+          }
+          
+          break; // Exit the retry loop if successful
+        } catch (fetchError) {
+          retryCount++;
+          if (retryCount >= maxRetries) throw fetchError;
+          console.log(`Fetch attempt ${retryCount} failed. Retrying in ${1000 * retryCount}ms...`, fetchError);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Wait before retry with increasing delay
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching gallery data after all retries:', error);
+      showNotification('error', 'Gagal mengambil data galeri dari server');
+      
+      // Fall back to localStorage if Firestore fails
+      const savedData = localStorage.getItem('galeriData');
+      if (savedData) {
+        try {
+          console.log('Using data from localStorage instead');
+          const parsedData = JSON.parse(savedData);
+          setGalleryItems(parsedData);
+          showNotification('warning', 'Menggunakan data lokal karena masalah jaringan');
+        } catch (e) {
+          console.error('Error parsing localStorage data:', e);
+          // Use default data as last resort
+          console.log('Using default gallery data as last resort');
+          setGalleryItems(galeriData);
+          showNotification('warning', 'Menggunakan data default');
+        }
+      } else {
+        // Set default data if no localStorage data
+        console.log('No data in localStorage, using default gallery data');
+        setGalleryItems(galeriData);
+        showNotification('warning', 'Menggunakan data default');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
     if (adminAuth !== 'true') {
       router.push('/admin/login');
     } else {
       setIsAuthenticated(true);
+      setIsLoading(true);
       
-      // Load gallery data from localStorage or set default
-      const savedData = localStorage.getItem('galeriData');
-      if (savedData) {
-        setGalleryItems(JSON.parse(savedData));
-      } else {
-        setGalleryItems(galeriData);
-        localStorage.setItem('galeriData', JSON.stringify(galeriData));
-      }
+      // First try to load data from Firestore
+      const loadData = async () => {
+        try {
+          await fetchGalleryFromFirestore();
+        } catch (error) {
+          console.error('Failed to fetch from Firestore:', error);
+          // Fall back to localStorage if Firestore fails
+          const savedData = localStorage.getItem('galeriData');
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setGalleryItems(parsedData);
+              showNotification('warning', 'Menggunakan data lokal karena masalah jaringan');
+            } catch (e) {
+              console.error('Error parsing localStorage data:', e);
+              showNotification('error', 'Terjadi kesalahan saat memuat data');
+            }
+          } else {
+            // Set default data if no localStorage data
+            setGalleryItems(galeriData);
+            localStorage.setItem('galeriData', JSON.stringify(galeriData));
+            showNotification('warning', 'Menggunakan data default karena masalah jaringan');
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
     
@@ -124,6 +313,11 @@ export default function AdminGaleriPage() {
       return;
     }
 
+    // Check image size - warn if large but allow submission
+    if (formData.image && formData.image.length > 1000000) {
+      console.warn(`Large image detected (${Math.round(formData.image.length/1024)}KB). This may cause performance issues.`);
+    }
+
     // Check for duplicate title and category (excluding current item when editing)
     const isDuplicate = galleryItems.some(item => 
       item.title.toLowerCase().trim() === formData.title.toLowerCase().trim() && 
@@ -137,36 +331,46 @@ export default function AdminGaleriPage() {
       return;
     }
     
-    if (editingItem) {
-      // Update existing
-      const updatedData = galleryItems.map(item => 
-        item.id === editingItem.id 
-          ? { ...formData, id: editingItem.id }
-          : item
-      );
-      setGalleryItems(updatedData);
-      localStorage.setItem('galeriData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
-      showNotification('success', 'Data galeri berhasil diperbarui!');
-    } else {
-      // Add new
-      const newItem = {
-        ...formData,
-        id: Date.now() // Simple ID generation
+    try {
+      // Show loading indicator before saving to Firestore
+      setIsLoading(true);
+      
+      // Prepare the data to save
+      const galleryData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        image: formData.image
       };
-      const updatedData = [...galleryItems, newItem];
-      setGalleryItems(updatedData);
-      localStorage.setItem('galeriData', JSON.stringify(updatedData));
+      
+      if (editingItem && typeof editingItem.id === 'string') {
+        // Update existing gallery item in Firestore
+        const galleryRef = doc(db, 'galeri', editingItem.id);
+        await updateDoc(galleryRef, galleryData);
+        showNotification('success', 'Data galeri berhasil diperbarui!');
+      } else {
+        // Add new gallery item to Firestore
+        await addDoc(collection(db, 'galeri'), galleryData);
+        showNotification('success', 'Data galeri berhasil ditambahkan!');
+      }
+      
+      // Refresh data from Firestore
+      await fetchGalleryFromFirestore();
+      
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
-      showNotification('success', 'Data galeri berhasil ditambahkan!');
+      
+      // Clean up state
+      setIsModalOpen(false);
+      setEditingItem(null);
+      setImagePreview(null);
+      setFormData({ title: '', description: '', category: 'makanan', image: '' });
+    } catch (error) {
+      console.error('Error saving gallery data:', error);
+      showNotification('error', 'Terjadi kesalahan saat menyimpan data galeri');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsModalOpen(false);
-    setEditingItem(null);
-    setImagePreview(null);
-    setFormData({ title: '', description: '', category: 'makanan', image: '' });
   };
 
   const handleEdit = (item: GalleryItem) => {
@@ -187,14 +391,28 @@ export default function AdminGaleriPage() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    if (itemToDelete) {
-      const updatedData = galleryItems.filter(item => item.id !== itemToDelete.id);
-      setGalleryItems(updatedData);
-      localStorage.setItem('galeriData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
-      showNotification('success', 'Data galeri berhasil dihapus!');
+  const confirmDelete = async () => {
+    if (itemToDelete && typeof itemToDelete.id === 'string') {
+      try {
+        // Delete from Firestore
+        const docRef = doc(db, 'galeri', itemToDelete.id);
+        await deleteDoc(docRef);
+        
+        // Update local state
+        const updatedData = galleryItems.filter(item => item.id !== itemToDelete.id);
+        setGalleryItems(updatedData);
+        
+        // Update localStorage for fallback
+        localStorage.setItem('galeriData', JSON.stringify(updatedData));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'galeri' } }));
+        
+        showNotification('success', 'Data galeri berhasil dihapus!');
+      } catch (error) {
+        console.error('Error deleting gallery item:', error);
+        showNotification('error', 'Gagal menghapus data galeri');
+      }
     }
     setShowDeleteConfirm(false);
     setItemToDelete(null);
@@ -221,6 +439,20 @@ export default function AdminGaleriPage() {
     return matchesCategory && matchesSearch;
   });
 
+  // State for tracking render errors
+  const [renderError, setRenderError] = useState<string | null>(null);
+  
+  // Error boundary effect for large data rendering issues
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Caught runtime error:', event.error);
+      setRenderError('Terjadi kesalahan saat menampilkan data. Coba muat ulang halaman.');
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+  
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -229,7 +461,37 @@ export default function AdminGaleriPage() {
     );
   }
 
-  return (
+  // Show error state if render error
+  if (renderError) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-red-600 max-w-lg mx-auto p-6 rounded-lg shadow-lg text-center">
+          <svg className="w-16 h-16 mx-auto text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.207-.833-2.976 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h2 className="text-2xl font-bold text-white mt-4">Error Rendering Galeri</h2>
+          <p className="text-white mt-2">{renderError}</p>
+          <div className="mt-6 flex justify-center space-x-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100"
+            >
+              Muat Ulang Halaman
+            </button>
+            <button 
+              onClick={() => router.push('/admin')} 
+              className="px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-700"
+            >
+              Kembali ke Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  try {
+    return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <div className="bg-gray-800 shadow-lg">
@@ -260,6 +522,14 @@ export default function AdminGaleriPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Loading indicator */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-gray-300">Memuat data galeri...</p>
+          </div>
+        ) : (
+        <>
         {/* Filter & Search Controls */}
         <div className="mb-8 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -338,7 +608,7 @@ export default function AdminGaleriPage() {
                     {item.description}
                   </p>
                 </div>
-                <div className="flex space-x-2 mt-auto pt-2 border-t border-gray-700 flex-shrink-0">
+                <div className="flex space-x-2 mt-4 pt-2 flex-shrink-0">
                   <button
                     onClick={() => handleEdit(item)}
                     className="flex items-center space-x-1 px-2 py-1 bg-green-600 hover:bg-green-700 rounded-md transition-colors text-xs flex-shrink-0"
@@ -369,6 +639,8 @@ export default function AdminGaleriPage() {
               }
             </div>
           </div>
+        )}
+        </>
         )}
       </div>
 
@@ -626,4 +898,36 @@ export default function AdminGaleriPage() {
       />
     </div>
   );
+  } catch (error) {
+    console.error("Render error caught:", error);
+    // We won't reach this in most cases since React's error boundary would catch it first,
+    // but just in case, we'll set the error state which will trigger a re-render
+    setRenderError('Terjadi kesalahan saat menampilkan data. Coba muat ulang halaman.');
+    
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-red-600 max-w-lg mx-auto p-6 rounded-lg shadow-lg text-center">
+          <svg className="w-16 h-16 mx-auto text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.207-.833-2.976 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h2 className="text-2xl font-bold text-white mt-4">Error Rendering Galeri</h2>
+          <p className="text-white mt-2">Terjadi kesalahan saat menampilkan data. Coba muat ulang halaman.</p>
+          <div className="mt-6 flex justify-center space-x-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100"
+            >
+              Muat Ulang Halaman
+            </button>
+            <button 
+              onClick={() => router.push('/admin')} 
+              className="px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-700"
+            >
+              Kembali ke Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }

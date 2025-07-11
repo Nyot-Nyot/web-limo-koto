@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -12,11 +12,21 @@ import {
 } from '@heroicons/react/24/outline';
 import { JorongData, useJorongData } from '@/data/jorong';
 import NotificationModal from '@/components/admin/NotificationModal';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  getDocs,
+  deleteDoc
+} from 'firebase/firestore';
 
 export default function KelolJorong() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { getJorongData, updateJorongData } = useJorongData();
-  const [jorongData, setJorongData] = useState<JorongData[]>(getJorongData());
+  // Use useRef to prevent re-renders
+  const jorongDataServiceRef = useRef(useJorongData());
+  const [jorongData, setJorongData] = useState<JorongData[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingJorong, setEditingJorong] = useState<JorongData | null>(null);
   const [formData, setFormData] = useState<Partial<JorongData>>({
@@ -53,10 +63,51 @@ export default function KelolJorong() {
     }
   }, [router]);
 
-  // Update local state when data changes
+  // Load data once when component mounts
   useEffect(() => {
-    setJorongData(getJorongData());
-  }, [getJorongData]);
+    const loadData = async () => {
+      try {
+        await fetchJorongFromFirestore();
+      } catch (error) {
+        console.error('Failed to fetch from Firestore:', error);
+        // Fall back to localStorage if Firestore fails
+        const data = jorongDataServiceRef.current.getJorongData();
+        setJorongData(data);
+      }
+    };
+    
+    if (isAuthenticated) {
+      loadData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  // Function to fetch jorong data from Firestore
+  const fetchJorongFromFirestore = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'jorong'));
+      const data = snapshot.docs.map(doc => {
+        const docData = doc.data();
+        return {
+          id: doc.id,
+          name: typeof docData.name === 'string' ? docData.name : '',
+          population: typeof docData.population === 'string' ? docData.population : '',
+          area: typeof docData.area === 'string' ? docData.area : '',
+          coordinates: docData.coordinates || { lat: 0, lng: 0 },
+          color: typeof docData.color === 'string' ? docData.color : '#EC4899',
+          description: typeof docData.description === 'string' ? docData.description : '',
+          facilities: Array.isArray(docData.facilities) ? docData.facilities : []
+        };
+      });
+      setJorongData(data);
+      // Update localStorage for offline fallback
+      jorongDataServiceRef.current.updateJorongData(data);
+    } catch (error) {
+      console.error('Error fetching jorong data:', error);
+      showNotification('error', 'Gagal mengambil data dari server');
+      throw error; // Re-throw to trigger fallback
+    }
+  };
 
   const availableColors = [
     '#EC4899', '#DC2626', '#06B6D4', '#84CC16', '#10B981',
@@ -376,7 +427,7 @@ export default function KelolJorong() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.population || !formData.area || !formData.description) {
@@ -384,45 +435,55 @@ export default function KelolJorong() {
       return;
     }
 
-    let updatedData: JorongData[];
+    try {
+      if (editingJorong) {
+        // Update existing jorong in Firestore
+        if (typeof editingJorong.id === 'string') {
+          const jorongRef = doc(db, 'jorong', editingJorong.id);
+          await updateDoc(jorongRef, {
+            name: formData.name,
+            population: formData.population,
+            area: formData.area,
+            coordinates: formData.coordinates,
+            color: formData.color,
+            description: formData.description,
+            facilities: formData.facilities || []
+          });
+          showNotification('success', 'Data jorong berhasil diperbarui!');
+        }
+      } else {
+        // Add new jorong to Firestore
+        const newId = formData.name?.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || '';
+        
+        // Check if ID already exists
+        if (jorongData.find(j => j.id === newId)) {
+          showNotification('error', 'Nama jorong sudah ada! Gunakan nama yang berbeda.');
+          return;
+        }
 
-    if (editingJorong) {
-      // Update existing jorong
-      updatedData = jorongData.map(j => 
-        j.id === editingJorong.id 
-          ? { ...j, ...formData, id: editingJorong.id } as JorongData
-          : j
-      );
-      showNotification('success', 'Data jorong berhasil diperbarui!');
-    } else {
-      // Add new jorong
-      const newId = formData.name?.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || '';
-      
-      // Check if ID already exists
-      if (jorongData.find(j => j.id === newId)) {
-        showNotification('error', 'Nama jorong sudah ada! Gunakan nama yang berbeda.');
-        return;
+        // Add to Firestore with custom ID
+        const jorongCollection = collection(db, 'jorong');
+        await addDoc(jorongCollection, {
+          name: formData.name || '',
+          population: formData.population || '',
+          area: formData.area || '',
+          coordinates: formData.coordinates || { lat: 0, lng: 0 },
+          color: formData.color || '#EC4899',
+          description: formData.description || '',
+          facilities: formData.facilities || []
+        });
+        showNotification('success', 'Data jorong berhasil ditambahkan!');
       }
 
-      const newJorong: JorongData = {
-        id: newId,
-        name: formData.name || '',
-        population: formData.population || '',
-        area: formData.area || '',
-        coordinates: formData.coordinates || { lat: 0, lng: 0 },
-        color: formData.color || '#EC4899',
-        description: formData.description || '',
-        facilities: formData.facilities || []
-      };
-      updatedData = [...jorongData, newJorong];
-      showNotification('success', 'Data jorong berhasil ditambahkan!');
+      // Refresh data from Firestore
+      await fetchJorongFromFirestore();
+      
+      // Close modal and reset form
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving jorong data:', error);
+      showNotification('error', 'Terjadi kesalahan saat menyimpan data jorong');
     }
-
-    // Update data and persist to localStorage
-    setJorongData(updatedData);
-    updateJorongData(updatedData);
-
-    handleCloseModal();
   };
 
   const handleDelete = (id: string) => {
@@ -433,12 +494,25 @@ export default function KelolJorong() {
     }
   };
   
-  const confirmDelete = () => {
-    if (jorongToDelete) {
-      const updatedData = jorongData.filter(j => j.id !== jorongToDelete.id);
-      setJorongData(updatedData);
-      updateJorongData(updatedData);
-      showNotification('success', 'Data jorong berhasil dihapus!');
+  const confirmDelete = async () => {
+    if (jorongToDelete && typeof jorongToDelete.id === 'string') {
+      try {
+        // Delete from Firestore
+        const docRef = doc(db, 'jorong', jorongToDelete.id);
+        await deleteDoc(docRef);
+        
+        // Update local state
+        const updatedData = jorongData.filter(j => j.id !== jorongToDelete.id);
+        setJorongData(updatedData);
+        
+        // Update localStorage for fallback
+        jorongDataServiceRef.current.updateJorongData(updatedData);
+        
+        showNotification('success', 'Data jorong berhasil dihapus!');
+      } catch (error) {
+        console.error('Error deleting jorong:', error);
+        showNotification('error', 'Gagal menghapus data jorong');
+      }
       setShowDeleteConfirm(false);
       setJorongToDelete(null);
     }

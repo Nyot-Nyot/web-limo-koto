@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function AdminLogin() {
   const [credentials, setCredentials] = useState({
@@ -20,15 +22,16 @@ export default function AdminLogin() {
     setIsLoading(true);
     setError('');
 
-    // Simple authentication (in production, use proper authentication)
-    if (credentials.username === 'admin' && credentials.password === 'admin123') {
-      // Set admin session
+    try {
+      await signInWithEmailAndPassword(auth, credentials.username, credentials.password);
+      // Optional: bisa set localStorage kalo mau dipakai buat ngejaga session
       localStorage.setItem('adminAuth', 'true');
       router.push('/admin');
-    } else {
+    } catch (err: any) {
+      console.error(err);
       setError('Username atau password salah');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -74,7 +77,7 @@ export default function AdminLogin() {
                 type="text"
                 required
                 className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
-                placeholder="Username"
+                placeholder="Username (Email)"
                 value={credentials.username}
                 onChange={(e) => setCredentials({...credentials, username: e.target.value})}
               />
@@ -110,10 +113,10 @@ export default function AdminLogin() {
             {isLoading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
-        
+
         <div className="text-center text-gray-400 text-sm">
           <p>Demo credentials:</p>
-          <p>Username: admin | Password: admin123</p>
+          <p>Email: admin@example.com | Password: admin123</p>
         </div>
       </div>
     </div>
