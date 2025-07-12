@@ -10,6 +10,7 @@ export interface LayananItem {
   biaya: string;
   icon: string;
   color: string;
+  hasForm?: boolean;
 }
 
 export interface ContactItem {
@@ -55,4 +56,24 @@ export interface ModalState {
   isOpen: boolean;
   type: string;
   title: string;
+}
+
+export interface SKUFormData {
+  nama_orang_2: string;
+  tempat_tanggal_lahir: string;
+  nik: string;
+  agama: string;
+  pekerjaan: string;
+  status: string;
+  alamat: string;
+  nama_usaha: string;
+  tempat_usaha: string;
+  nama_nagari: string;
+  nama_kecamatan: string;
+  nama_kabupaten: string;
+  // File uploads
+  ktp?: File | null;
+  kk?: File | null;
+  pengantar_rt_rw?: File | null;
+  foto_tempat_usaha?: File | null;
 }
