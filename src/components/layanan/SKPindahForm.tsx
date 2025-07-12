@@ -5,6 +5,11 @@ interface SKPindahFormProps {
   onClose: () => void;
 }
 
+interface AnggotaKeluarga {
+  nama: string;
+  hubungan: string;
+}
+
 interface SKPindahFormData {
   // Data utama
   nomor_kk: string;
@@ -30,6 +35,9 @@ interface SKPindahFormData {
   nama_kecamatan: string;
   nama_kabupaten: string;
   
+  // Anggota keluarga yang ikut pindah
+  anggota_keluarga: AnggotaKeluarga[];
+  
   // File uploads
   kk?: File | null;
   ktp?: File | null;
@@ -54,12 +62,37 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     nama_nagari: 'Nagari Limo Koto',
     nama_kecamatan: 'Koto IV',
     nama_kabupaten: 'Kabupaten Sijunjung',
+    anggota_keluarga: [],
     kk: null,
     ktp: null,
     pas_photo: null
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Functions for managing anggota keluarga
+  const addAnggotaKeluarga = () => {
+    setFormData(prev => ({
+      ...prev,
+      anggota_keluarga: [...prev.anggota_keluarga, { nama: '', hubungan: '' }]
+    }));
+  };
+
+  const removeAnggotaKeluarga = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      anggota_keluarga: prev.anggota_keluarga.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateAnggotaKeluarga = (index: number, field: keyof AnggotaKeluarga, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      anggota_keluarga: prev.anggota_keluarga.map((anggota, i) => 
+        i === index ? { ...anggota, [field]: value } : anggota
+      )
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +105,18 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
       
       // Append form fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === 'string') {
+        if (key === 'anggota_keluarga') {
+          // Handle array data for anggota_keluarga - send as JSON for docxtemplater
+          submitFormData.append(key, JSON.stringify(value));
+        } else if (value !== null && typeof value === 'string') {
           submitFormData.append(key, value);
         } else if (value instanceof File) {
           submitFormData.append(key, value);
         }
       });
+
+      // Debug: Log the anggota_keluarga data
+      console.log('Anggota Keluarga Data:', formData.anggota_keluarga);
 
       const response = await fetch('/api/documents/generate', {
         method: 'POST',
@@ -381,6 +420,95 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
                 placeholder="Nama provinsi tujuan"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Anggota Keluarga yang Ikut Pindah */}
+        <div className="bg-white border border-orange-200 rounded-lg p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
+              <h3 className="text-lg font-semibold text-orange-900">Anggota Keluarga yang Ikut Pindah</h3>
+            </div>
+            <button
+              type="button"
+              onClick={addAnggotaKeluarga}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+            >
+              + Tambah Anggota
+            </button>
+          </div>
+          
+          {formData.anggota_keluarga.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>Belum ada anggota keluarga yang ditambahkan.</p>
+              <p className="text-sm">Klik "Tambah Anggota" untuk menambahkan data anggota keluarga yang ikut pindah.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {formData.anggota_keluarga.map((anggota, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-medium text-gray-800">Anggota Keluarga #{index + 1}</h4>
+                    <button
+                      type="button"
+                      onClick={() => removeAnggotaKeluarga(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Lengkap <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={anggota.nama}
+                        onChange={(e) => updateAnggotaKeluarga(index, 'nama', e.target.value)}
+                        required
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black transition-colors"
+                        placeholder="Masukkan nama lengkap"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Hubungan Keluarga <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={anggota.hubungan}
+                        onChange={(e) => updateAnggotaKeluarga(index, 'hubungan', e.target.value)}
+                        required
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black transition-colors"
+                      >
+                        <option value="">Pilih Hubungan</option>
+                        <option value="Kepala Keluarga">Kepala Keluarga</option>
+                        <option value="Istri">Istri</option>
+                        <option value="Suami">Suami</option>
+                        <option value="Anak">Anak</option>
+                        <option value="Menantu">Menantu</option>
+                        <option value="Cucu">Cucu</option>
+                        <option value="Orang Tua">Orang Tua</option>
+                        <option value="Mertua">Mertua</option>
+                        <option value="Saudara">Saudara</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <p className="text-sm text-orange-800">
+              <strong>Catatan:</strong> Tambahkan semua anggota keluarga yang akan ikut pindah beserta hubungan keluarga mereka.
+            </p>
           </div>
         </div>
 
