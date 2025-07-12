@@ -1,27 +1,45 @@
-import React, { memo } from 'react';
-import { FaClock } from 'react-icons/fa';
-import { jamLayanan } from '@/data/layanan';
+import React from "react";
+import { FaClock } from "react-icons/fa";
+import { jamLayanan } from "@/data/layanan";
 
-const OperationalHours = memo(() => (
-  <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:shadow-xl transition-all duration-300">
-    <h3 className="text-xl font-bold mb-6 text-yellow-400">Jam Operasional</h3>
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-300">Senin - Jumat</span>
-        <span className="text-white font-medium">{jamLayanan.senin_jumat}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-gray-300">Sabtu</span>
-        <span className="text-white font-medium">{jamLayanan.sabtu}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-gray-300">Minggu</span>
-        <span className="text-red-400 font-medium">{jamLayanan.minggu}</span>
+const OperationalHours = () => {
+  return (
+    <div className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group border border-white/20 h-full">
+      <div className="p-6 h-full flex flex-col">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <FaClock className="text-yellow-400 text-xl" />
+          <h3 className="text-xl font-bold group-hover:text-yellow-300 transition-colors">
+            Jam Operasional
+          </h3>
+        </div>
+
+        {/* Schedule */}
+        <div className="space-y-3 flex-grow">
+          {/* Monday to Friday */}
+          <div className="flex justify-between items-center py-2 border-b border-white/10">
+            <span className="text-gray-300 font-medium">Senin - Jumat</span>
+            <span className="text-green-400 font-semibold">
+              {jamLayanan.senin_jumat}
+            </span>
+          </div>
+
+          {/* Saturday and Sunday combined */}
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-300 font-medium">Sabtu - Minggu</span>
+            <span className="text-red-400 font-semibold">Tutup</span>
+          </div>
+        </div>
+
+        {/* Footer note */}
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <p className="text-xs text-gray-400 text-center">
+            Pelayanan hanya pada hari kerja
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-));
-
-OperationalHours.displayName = 'OperationalHours';
+  );
+};
 
 export default OperationalHours;
