@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
 
 interface SKMeninggalFormProps {
   onClose: () => void;
@@ -20,6 +21,9 @@ interface SKMeninggalFormData {
   meninggal_di: string;
   disebabkan: string;
   dikebumikan_di: string;
+  
+  // Data pelapor
+  nomorHP: string; // Tambahkan field nomor HP pelapor
   
   // Static data
   nama_nagari: string;
@@ -47,6 +51,7 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
     meninggal_di: '',
     disebabkan: '',
     dikebumikan_di: '',
+    nomorHP: '', // Tambahkan field nomor HP pelapor
     nama_nagari: 'Nagari Limo Koto',
     nama_kecamatan: 'Koto IV',
     nama_kabupaten: 'Kabupaten Sijunjung',
@@ -64,6 +69,35 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
     setIsSubmitting(true);
 
     try {
+      // Validasi input
+      if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
+        alert('Harap isi semua field yang wajib diisi!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Proses file upload menjadi base64
+      const processedFiles = await processUploadedFiles({
+        pengantar_rt_rw: formData.pengantar_rt_rw || null,
+        ktp_almarhum: formData.ktp_almarhum || null,
+        kk_almarhum: formData.kk_almarhum || null,
+        surat_rs: formData.surat_rs || null,
+        ktp_pelapor: formData.ktp_pelapor || null
+      });
+
+      // Buat data yang akan disimpan
+      const dataToSave = {
+        ...formData,
+        ...processedFiles
+      };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKMeninggalDunia',
+        dataToSave,
+        formData.nomorHP
+      );
+
       // Create FormData object
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKMeninggalDunia');
@@ -104,7 +138,7 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!');
+        alert(`Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
         onClose();
       } else {
         const result = await response.json();
@@ -197,6 +231,21 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
                 maxLength={16}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-black transition-colors"
                 placeholder="16 digit NIK"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP Pelapor <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
 

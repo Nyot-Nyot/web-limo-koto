@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
 
 interface SKPindahFormProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface SKPindahFormData {
   nomor_kk: string;
   nama_orang_2: string; // nama yang pindah
   nik: string;
+  nomorHP: string; // Tambahkan field nomor HP
   
   // Data daerah asal
   desa_kelurahan_asal: string;
@@ -41,6 +43,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     nomor_kk: '',
     nama_orang_2: '',
     nik: '',
+    nomorHP: '', // Tambahkan field nomor HP
     desa_kelurahan_asal: '',
     kecamatan_asal: '',
     kabupaten_kota_asal: '',
@@ -66,6 +69,33 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     setIsSubmitting(true);
 
     try {
+      // Validasi input
+      if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
+        alert('Harap isi semua field yang wajib diisi!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Proses file upload menjadi base64
+      const processedFiles = await processUploadedFiles({
+        kk: formData.kk || null,
+        ktp: formData.ktp || null,
+        pas_photo: formData.pas_photo || null
+      });
+
+      // Buat data yang akan disimpan
+      const dataToSave = {
+        ...formData,
+        ...processedFiles
+      };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKPindah',
+        dataToSave,
+        formData.nomorHP
+      );
+
       // Create FormData object
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKPindah');
@@ -106,7 +136,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Pindah berhasil dibuat dan didownload!');
+        alert(`Dokumen Surat Keterangan Pindah berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
         onClose();
       } else {
         const result = await response.json();
@@ -199,6 +229,21 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
                 maxLength={16}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Masukkan NIK"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>

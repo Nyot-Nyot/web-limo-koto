@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
 
 interface SKKelahiranFormProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ interface SKKelahiranFormData {
   nama_ibu: string;
   nama_ayah: string;
   alamat: string;
+  nomorHP: string; // Tambahkan field nomor HP
   
   // Static data
   nama_nagari: string;
@@ -40,6 +42,7 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
     nama_ibu: '',
     nama_ayah: '',
     alamat: '',
+    nomorHP: '', // Tambahkan field nomor HP
     nama_nagari: 'Nagari Limo Koto',
     nama_kecamatan: 'Koto IV',
     nama_kabupaten: 'Kabupaten Sijunjung',
@@ -56,7 +59,35 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Create FormData object
+      // Validasi nomor HP
+      if (!formData.nomorHP) {
+        alert('Nomor HP wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Proses file upload
+      const uploadedFiles = await processUploadedFiles({
+        pengantar_rt_rw: formData.pengantar_rt_rw || null,
+        surat_bidan: formData.surat_bidan || null,
+        kk: formData.kk || null,
+        ktp_orangtua: formData.ktp_orangtua || null
+      });
+
+      // Gabungkan data form dengan file yang sudah diproses
+      const dataToSubmit = {
+        ...formData,
+        ...uploadedFiles, // File akan disimpan sebagai base64 dalam Firestore
+      };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKKelahiran',
+        dataToSubmit,
+        formData.nomorHP
+      );
+
+      // Create FormData object untuk generate dokumen
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKKelahiran');
       
@@ -96,7 +127,7 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!');
+        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!`);
         onClose();
       } else {
         const result = await response.json();
@@ -294,6 +325,21 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
                 rows={3}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Masukkan alamat lengkap orang tua"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>

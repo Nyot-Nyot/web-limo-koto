@@ -71,6 +71,7 @@ export interface SKUFormData {
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
+  nomorHP: string; // Tambahkan field nomor HP
   // File uploads
   ktp?: File | null;
   kk?: File | null;

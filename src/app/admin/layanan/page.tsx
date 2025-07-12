@@ -146,13 +146,13 @@ export default function AdminLayananPage() {
         return {
           id: doc.id,
           nomorPermohonan: docData.nomorPermohonan || generateNomorPermohonan(docData.jenisLayanan),
-          namaPemohon: docData.nama || '',
+          namaPemohon: docData.namaPemohon || '',
           nik: docData.nik || '',
           jenisLayanan: docData.jenisLayanan || '',
           tanggalPengajuan: docData.tanggalPengajuan?.toDate() || new Date(),
           status: docData.status || 'pending',
           nomorHP: docData.nomorHP || '',
-          data: docData,
+          data: docData.data || docData,
           catatan: docData.catatan || '',
           alasanTolak: docData.alasanTolak || '',
           timeline: {

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
 
 interface DomisiliFormProps {
   onClose: () => void;
@@ -19,6 +20,7 @@ interface DomisiliFormData {
   nama_kecamatan: string;
   nama_kabupaten: string;
   tujuan: string;
+  nomorHP: string; // Tambahkan field nomor HP
   kk: File | null;
   ktp: File | null;
   surat_permohonan: File | null;
@@ -39,6 +41,7 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
     nama_kecamatan: 'Koto VII',
     nama_kabupaten: 'Sijunjung',
     tujuan: '',
+    nomorHP: '', // Tambahkan field nomor HP
     kk: null,
     ktp: null,
     surat_permohonan: null
@@ -51,7 +54,34 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Create FormData object
+      // Validasi nomor HP
+      if (!formData.nomorHP) {
+        alert('Nomor HP wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Proses file upload
+      const uploadedFiles = await processUploadedFiles({
+        kk: formData.kk,
+        ktp: formData.ktp,
+        surat_permohonan: formData.surat_permohonan
+      });
+
+      // Gabungkan data form dengan file yang sudah diproses
+      const dataToSubmit = {
+        ...formData,
+        ...uploadedFiles, // File akan disimpan sebagai base64 dalam Firestore
+      };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKDomisili',
+        dataToSubmit,
+        formData.nomorHP
+      );
+
+      // Create FormData object untuk generate dokumen
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKDomisili');
       
@@ -91,7 +121,7 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!');
+        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!`);
         onClose();
       } else {
         const result = await response.json();
@@ -255,6 +285,21 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Pekerjaan utama"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP/WA <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>

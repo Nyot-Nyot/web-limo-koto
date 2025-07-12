@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { SKUFormData } from '@/types/layanan';
+import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
 
 interface SKUFormProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ export default function SKUForm({ onClose }: SKUFormProps) {
     nama_nagari: 'Limo Koto',
     nama_kecamatan: 'Koto VII',
     nama_kabupaten: 'Sijunjung',
+    nomorHP: '', // Tambahkan field nomor HP
     ktp: null,
     kk: null,
     pengantar_rt_rw: null,
@@ -33,7 +35,35 @@ export default function SKUForm({ onClose }: SKUFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Create FormData object
+      // Validasi nomor HP
+      if (!formData.nomorHP) {
+        alert('Nomor HP wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Proses file upload
+      const uploadedFiles = await processUploadedFiles({
+        ktp: formData.ktp,
+        kk: formData.kk,
+        pengantar_rt_rw: formData.pengantar_rt_rw,
+        foto_tempat_usaha: formData.foto_tempat_usaha
+      });
+
+      // Gabungkan data form dengan file yang sudah diproses
+      const dataToSubmit = {
+        ...formData,
+        ...uploadedFiles, // File akan disimpan sebagai base64 dalam Firestore
+      };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKU_AN',
+        dataToSubmit,
+        formData.nomorHP
+      );
+
+      // Create FormData object untuk generate dokumen
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKU_AN');
       
@@ -73,7 +103,7 @@ export default function SKUForm({ onClose }: SKUFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen SKU berhasil dibuat dan didownload!');
+        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen SKU berhasil dibuat dan didownload!`);
         onClose();
       } else {
         const result = await response.json();
@@ -235,6 +265,21 @@ export default function SKUForm({ onClose }: SKUFormProps) {
                 rows={3}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Alamat lengkap sesuai KTP"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP/WA <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>

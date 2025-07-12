@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
 
 interface SKTempatTinggalFormProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ interface SKTempatTinggalFormData {
   status: string;
   alamat: string;
   jorong: string;
+  nomorHP: string; // Tambahkan field nomor HP
   
   // Static data
   nama_nagari: string;
@@ -39,6 +41,7 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
     status: '',
     alamat: '',
     jorong: '',
+    nomorHP: '', // Tambahkan field nomor HP
     nama_nagari: 'Nagari Limo Koto',
     nama_kecamatan: 'Koto IV',
     nama_kabupaten: 'Kabupaten Sijunjung',
@@ -54,6 +57,33 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
     setIsSubmitting(true);
 
     try {
+      // Validasi input
+      if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
+        alert('Harap isi semua field yang wajib diisi!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Proses file upload menjadi base64
+      const processedFiles = await processUploadedFiles({
+        kk: formData.kk || null,
+        ktp: formData.ktp || null,
+        surat_permohonan: formData.surat_permohonan || null
+      });
+
+      // Buat data yang akan disimpan
+      const dataToSave = {
+        ...formData,
+        ...processedFiles
+      };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKTempatTinggal',
+        dataToSave,
+        formData.nomorHP
+      );
+
       // Create FormData object
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKTempatTinggal');
@@ -94,7 +124,7 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal berhasil dibuat dan didownload!');
+        alert(`Dokumen Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
         onClose();
       } else {
         const result = await response.json();
@@ -186,6 +216,21 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
                 maxLength={16}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black transition-colors"
                 placeholder="16 digit NIK"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
 
