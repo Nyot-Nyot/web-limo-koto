@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, updateDoc, doc, query, orderBy } from 'firebase/firestore';
 import { sendWhatsAppNotification, exportToExcel } from '@/lib/adminLayananUtils';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { 
   FaFileAlt, 
   FaDownload, 
@@ -117,6 +118,7 @@ export default function AdminLayananPage() {
     if (isAuthenticated) {
       fetchPermohonanData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   // Auto-refresh functionality
@@ -390,15 +392,15 @@ export default function AdminLayananPage() {
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case 'pending':
-        return { color: 'text-yellow-600 bg-yellow-100', icon: MdPending, text: 'Pending' };
+        return { color: 'text-yellow-300 bg-yellow-900/30', icon: MdPending, text: 'Pending' };
       case 'approved':
-        return { color: 'text-blue-600 bg-blue-100', icon: MdApproval, text: 'Approved' };
+        return { color: 'text-blue-300 bg-blue-900/30', icon: MdApproval, text: 'Approved' };
       case 'selesai':
-        return { color: 'text-green-600 bg-green-100', icon: MdDone, text: 'Selesai' };
+        return { color: 'text-green-300 bg-green-900/30', icon: MdDone, text: 'Selesai' };
       case 'ditolak':
-        return { color: 'text-red-600 bg-red-100', icon: MdError, text: 'Ditolak' };
+        return { color: 'text-red-300 bg-red-900/30', icon: MdError, text: 'Ditolak' };
       default:
-        return { color: 'text-gray-600 bg-gray-100', icon: MdPending, text: 'Unknown' };
+        return { color: 'text-gray-300 bg-gray-900/30', icon: MdPending, text: 'Unknown' };
     }
   };
 
@@ -411,7 +413,7 @@ export default function AdminLayananPage() {
       <button
         key="download"
         onClick={() => handleDownload(permohonan)}
-        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        className="p-2 text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
         title="Download Surat"
       >
         <FaDownload />
@@ -425,7 +427,7 @@ export default function AdminLayananPage() {
           setSelectedPermohonan(permohonan);
           setShowDetailModal(true);
         }}
-        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+        className="p-2 text-purple-400 hover:bg-gray-700 rounded-lg transition-colors"
         title="Lihat Detail"
       >
         <FaEye />
@@ -439,7 +441,7 @@ export default function AdminLayananPage() {
           key="approve"
           onClick={() => handleStatusUpdate(permohonan.id, 'approved')}
           disabled={actionLoading === permohonan.id}
-          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+          className="p-2 text-green-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
           title="Approve"
         >
           {actionLoading === permohonan.id ? <FaSpinner className="animate-spin" /> : <FaCheck />}
@@ -451,7 +453,7 @@ export default function AdminLayananPage() {
           key="reject"
           onClick={() => handleStatusUpdate(permohonan.id, 'ditolak')}
           disabled={actionLoading === permohonan.id}
-          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+          className="p-2 text-red-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
           title="Tolak"
         >
           <FaTimes />
@@ -465,7 +467,7 @@ export default function AdminLayananPage() {
           key="selesai"
           onClick={() => handleStatusUpdate(permohonan.id, 'selesai')}
           disabled={actionLoading === permohonan.id}
-          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+          className="p-2 text-green-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
           title="Tandai Selesai"
         >
           <FaCheck />
@@ -478,7 +480,7 @@ export default function AdminLayananPage() {
       <button
         key="notify"
         onClick={() => handleSendNotification(permohonan)}
-        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+        className="p-2 text-green-400 hover:bg-gray-700 rounded-lg transition-colors"
         title="Kirim Notifikasi"
       >
         <FaWhatsapp />
@@ -571,28 +573,39 @@ export default function AdminLayananPage() {
   };
 
   if (!isAuthenticated) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header Section */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Management Surat Keterangan</h1>
-              <p className="mt-1 text-sm text-gray-600">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/admin')}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5" />
+                <span>Kembali</span>
+              </button>
+              <h1 className="text-2xl font-bold text-yellow-400">Management Surat Keterangan</h1>
+              <p className="text-gray-400 hidden md:block">
                 Kelola permohonan surat keterangan dari masyarakat
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="relative p-2 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors"
               >
                 {quickStats.notifikasiGagal > 0 ? (
-                  <MdNotificationsActive className="h-6 w-6 text-red-600" />
+                  <MdNotificationsActive className="h-6 w-6 text-red-400" />
                 ) : (
                   <MdNotifications className="h-6 w-6" />
                 )}
@@ -605,7 +618,7 @@ export default function AdminLayananPage() {
               <button
                 onClick={fetchPermohonanData}
                 disabled={loading}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
               >
                 <FaRedo className={loading ? 'animate-spin' : ''} />
               </button>
@@ -617,69 +630,69 @@ export default function AdminLayananPage() {
       {/* Quick Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-gray-800 p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <FaFileAlt className="h-8 w-8 text-blue-600" />
+                <FaFileAlt className="h-8 w-8 text-blue-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Hari Ini</p>
-                <p className="text-2xl font-bold text-gray-900">{quickStats.totalHariIni}</p>
+                <p className="text-sm font-medium text-gray-400">Total Hari Ini</p>
+                <p className="text-2xl font-bold text-white">{quickStats.totalHariIni}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-gray-800 p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <MdPending className="h-8 w-8 text-yellow-600" />
+                <MdPending className="h-8 w-8 text-yellow-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Menunggu Review</p>
-                <p className="text-2xl font-bold text-gray-900">{quickStats.pending}</p>
+                <p className="text-sm font-medium text-gray-400">Menunggu Review</p>
+                <p className="text-2xl font-bold text-white">{quickStats.pending}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-gray-800 p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <MdApproval className="h-8 w-8 text-blue-600" />
+                <MdApproval className="h-8 w-8 text-blue-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Menunggu TTE</p>
-                <p className="text-2xl font-bold text-gray-900">{quickStats.approved}</p>
+                <p className="text-sm font-medium text-gray-400">Menunggu TTE</p>
+                <p className="text-2xl font-bold text-white">{quickStats.approved}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-gray-800 p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <MdDone className="h-8 w-8 text-green-600" />
+                <MdDone className="h-8 w-8 text-green-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Selesai Hari Ini</p>
-                <p className="text-2xl font-bold text-gray-900">{quickStats.selesaiHariIni}</p>
+                <p className="text-sm font-medium text-gray-400">Selesai Hari Ini</p>
+                <p className="text-2xl font-bold text-white">{quickStats.selesaiHariIni}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-gray-800 p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <MdError className="h-8 w-8 text-red-600" />
+                <MdError className="h-8 w-8 text-red-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Notifikasi Gagal</p>
-                <p className="text-2xl font-bold text-gray-900">{quickStats.notifikasiGagal}</p>
+                <p className="text-sm font-medium text-gray-400">Notifikasi Gagal</p>
+                <p className="text-2xl font-bold text-white">{quickStats.notifikasiGagal}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
+        <div className="bg-gray-800 p-6 rounded-lg mb-8">
           {/* Tabs */}
           <div className="flex flex-wrap gap-2 mb-6">
             {['semua', 'pending', 'approved', 'selesai', 'ditolak'].map((tab) => (
@@ -688,8 +701,8 @@ export default function AdminLayananPage() {
                 onClick={() => setActiveTab(tab as 'semua' | 'pending' | 'approved' | 'selesai' | 'ditolak')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-yellow-500 text-gray-900'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -704,7 +717,7 @@ export default function AdminLayananPage() {
               <select
                 value={jenisLayananFilter}
                 onChange={(e) => setJenisLayananFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="semua">Semua Jenis Surat</option>
                 <option value="domisili">Surat Domisili</option>
@@ -720,7 +733,7 @@ export default function AdminLayananPage() {
               <select
                 value={tanggalFilter}
                 onChange={(e) => setTanggalFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="semua">Semua Tanggal</option>
                 <option value="hari_ini">Hari Ini</option>
@@ -738,17 +751,17 @@ export default function AdminLayananPage() {
               placeholder="Cari berdasarkan nama, NIK, atau nomor HP..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-400"
             />
           </div>
         </div>
 
         {/* Bulk Actions */}
         {selectedItems.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-gray-800 border border-yellow-500 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-blue-800">
+                <span className="text-sm font-medium text-yellow-400">
                   {selectedItems.length} item terpilih
                 </span>
                 <div className="flex gap-2">
@@ -788,7 +801,7 @@ export default function AdminLayananPage() {
               </div>
               <button
                 onClick={() => setSelectedItems([])}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                className="text-yellow-400 hover:text-yellow-300 text-sm"
               >
                 Batalkan
               </button>
@@ -797,12 +810,12 @@ export default function AdminLayananPage() {
         )}
 
         {/* Data Table */}
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-gray-800 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     <input
                       type="checkbox"
                       checked={selectedItems.length === filteredData.length && filteredData.length > 0}
@@ -813,43 +826,43 @@ export default function AdminLayananPage() {
                           setSelectedItems([]);
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-500 text-yellow-500 focus:ring-yellow-500 bg-gray-600"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     No. Permohonan
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Nama Pemohon
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Jenis Surat
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Tanggal Pengajuan
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Nomor HP
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Aksi
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-700">
                 {loading ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-12 text-center">
-                      <FaSpinner className="animate-spin mx-auto h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-gray-500">Memuat data...</p>
+                      <FaSpinner className="animate-spin mx-auto h-8 w-8 text-yellow-400" />
+                      <p className="mt-2 text-gray-400">Memuat data...</p>
                     </td>
                   </tr>
                 ) : filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                       Tidak ada data permohonan
                     </td>
                   </tr>
@@ -859,7 +872,7 @@ export default function AdminLayananPage() {
                     const StatusIcon = statusDisplay.icon;
                     
                     return (
-                      <tr key={permohonan.id} className="hover:bg-gray-50">
+                      <tr key={permohonan.id} className="hover:bg-gray-700">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
                             type="checkbox"
@@ -871,20 +884,20 @@ export default function AdminLayananPage() {
                                 setSelectedItems(selectedItems.filter(id => id !== permohonan.id));
                               }
                             }}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-500 text-yellow-500 focus:ring-yellow-500 bg-gray-600"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                           {permohonan.nomorPermohonan}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{permohonan.namaPemohon}</div>
-                          <div className="text-sm text-gray-500">{permohonan.nik}</div>
+                          <div className="text-sm font-medium text-white">{permohonan.namaPemohon}</div>
+                          <div className="text-sm text-gray-400">{permohonan.nik}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                           {permohonan.jenisLayanan}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                           {permohonan.tanggalPengajuan.toLocaleDateString('id-ID')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -893,7 +906,7 @@ export default function AdminLayananPage() {
                             {statusDisplay.text}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                           {permohonan.nomorHP}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -914,15 +927,15 @@ export default function AdminLayananPage() {
       {/* Detail Modal */}
       {showDetailModal && selectedPermohonan && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
+          <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-white">
                   Detail Permohonan - {selectedPermohonan.nomorPermohonan}
                 </h3>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-white"
                 >
                   <FaTimes className="h-6 w-6" />
                 </button>
@@ -931,35 +944,35 @@ export default function AdminLayananPage() {
               {/* Detail content */}
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Data Pemohon</h4>
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-semibold text-white mb-3">Data Pemohon</h4>
                     <div className="space-y-2">
-                      <p><span className="font-medium">Nama:</span> {selectedPermohonan.namaPemohon}</p>
-                      <p><span className="font-medium">NIK:</span> {selectedPermohonan.nik}</p>
-                      <p><span className="font-medium">Nomor HP:</span> {selectedPermohonan.nomorHP}</p>
-                      <p><span className="font-medium">Jenis Layanan:</span> {selectedPermohonan.jenisLayanan}</p>
-                      <p><span className="font-medium">Alamat:</span> {selectedPermohonan.data.alamat || '-'}</p>
-                      <p><span className="font-medium">Agama:</span> {selectedPermohonan.data.agama || '-'}</p>
-                      <p><span className="font-medium">Pekerjaan:</span> {selectedPermohonan.data.pekerjaan || '-'}</p>
+                      <p><span className="font-medium text-gray-300">Nama:</span> <span className="text-white">{selectedPermohonan.namaPemohon}</span></p>
+                      <p><span className="font-medium text-gray-300">NIK:</span> <span className="text-white">{selectedPermohonan.nik}</span></p>
+                      <p><span className="font-medium text-gray-300">Nomor HP:</span> <span className="text-white">{selectedPermohonan.nomorHP}</span></p>
+                      <p><span className="font-medium text-gray-300">Jenis Layanan:</span> <span className="text-white">{selectedPermohonan.jenisLayanan}</span></p>
+                      <p><span className="font-medium text-gray-300">Alamat:</span> <span className="text-white">{selectedPermohonan.data.alamat || '-'}</span></p>
+                      <p><span className="font-medium text-gray-300">Agama:</span> <span className="text-white">{selectedPermohonan.data.agama || '-'}</span></p>
+                      <p><span className="font-medium text-gray-300">Pekerjaan:</span> <span className="text-white">{selectedPermohonan.data.pekerjaan || '-'}</span></p>
                     </div>
                   </div>
                   
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Timeline Status</h4>
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-semibold text-white mb-3">Timeline Status</h4>
                     <div className="space-y-3">
                       <div className="flex items-center space-x-3">
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                         <div>
-                          <p className="font-medium text-sm">Diajukan</p>
-                          <p className="text-xs text-gray-600">{selectedPermohonan.timeline.diajukan.toLocaleString('id-ID')}</p>
+                          <p className="font-medium text-sm text-white">Diajukan</p>
+                          <p className="text-xs text-gray-400">{selectedPermohonan.timeline.diajukan.toLocaleString('id-ID')}</p>
                         </div>
                       </div>
                       {selectedPermohonan.timeline.direview && (
                         <div className="flex items-center space-x-3">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                           <div>
-                            <p className="font-medium text-sm">Direview</p>
-                            <p className="text-xs text-gray-600">{selectedPermohonan.timeline.direview.toLocaleString('id-ID')}</p>
+                            <p className="font-medium text-sm text-white">Direview</p>
+                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.direview.toLocaleString('id-ID')}</p>
                           </div>
                         </div>
                       )}
@@ -967,8 +980,8 @@ export default function AdminLayananPage() {
                         <div className="flex items-center space-x-3">
                           <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                           <div>
-                            <p className="font-medium text-sm">Disetujui</p>
-                            <p className="text-xs text-gray-600">{selectedPermohonan.timeline.disetujui.toLocaleString('id-ID')}</p>
+                            <p className="font-medium text-sm text-white">Disetujui</p>
+                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.disetujui.toLocaleString('id-ID')}</p>
                           </div>
                         </div>
                       )}
@@ -976,8 +989,8 @@ export default function AdminLayananPage() {
                         <div className="flex items-center space-x-3">
                           <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                           <div>
-                            <p className="font-medium text-sm">Selesai</p>
-                            <p className="text-xs text-gray-600">{selectedPermohonan.timeline.selesai.toLocaleString('id-ID')}</p>
+                            <p className="font-medium text-sm text-white">Selesai</p>
+                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.selesai.toLocaleString('id-ID')}</p>
                           </div>
                         </div>
                       )}
@@ -986,13 +999,13 @@ export default function AdminLayananPage() {
                 </div>
 
                 {/* Notification Status */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Status Notifikasi</h4>
+                <div className="bg-gray-700 p-4 rounded-lg">
+                  <h4 className="font-semibold text-white mb-3">Status Notifikasi</h4>
                   <div className="flex items-center space-x-4">
                     <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
                       selectedPermohonan.notifikasi.terkirim 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-800 text-green-300' 
+                        : 'bg-red-800 text-red-300'
                     }`}>
                       {selectedPermohonan.notifikasi.terkirim ? (
                         <>
@@ -1007,13 +1020,13 @@ export default function AdminLayananPage() {
                       )}
                     </div>
                     {selectedPermohonan.notifikasi.tanggal && (
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-400">
                         {selectedPermohonan.notifikasi.tanggal.toLocaleString('id-ID')}
                       </span>
                     )}
                   </div>
                   {selectedPermohonan.notifikasi.error && (
-                    <p className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                    <p className="mt-2 text-sm text-red-400 bg-red-900 bg-opacity-50 p-2 rounded">
                       Error: {selectedPermohonan.notifikasi.error}
                     </p>
                   )}
@@ -1021,9 +1034,9 @@ export default function AdminLayananPage() {
 
                 {/* Admin Notes */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Catatan Admin</h4>
+                  <h4 className="font-semibold text-white mb-3">Catatan Admin</h4>
                   <textarea
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-400"
                     rows={4}
                     placeholder="Tambahkan catatan internal..."
                     defaultValue={selectedPermohonan.catatan || ''}
@@ -1035,7 +1048,7 @@ export default function AdminLayananPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-4 border-t">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-600">
                   <button
                     onClick={() => handleDownload(selectedPermohonan)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -1099,15 +1112,15 @@ export default function AdminLayananPage() {
       {/* Notification Panel */}
       {showNotificationPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
+          <div className="bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-white">
                   Panel Notifikasi
                 </h3>
                 <button
                   onClick={() => setShowNotificationPanel(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-white"
                 >
                   <FaTimes className="h-6 w-6" />
                 </button>
@@ -1115,19 +1128,19 @@ export default function AdminLayananPage() {
 
               <div className="space-y-4">
                 {/* Failed Notifications */}
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-red-800 mb-3">
+                <div className="bg-red-900/30 border border-red-600 rounded-lg p-4">
+                  <h4 className="font-semibold text-red-300 mb-3">
                     Notifikasi Gagal ({quickStats.notifikasiGagal})
                   </h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {permohonanData
                       .filter(item => item.notifikasi.error && !item.notifikasi.terkirim)
                       .map(item => (
-                        <div key={item.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                        <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded border border-gray-600">
                           <div>
-                            <p className="font-medium text-gray-900">{item.namaPemohon}</p>
-                            <p className="text-sm text-gray-600">{item.nomorPermohonan}</p>
-                            <p className="text-sm text-red-600">{item.notifikasi.error}</p>
+                            <p className="font-medium text-white">{item.namaPemohon}</p>
+                            <p className="text-sm text-gray-300">{item.nomorPermohonan}</p>
+                            <p className="text-sm text-red-400">{item.notifikasi.error}</p>
                           </div>
                           <button
                             onClick={() => handleSendNotification(item)}
@@ -1141,8 +1154,8 @@ export default function AdminLayananPage() {
                 </div>
 
                 {/* Successful Notifications */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-800 mb-3">
+                <div className="bg-green-900/30 border border-green-600 rounded-lg p-4">
+                  <h4 className="font-semibold text-green-300 mb-3">
                     Notifikasi Berhasil Terkirim (24 Jam Terakhir)
                   </h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -1155,15 +1168,15 @@ export default function AdminLayananPage() {
                                item.notifikasi.tanggal >= yesterday;
                       })
                       .map(item => (
-                        <div key={item.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                        <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded border border-gray-600">
                           <div>
-                            <p className="font-medium text-gray-900">{item.namaPemohon}</p>
-                            <p className="text-sm text-gray-600">{item.nomorPermohonan}</p>
-                            <p className="text-sm text-green-600">
+                            <p className="font-medium text-white">{item.namaPemohon}</p>
+                            <p className="text-sm text-gray-300">{item.nomorPermohonan}</p>
+                            <p className="text-sm text-green-400">
                               Terkirim: {item.notifikasi.tanggal?.toLocaleString('id-ID')}
                             </p>
                           </div>
-                          <div className="text-green-600">
+                          <div className="text-green-400">
                             <FaCheck />
                           </div>
                         </div>
@@ -1204,15 +1217,15 @@ export default function AdminLayananPage() {
       {/* Settings Panel */}
       {showSettingsPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full m-4">
+          <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full m-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-white">
                   Pengaturan
                 </h3>
                 <button
                   onClick={() => setShowSettingsPanel(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-white"
                 >
                   <FaTimes className="h-6 w-6" />
                 </button>
@@ -1220,7 +1233,7 @@ export default function AdminLayananPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Auto Refresh
                   </label>
                   <div className="flex items-center space-x-3">
@@ -1228,23 +1241,23 @@ export default function AdminLayananPage() {
                       type="checkbox"
                       checked={autoRefresh}
                       onChange={(e) => setAutoRefresh(e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-600 text-yellow-500 focus:ring-yellow-500 bg-gray-700"
                     />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-300">
                       {autoRefresh ? 'Aktif' : 'Nonaktif'}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Interval Refresh (detik)
                   </label>
                   <input
                     type="number"
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(parseInt(e.target.value) || 30)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     min="10"
                     max="300"
                     disabled={!autoRefresh}
@@ -1252,10 +1265,10 @@ export default function AdminLayananPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Template Notifikasi
                   </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
                     <option value="default">Template Default</option>
                     <option value="formal">Template Formal</option>
                     <option value="casual">Template Casual</option>
@@ -1263,10 +1276,10 @@ export default function AdminLayananPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Backup Otomatis
                   </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
                     <option value="daily">Harian</option>
                     <option value="weekly">Mingguan</option>
                     <option value="monthly">Bulanan</option>
@@ -1286,7 +1299,7 @@ export default function AdminLayananPage() {
                     // Handle save settings
                     setShowSettingsPanel(false);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700 transition-colors"
                 >
                   Simpan
                 </button>
