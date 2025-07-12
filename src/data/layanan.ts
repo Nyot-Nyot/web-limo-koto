@@ -1,11 +1,4 @@
-import {
-  FaPhoneAlt,
-  FaWhatsapp,
-  FaEnvelope,
-  FaInstagram,
-  FaAmbulance,
-  FaShieldAlt,
-} from "react-icons/fa";
+import { FaPhoneAlt, FaWhatsapp, FaEnvelope, FaInstagram, FaAmbulance, FaShieldAlt } from "react-icons/fa";
 import { LayananItem, ContactInfo, JamLayanan } from "@/types/layanan";
 
 export const layananList: LayananItem[] = [
@@ -67,11 +60,7 @@ export const layananList: LayananItem[] = [
   {
     id: "surat_kematian",
     title: "Surat Keterangan Kematian",
-    items: [
-      "FC KK dan KTP",
-      "Surat pengantar RT/RW",
-      "Surat keterangan dokter/RS",
-    ],
+    items: ["FC KK dan KTP", "Surat pengantar RT/RW", "Surat keterangan dokter/RS"],
     description: "Surat keterangan untuk administrasi kematian",
     title: "Surat Keterangan Meninggal Dunia",
     items: [
@@ -214,49 +203,19 @@ export const aktaList: LayananItem[] = [
 
 export const kontakInfo: ContactInfo = {
   pelayanan: [
-    {
-      icon: FaPhoneAlt,
-      text: "08123456789092",
-      label: "Telepon",
-      color: "text-blue-400",
-    },
-    {
-      icon: FaWhatsapp,
-      text: "08123456789092",
-      label: "WhatsApp",
-      color: "text-green-400",
-    },
-    {
-      icon: FaEnvelope,
-      text: "limoKoto69@gmail.com",
-      label: "Email",
-      color: "text-red-400",
-    },
-    {
-      icon: FaInstagram,
-      text: "Limo Koto",
-      label: "Instagram",
-      color: "text-pink-400",
-    },
+    { icon: FaPhoneAlt, text: "08123456789092", label: "Telepon", color: "text-blue-400" },
+    { icon: FaWhatsapp, text: "08123456789092", label: "WhatsApp", color: "text-green-400" },
+    { icon: FaEnvelope, text: "limoKoto69@gmail.com", label: "Email", color: "text-red-400" },
+    { icon: FaInstagram, text: "Limo Koto", label: "Instagram", color: "text-pink-400" },
   ],
   emergency: [
-    {
-      icon: FaAmbulance,
-      text: "0823456789002",
-      label: "Ambulance",
-      color: "text-red-500",
-    },
-    {
-      icon: FaShieldAlt,
-      text: "0823456789002",
-      label: "Keamanan",
-      color: "text-blue-500",
-    },
-  ],
+    { icon: FaAmbulance, text: "0823456789002", label: "Ambulance", color: "text-red-500" },
+    { icon: FaShieldAlt, text: "0823456789002", label: "Keamanan", color: "text-blue-500" },
+  ]
 };
 
 export const jamLayanan: JamLayanan = {
   senin_jumat: "08:00 - 12:00 & 13:30 - 16:00",
   sabtu: "08:00 - 11:00",
-  minggu: "Tutup",
+  minggu: "Tutup"
 };
