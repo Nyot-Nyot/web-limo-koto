@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { kepalaJorongData, sekretarisData, waliNagariData } from '@/data/pejabat';
 import { faqData } from '@/data/faq';
@@ -11,7 +12,7 @@ import FAQCard from '@/components/FAQCard';
 import FeatureCard from '@/components/FeatureCard';
 
 interface PejabatData {
-  id: number;
+  id: string | number;
   name: string;
   title: string;
   image: string;
@@ -402,7 +403,7 @@ export default function HeroSection() {
             </div>
             
             <div className="text-center mt-10">
-              <a 
+              <Link 
                 href="/berita" 
                 className="inline-flex items-center px-6 py-3 border-white border-2 text-base font-semibold rounded-md text-white bg-transparent hover:bg-white hover:text-black transition"
               >
@@ -410,7 +411,7 @@ export default function HeroSection() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </section>

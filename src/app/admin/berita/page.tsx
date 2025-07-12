@@ -60,7 +60,6 @@ export default function AdminBeritaPage() {
   const [currentBlockCaption, setCurrentBlockCaption] = useState('');
   const [currentListItems, setCurrentListItems] = useState<string[]>(['']);
   const [currentListItemInput, setCurrentListItemInput] = useState('');
-  const [currentBlockImageFile, setCurrentBlockImageFile] = useState<File | null>(null);
   const [currentBlockImagePreview, setCurrentBlockImagePreview] = useState<string | null>(null);
   const [currentBlockVideoFile, setCurrentBlockVideoFile] = useState<File | null>(null);
   const [useVideoFile, setUseVideoFile] = useState(false);
@@ -180,7 +179,6 @@ export default function AdminBeritaPage() {
     setBlockImageDragOver(false);
     const files = e.dataTransfer.files;
     if (files[0]) {
-      setCurrentBlockImageFile(files[0]);
       handleContentImageFileUpload(files[0]);
     }
   };
@@ -189,8 +187,6 @@ export default function AdminBeritaPage() {
   const handleBlockImageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Update the currentBlockImageFile state and handle upload
-      setCurrentBlockImageFile(file);
       handleContentImageFileUpload(file);
     }
   };
@@ -342,7 +338,6 @@ export default function AdminBeritaPage() {
     setCurrentBlockCaption('');
     setCurrentListItems(['']);
     setCurrentListItemInput('');
-    setCurrentBlockImageFile(null);
     setCurrentBlockImagePreview(null);
     setCurrentBlockVideoFile(null);
     setUseVideoFile(false);
@@ -749,7 +744,6 @@ export default function AdminBeritaPage() {
         setCurrentBlockCaption('');
         setCurrentListItems(['']);
         setCurrentListItemInput('');
-        setCurrentBlockImageFile(null);
         setCurrentBlockImagePreview(null);
         setCurrentBlockVideoFile(null);
         setUseVideoFile(false);
@@ -872,7 +866,6 @@ export default function AdminBeritaPage() {
     setCurrentBlockCaption('');
     setCurrentListItems(['']);
     setCurrentListItemInput('');
-    setCurrentBlockImageFile(null);
     setCurrentBlockImagePreview(null);
     setCurrentBlockVideoFile(null);
     setUseVideoFile(false);
@@ -1502,7 +1495,6 @@ export default function AdminBeritaPage() {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setCurrentBlockImageFile(null);
                                     setCurrentBlockImagePreview(null);
                                     setCurrentBlockUrl('');
                                   }}

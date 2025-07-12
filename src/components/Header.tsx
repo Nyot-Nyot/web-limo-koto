@@ -38,24 +38,24 @@ export default function Header() {
 
 					{/* Desktop Navigation */}
 					<nav className="hidden md:flex items-center space-x-8">
-						<a
+						<Link
 							href="/profil"
 							className="hover:text-gray-300 transition-colors"
 						>
 							Profil
-						</a>
-						<a
+						</Link>
+						<Link
 							href="/layanan"
 							className="hover:text-gray-300 transition-colors"
 						>
 							Layanan
-						</a>
-						<a
+						</Link>
+						<Link
 							href="/berita"
 							className="hover:text-gray-300 transition-colors"
 						>
 							Berita
-						</a>
+						</Link>
 					</nav>
 
 					{/* Search and User */}
@@ -90,27 +90,27 @@ export default function Header() {
 				{isMobileMenuOpen && (
 					<div className="md:hidden absolute top-16 left-0 right-0 bg-black/90 backdrop-blur-sm border-t border-white/20 z-[9998]">
 						<nav className="px-4 py-6 space-y-4">
-							<a
+							<Link
 								href="/profil"
 								className="block py-2 text-lg hover:text-gray-300 transition-colors"
 								onClick={() => setIsMobileMenuOpen(false)}
 							>
 								Profil
-							</a>
-							<a
+							</Link>
+							<Link
 								href="/layanan"
 								className="block py-2 text-lg hover:text-gray-300 transition-colors"
 								onClick={() => setIsMobileMenuOpen(false)}
 							>
 								Layanan
-							</a>
-							<a
+							</Link>
+							<Link
 								href="/berita"
 								className="block py-2 text-lg hover:text-gray-300 transition-colors"
 								onClick={() => setIsMobileMenuOpen(false)}
 							>
 								Berita
-							</a>
+							</Link>
 							<div className="pt-4 border-t border-white/20">
 								<div className="relative mb-4">
 									<input

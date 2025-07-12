@@ -19,6 +19,7 @@ export default function BeritaDetailPage() {
     // Get data from localStorage if available, otherwise use mock data
     const loadNewsData = () => {
       const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+      const safeSlug = slug ?? "";
       let newsItems: NewsItem[] = mockNewsData;
       
       // Check localStorage for updated news
@@ -33,9 +34,9 @@ export default function BeritaDetailPage() {
       
       // Find the news item by slug (URL), ID, or title slug
       const foundNews = newsItems.find(item => 
-        item.href.includes(slug) || 
-        item.id === slug || 
-        createSlug(item.title) === slug
+        item.href.includes(safeSlug) || 
+        item.id === safeSlug || 
+        createSlug(item.title) === safeSlug
       );
       
       if (foundNews) {

@@ -1,4 +1,6 @@
 // Types for layanan/services page
+import { ComponentType } from 'react';
+
 export interface LayananItem {
   id: string;
   title: string;
@@ -11,7 +13,7 @@ export interface LayananItem {
 }
 
 export interface ContactItem {
-  icon: React.ComponentType<any>;
+  icon: ComponentType<{ className?: string }>;
   text: string;
   label: string;
   color: string;
