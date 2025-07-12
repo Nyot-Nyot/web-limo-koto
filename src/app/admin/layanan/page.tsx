@@ -20,7 +20,11 @@ import {
   FaCog,
   FaCheckSquare,
   FaSpinner,
-  FaTrash
+  FaTrash,
+  FaPaperclip,
+  FaFilePdf,
+  FaFileImage,
+  FaFileWord
 } from 'react-icons/fa';
 import { 
   MdPending, 
@@ -46,6 +50,13 @@ interface PermohonanData {
     agama?: string;
     pekerjaan?: string;
     [key: string]: unknown;
+  };
+  attachments?: {
+    [key: string]: {
+      url: string;
+      filename: string;
+      type: string;
+    };
   };
   catatan?: string;
   alasanTolak?: string;
@@ -154,6 +165,7 @@ export default function AdminLayananPage() {
           status: docData.status || 'pending',
           nomorHP: docData.nomorHP || '',
           data: docData.data || docData,
+          attachments: docData.attachments || {},
           catatan: docData.catatan || '',
           alasanTolak: docData.alasanTolak || '',
           timeline: {
@@ -314,6 +326,36 @@ export default function AdminLayananPage() {
     }
   };
 
+  // Handle bulk download attachments
+  const handleBulkDownloadAttachments = async () => {
+    try {
+      const selectedData = permohonanData.filter(item => selectedItems.includes(item.id));
+      let totalAttachments = 0;
+      
+      for (const permohonan of selectedData) {
+        if (permohonan.attachments && Object.keys(permohonan.attachments).length > 0) {
+          for (const attachment of Object.values(permohonan.attachments)) {
+            try {
+              await handleDownloadAttachment(attachment);
+              totalAttachments++;
+            } catch (error) {
+              console.error(`Failed to download attachment for ${permohonan.nomorPermohonan}:`, error);
+            }
+          }
+        }
+      }
+      
+      if (totalAttachments > 0) {
+        alert(`${totalAttachments} lampiran berhasil diunduh`);
+      } else {
+        alert('Tidak ada lampiran yang dapat diunduh dari data yang dipilih');
+      }
+    } catch (error) {
+      console.error('Error in bulk download attachments:', error);
+      alert('Gagal mengunduh lampiran');
+    }
+  };
+
   // Handle bulk notification
   const handleBulkNotification = async () => {
     try {
@@ -461,6 +503,10 @@ export default function AdminLayananPage() {
           // Handle bulk download
           await handleBulkDownload();
           break;
+        case 'download_attachments':
+          // Handle bulk download attachments
+          await handleBulkDownloadAttachments();
+          break;
         case 'notify':
           // Handle bulk notification
           await handleBulkNotification();
@@ -529,6 +575,23 @@ export default function AdminLayananPage() {
         <FaEye />
       </button>
     );
+
+    // Add attachment download button if attachments exist
+    if (permohonan.attachments && Object.keys(permohonan.attachments).length > 0) {
+      buttons.push(
+        <button
+          key="attachments"
+          onClick={() => {
+            setSelectedPermohonan(permohonan);
+            setShowDetailModal(true);
+          }}
+          className="p-2 text-orange-400 hover:bg-gray-700 rounded-lg transition-colors"
+          title="Lihat Lampiran"
+        >
+          <FaPaperclip />
+        </button>
+      );
+    }
 
     // Status-specific actions
     if (permohonan.status === 'pending') {
@@ -637,6 +700,50 @@ export default function AdminLayananPage() {
       alert('Gagal mengunduh dokumen. Silakan coba lagi.');
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  // Handle download attachment
+  const handleDownloadAttachment = async (attachment: { url: string; filename: string; type: string }) => {
+    try {
+      // Use our API endpoint for downloading files
+      const response = await fetch(`/api/documents/download?path=${encodeURIComponent(attachment.url)}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download attachment');
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = attachment.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading attachment:', error);
+      alert('Gagal mengunduh lampiran. Silakan coba lagi.');
+    }
+  };
+
+  // Get file icon based on file type
+  const getFileIcon = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return FaFilePdf;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return FaFileImage;
+      case 'doc':
+      case 'docx':
+        return FaFileWord;
+      default:
+        return FaFileAlt;
     }
   };
 
@@ -803,655 +910,706 @@ export default function AdminLayananPage() {
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-8">
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {['semua', 'pending', 'approved', 'selesai', 'ditolak'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab as 'semua' | 'pending' | 'approved' | 'selesai' | 'ditolak')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === tab
-                    ? 'bg-yellow-500 text-gray-900'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-gray-800 p-6 rounded-lg mb-8">
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {['semua', 'pending', 'approved', 'selesai', 'ditolak'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as 'semua' | 'pending' | 'approved' | 'selesai' | 'ditolak')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    activeTab === tab
+                      ? 'bg-yellow-500 text-gray-900'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <FaFilter className="text-gray-400" />
+                <select
+                  value={jenisLayananFilter}
+                  onChange={(e) => setJenisLayananFilter(e.target.value)}
+                  className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                >
+                  <option value="semua">Semua Jenis Surat</option>
+                  <option value="domisili">Surat Domisili</option>
+                  <option value="kelahiran">Surat Kelahiran</option>
+                  <option value="usaha">Surat Usaha</option>
+                  <option value="pindah">Surat Pindah</option>
+                  <option value="surat_kematian">Surat Kematian</option>
+                  <option value="tempat_tinggal">Surat Tempat Tinggal</option>
+                </select>
+              </div>
+              
+              <div>
+                <select
+                  value={tanggalFilter}
+                  onChange={(e) => setTanggalFilter(e.target.value)}
+                  className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                >
+                  <option value="semua">Semua Tanggal</option>
+                  <option value="hari_ini">Hari Ini</option>
+                  <option value="minggu_ini">Minggu Ini</option>
+                  <option value="bulan_ini">Bulan Ini</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari berdasarkan nama, NIK, atau nomor HP..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-400"
+              />
+            </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <FaFilter className="text-gray-400" />
-              <select
-                value={jenisLayananFilter}
-                onChange={(e) => setJenisLayananFilter(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              >
-                <option value="semua">Semua Jenis Surat</option>
-                <option value="domisili">Surat Domisili</option>
-                <option value="kelahiran">Surat Kelahiran</option>
-                <option value="usaha">Surat Usaha</option>
-                <option value="pindah">Surat Pindah</option>
-                <option value="surat_kematian">Surat Kematian</option>
-                <option value="tempat_tinggal">Surat Tempat Tinggal</option>
-              </select>
+          {/* Bulk Actions */}
+          {selectedItems.length > 0 && (
+            <div className="bg-gray-800 border border-yellow-500 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-yellow-400">
+                    {selectedItems.length} item terpilih
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleBulkAction('approve')}
+                      disabled={actionLoading === 'bulk'}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <FaCheck className="inline mr-2" />
+                      Approve Semua
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('download')}
+                      disabled={actionLoading === 'bulk'}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <FaDownload className="inline mr-2" />
+                      Download Semua
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('download_attachments')}
+                      disabled={actionLoading === 'bulk'}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <FaPaperclip className="inline mr-2" />
+                      Download Lampiran
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('notify')}
+                      disabled={actionLoading === 'bulk'}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <FaWhatsapp className="inline mr-2" />
+                      Kirim SMS
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('export')}
+                      disabled={actionLoading === 'bulk'}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <FaFileExport className="inline mr-2" />
+                      Export Excel
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('delete')}
+                      disabled={actionLoading === 'bulk'}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-sm"
+                      title="Hapus data yang sudah selesai"
+                    >
+                      <FaTrash className="inline mr-2" />
+                      Hapus Selesai
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="text-yellow-400 hover:text-yellow-300 text-sm"
+                >
+                  Batalkan
+                </button>
+              </div>
             </div>
-            
-            <div>
-              <select
-                value={tanggalFilter}
-                onChange={(e) => setTanggalFilter(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              >
-                <option value="semua">Semua Tanggal</option>
-                <option value="hari_ini">Hari Ini</option>
-                <option value="minggu_ini">Minggu Ini</option>
-                <option value="bulan_ini">Bulan Ini</option>
-              </select>
-            </div>
-          </div>
+          )}
 
-          {/* Search */}
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Cari berdasarkan nama, NIK, atau nomor HP..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-400"
-            />
+          {/* Data Table */}
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.length === filteredData.length && filteredData.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedItems(filteredData.map(item => item.id));
+                          } else {
+                            setSelectedItems([]);
+                          }
+                        }}
+                        className="rounded border-gray-500 text-yellow-500 focus:ring-yellow-500 bg-gray-600"
+                      />
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Nama Pemohon
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Jenis Surat
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Tanggal Pengajuan
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Nomor HP
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Lampiran
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center">
+                        <FaSpinner className="animate-spin mx-auto h-8 w-8 text-yellow-400" />
+                        <p className="mt-2 text-gray-400">Memuat data...</p>
+                      </td>
+                    </tr>
+                  ) : filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                        Tidak ada data permohonan
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((permohonan) => {
+                      const statusDisplay = getStatusDisplay(permohonan.status);
+                      const StatusIcon = statusDisplay.icon;
+                      
+                      return (
+                        <tr key={permohonan.id} className="hover:bg-gray-700">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedItems.includes(permohonan.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedItems([...selectedItems, permohonan.id]);
+                                } else {
+                                  setSelectedItems(selectedItems.filter(id => id !== permohonan.id));
+                                }
+                              }}
+                              className="rounded border-gray-500 text-yellow-500 focus:ring-yellow-500 bg-gray-600"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-white">{permohonan.namaPemohon}</div>
+                            <div className="text-sm text-gray-400">{permohonan.nik}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {permohonan.jenisLayanan}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {permohonan.tanggalPengajuan.toLocaleDateString('id-ID')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}>
+                              <StatusIcon className="mr-1.5 h-4 w-4" />
+                              {statusDisplay.text}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {permohonan.nomorHP}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-1">
+                              {permohonan.attachments && Object.keys(permohonan.attachments).length > 0 ? (
+                                <>
+                                  <FaPaperclip className="h-4 w-4 text-green-400" />
+                                  <span className="text-sm text-green-400">
+                                    {Object.keys(permohonan.attachments).length} file
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-sm text-gray-400">-</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-2">
+                              {getActionButtons(permohonan)}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Bulk Actions */}
-        {selectedItems.length > 0 && (
-          <div className="bg-gray-800 border border-yellow-500 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-yellow-400">
-                  {selectedItems.length} item terpilih
-                </span>
-                <div className="flex gap-2">
+        {/* Detail Modal */}
+        {showDetailModal && selectedPermohonan && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-white">
+                    Detail Permohonan - {selectedPermohonan.nomorPermohonan}
+                  </h3>
                   <button
-                    onClick={() => handleBulkAction('approve')}
-                    disabled={actionLoading === 'bulk'}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm"
+                    onClick={() => setShowDetailModal(false)}
+                    className="text-gray-400 hover:text-white"
                   >
-                    <FaCheck className="inline mr-2" />
-                    Approve Semua
-                  </button>
-                  <button
-                    onClick={() => handleBulkAction('download')}
-                    disabled={actionLoading === 'bulk'}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
-                  >
-                    <FaDownload className="inline mr-2" />
-                    Download Semua
-                  </button>
-                  <button
-                    onClick={() => handleBulkAction('notify')}
-                    disabled={actionLoading === 'bulk'}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm"
-                  >
-                    <FaWhatsapp className="inline mr-2" />
-                    Kirim SMS
-                  </button>
-                  <button
-                    onClick={() => handleBulkAction('export')}
-                    disabled={actionLoading === 'bulk'}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 text-sm"
-                  >
-                    <FaFileExport className="inline mr-2" />
-                    Export Excel
-                  </button>
-                  <button
-                    onClick={() => handleBulkAction('delete')}
-                    disabled={actionLoading === 'bulk'}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-sm"
-                    title="Hapus data yang sudah selesai"
-                  >
-                    <FaTrash className="inline mr-2" />
-                    Hapus Selesai
+                    <FaTimes className="h-6 w-6" />
                   </button>
                 </div>
+
+                {/* Detail content */}
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-700 p-4 rounded-lg">
+                      <h4 className="font-semibold text-white mb-3">Data Pemohon</h4>
+                      <div className="space-y-2">
+                        <p><span className="font-medium text-gray-300">Nama:</span> <span className="text-white">{selectedPermohonan.namaPemohon}</span></p>
+                        <p><span className="font-medium text-gray-300">NIK:</span> <span className="text-white">{selectedPermohonan.nik}</span></p>
+                        <p><span className="font-medium text-gray-300">Nomor HP:</span> <span className="text-white">{selectedPermohonan.nomorHP}</span></p>
+                        <p><span className="font-medium text-gray-300">Jenis Layanan:</span> <span className="text-white">{selectedPermohonan.jenisLayanan}</span></p>
+                        <p><span className="font-medium text-gray-300">Alamat:</span> <span className="text-white">{selectedPermohonan.data.alamat || '-'}</span></p>
+                        <p><span className="font-medium text-gray-300">Agama:</span> <span className="text-white">{selectedPermohonan.data.agama || '-'}</span></p>
+                        <p><span className="font-medium text-gray-300">Pekerjaan:</span> <span className="text-white">{selectedPermohonan.data.pekerjaan || '-'}</span></p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-700 p-4 rounded-lg">
+                      <h4 className="font-semibold text-white mb-3">Timeline Status</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <div>
+                            <p className="font-medium text-sm text-white">Diajukan</p>
+                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.diajukan.toLocaleString('id-ID')}</p>
+                          </div>
+                        </div>
+                        {selectedPermohonan.timeline.direview && (
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div>
+                              <p className="font-medium text-sm text-white">Direview</p>
+                              <p className="text-xs text-gray-400">{selectedPermohonan.timeline.direview.toLocaleString('id-ID')}</p>
+                            </div>
+                          </div>
+                        )}
+                        {selectedPermohonan.timeline.disetujui && (
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <div>
+                              <p className="font-medium text-sm text-white">Disetujui</p>
+                              <p className="text-xs text-gray-400">{selectedPermohonan.timeline.disetujui.toLocaleString('id-ID')}</p>
+                            </div>
+                          </div>
+                        )}
+                        {selectedPermohonan.timeline.selesai && (
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <div>
+                              <p className="font-medium text-sm text-white">Selesai</p>
+                              <p className="text-xs text-gray-400">{selectedPermohonan.timeline.selesai.toLocaleString('id-ID')}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notification Status */}
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-semibold text-white mb-3">Status Notifikasi</h4>
+                    <div className="flex items-center space-x-4">
+                      <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+                        selectedPermohonan.notifikasi.terkirim 
+                          ? 'bg-green-800 text-green-300' 
+                          : 'bg-red-800 text-red-300'
+                      }`}>
+                        {selectedPermohonan.notifikasi.terkirim ? (
+                          <>
+                            <FaCheck className="h-4 w-4" />
+                            <span>Terkirim</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaTimes className="h-4 w-4" />
+                            <span>Belum Terkirim</span>
+                          </>
+                        )}
+                      </div>
+                      {selectedPermohonan.notifikasi.tanggal && (
+                        <span className="text-sm text-gray-400">
+                          {selectedPermohonan.notifikasi.tanggal.toLocaleString('id-ID')}
+                        </span>
+                      )}
+                    </div>
+                    {selectedPermohonan.notifikasi.error && (
+                      <p className="mt-2 text-sm text-red-400 bg-red-900 bg-opacity-50 p-2 rounded">
+                        Error: {selectedPermohonan.notifikasi.error}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Attachments Section */}
+                  {selectedPermohonan.attachments && Object.keys(selectedPermohonan.attachments).length > 0 && (
+                    <div className="bg-gray-700 p-4 rounded-lg">
+                      <h4 className="font-semibold text-white mb-3">Berkas Lampiran</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(selectedPermohonan.attachments).map(([key, attachment]) => {
+                          const FileIcon = getFileIcon(attachment.filename);
+                          return (
+                            <div key={key} className="flex items-center justify-between p-3 bg-gray-600 rounded-lg hover:bg-gray-500 transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <FileIcon className="h-6 w-6 text-blue-400" />
+                                <div>
+                                  <p className="text-sm font-medium text-white">{key}</p>
+                                  <p className="text-xs text-gray-400">{attachment.filename}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleDownloadAttachment(attachment)}
+                                className="p-2 text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
+                                title="Download Lampiran"
+                              >
+                                <FaDownload className="h-4 w-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Admin Notes */}
+                  <div>
+                    <h4 className="font-semibold text-white mb-3">Catatan Admin</h4>
+                    <textarea
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-400"
+                      rows={4}
+                      placeholder="Tambahkan catatan internal..."
+                      defaultValue={selectedPermohonan.catatan || ''}
+                      onChange={(e) => {
+                        // Update catatan in real-time
+                        setSelectedPermohonan(prev => prev ? {...prev, catatan: e.target.value} : null);
+                      }}
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-3 pt-4 border-t border-gray-600">
+                    <button
+                      onClick={() => handleDownload(selectedPermohonan)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <FaDownload className="inline mr-2" />
+                      Download Surat
+                    </button>
+                    <button
+                      onClick={() => handleSendNotification(selectedPermohonan)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <FaWhatsapp className="inline mr-2" />
+                      Kirim Notifikasi
+                    </button>
+                    {selectedPermohonan.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            handleStatusUpdate(selectedPermohonan.id, 'approved');
+                            setShowDetailModal(false);
+                          }}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          <FaCheck className="inline mr-2" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            const alasan = prompt('Alasan penolakan:');
+                            if (alasan) {
+                              handleStatusUpdate(selectedPermohonan.id, 'ditolak', { alasanTolak: alasan });
+                              setShowDetailModal(false);
+                            }
+                          }}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          <FaTimes className="inline mr-2" />
+                          Tolak
+                        </button>
+                      </>
+                    )}
+                    {selectedPermohonan.status === 'approved' && (
+                      <button
+                        onClick={() => {
+                          handleStatusUpdate(selectedPermohonan.id, 'selesai');
+                          setShowDetailModal(false);
+                        }}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        <FaCheck className="inline mr-2" />
+                        Tandai Selesai
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => setSelectedItems([])}
-                className="text-yellow-400 hover:text-yellow-300 text-sm"
-              >
-                Batalkan
-              </button>
             </div>
           </div>
         )}
 
-        {/* Data Table */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.length === filteredData.length && filteredData.length > 0}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedItems(filteredData.map(item => item.id));
-                        } else {
-                          setSelectedItems([]);
+        {/* Notification Panel */}
+        {showNotificationPanel && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-white">
+                    Panel Notifikasi
+                  </h3>
+                  <button
+                    onClick={() => setShowNotificationPanel(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <FaTimes className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Failed Notifications */}
+                  <div className="bg-red-900/30 border border-red-600 rounded-lg p-4">
+                    <h4 className="font-semibold text-red-300 mb-3">
+                      Notifikasi Gagal ({quickStats.notifikasiGagal})
+                    </h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {permohonanData
+                        .filter(item => item.notifikasi.error && !item.notifikasi.terkirim)
+                        .map(item => (
+                          <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded border border-gray-600">
+                            <div>
+                              <p className="font-medium text-white">{item.namaPemohon}</p>
+                              <p className="text-sm text-gray-300">{item.nomorPermohonan}</p>
+                              <p className="text-sm text-red-400">{item.notifikasi.error}</p>
+                            </div>
+                            <button
+                              onClick={() => handleSendNotification(item)}
+                              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                            >
+                              Coba Lagi
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Successful Notifications */}
+                  <div className="bg-green-900/30 border border-green-600 rounded-lg p-4">
+                    <h4 className="font-semibold text-green-300 mb-3">
+                      Notifikasi Berhasil Terkirim (24 Jam Terakhir)
+                    </h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {permohonanData
+                        .filter(item => {
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          return item.notifikasi.terkirim && 
+                                 item.notifikasi.tanggal && 
+                                 item.notifikasi.tanggal >= yesterday;
+                        })
+                        .map(item => (
+                          <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded border border-gray-600">
+                            <div>
+                              <p className="font-medium text-white">{item.namaPemohon}</p>
+                              <p className="text-sm text-gray-300">{item.nomorPermohonan}</p>
+                              <p className="text-sm text-green-400">
+                                Terkirim: {item.notifikasi.tanggal?.toLocaleString('id-ID')}
+                              </p>
+                            </div>
+                            <div className="text-green-400">
+                              <FaCheck />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={async () => {
+                      const failedItems = permohonanData.filter(item => item.notifikasi.error && !item.notifikasi.terkirim);
+                      for (const item of failedItems) {
+                        try {
+                          await handleSendNotification(item);
+                        } catch (error) {
+                          console.error(`Failed to retry notification for ${item.nomorPermohonan}:`, error);
                         }
-                      }}
-                      className="rounded border-gray-500 text-yellow-500 focus:ring-yellow-500 bg-gray-600"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    No. Permohonan
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Nama Pemohon
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Jenis Surat
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Tanggal Pengajuan
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Nomor HP
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {loading ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center">
-                      <FaSpinner className="animate-spin mx-auto h-8 w-8 text-yellow-400" />
-                      <p className="mt-2 text-gray-400">Memuat data...</p>
-                    </td>
-                  </tr>
-                ) : filteredData.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
-                      Tidak ada data permohonan
-                    </td>
-                  </tr>
-                ) : (
-                  filteredData.map((permohonan) => {
-                    const statusDisplay = getStatusDisplay(permohonan.status);
-                    const StatusIcon = statusDisplay.icon;
-                    
-                    return (
-                      <tr key={permohonan.id} className="hover:bg-gray-700">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.includes(permohonan.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedItems([...selectedItems, permohonan.id]);
-                              } else {
-                                setSelectedItems(selectedItems.filter(id => id !== permohonan.id));
-                              }
-                            }}
-                            className="rounded border-gray-500 text-yellow-500 focus:ring-yellow-500 bg-gray-600"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                          {permohonan.nomorPermohonan}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-white">{permohonan.namaPemohon}</div>
-                          <div className="text-sm text-gray-400">{permohonan.nik}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                          {permohonan.jenisLayanan}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                          {permohonan.tanggalPengajuan.toLocaleDateString('id-ID')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}>
-                            <StatusIcon className="mr-1.5 h-4 w-4" />
-                            {statusDisplay.text}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                          {permohonan.nomorHP}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            {getActionButtons(permohonan)}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Detail Modal */}
-      {showDetailModal && selectedPermohonan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">
-                  Detail Permohonan - {selectedPermohonan.nomorPermohonan}
-                </h3>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <FaTimes className="h-6 w-6" />
-                </button>
-              </div>
-
-              {/* Detail content */}
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <h4 className="font-semibold text-white mb-3">Data Pemohon</h4>
-                    <div className="space-y-2">
-                      <p><span className="font-medium text-gray-300">Nama:</span> <span className="text-white">{selectedPermohonan.namaPemohon}</span></p>
-                      <p><span className="font-medium text-gray-300">NIK:</span> <span className="text-white">{selectedPermohonan.nik}</span></p>
-                      <p><span className="font-medium text-gray-300">Nomor HP:</span> <span className="text-white">{selectedPermohonan.nomorHP}</span></p>
-                      <p><span className="font-medium text-gray-300">Jenis Layanan:</span> <span className="text-white">{selectedPermohonan.jenisLayanan}</span></p>
-                      <p><span className="font-medium text-gray-300">Alamat:</span> <span className="text-white">{selectedPermohonan.data.alamat || '-'}</span></p>
-                      <p><span className="font-medium text-gray-300">Agama:</span> <span className="text-white">{selectedPermohonan.data.agama || '-'}</span></p>
-                      <p><span className="font-medium text-gray-300">Pekerjaan:</span> <span className="text-white">{selectedPermohonan.data.pekerjaan || '-'}</span></p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <h4 className="font-semibold text-white mb-3">Timeline Status</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <div>
-                          <p className="font-medium text-sm text-white">Diajukan</p>
-                          <p className="text-xs text-gray-400">{selectedPermohonan.timeline.diajukan.toLocaleString('id-ID')}</p>
-                        </div>
-                      </div>
-                      {selectedPermohonan.timeline.direview && (
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                          <div>
-                            <p className="font-medium text-sm text-white">Direview</p>
-                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.direview.toLocaleString('id-ID')}</p>
-                          </div>
-                        </div>
-                      )}
-                      {selectedPermohonan.timeline.disetujui && (
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <div>
-                            <p className="font-medium text-sm text-white">Disetujui</p>
-                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.disetujui.toLocaleString('id-ID')}</p>
-                          </div>
-                        </div>
-                      )}
-                      {selectedPermohonan.timeline.selesai && (
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                          <div>
-                            <p className="font-medium text-sm text-white">Selesai</p>
-                            <p className="text-xs text-gray-400">{selectedPermohonan.timeline.selesai.toLocaleString('id-ID')}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notification Status */}
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <h4 className="font-semibold text-white mb-3">Status Notifikasi</h4>
-                  <div className="flex items-center space-x-4">
-                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-                      selectedPermohonan.notifikasi.terkirim 
-                        ? 'bg-green-800 text-green-300' 
-                        : 'bg-red-800 text-red-300'
-                    }`}>
-                      {selectedPermohonan.notifikasi.terkirim ? (
-                        <>
-                          <FaCheck className="h-4 w-4" />
-                          <span>Terkirim</span>
-                        </>
-                      ) : (
-                        <>
-                          <FaTimes className="h-4 w-4" />
-                          <span>Belum Terkirim</span>
-                        </>
-                      )}
-                    </div>
-                    {selectedPermohonan.notifikasi.tanggal && (
-                      <span className="text-sm text-gray-400">
-                        {selectedPermohonan.notifikasi.tanggal.toLocaleString('id-ID')}
-                      </span>
-                    )}
-                  </div>
-                  {selectedPermohonan.notifikasi.error && (
-                    <p className="mt-2 text-sm text-red-400 bg-red-900 bg-opacity-50 p-2 rounded">
-                      Error: {selectedPermohonan.notifikasi.error}
-                    </p>
-                  )}
-                </div>
-
-                {/* Admin Notes */}
-                <div>
-                  <h4 className="font-semibold text-white mb-3">Catatan Admin</h4>
-                  <textarea
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-400"
-                    rows={4}
-                    placeholder="Tambahkan catatan internal..."
-                    defaultValue={selectedPermohonan.catatan || ''}
-                    onChange={(e) => {
-                      // Update catatan in real-time
-                      setSelectedPermohonan(prev => prev ? {...prev, catatan: e.target.value} : null);
-                    }}
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-600">
-                  <button
-                    onClick={() => handleDownload(selectedPermohonan)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <FaDownload className="inline mr-2" />
-                    Download Surat
-                  </button>
-                  <button
-                    onClick={() => handleSendNotification(selectedPermohonan)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    <FaWhatsapp className="inline mr-2" />
-                    Kirim Notifikasi
-                  </button>
-                  {selectedPermohonan.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => {
-                          handleStatusUpdate(selectedPermohonan.id, 'approved');
-                          setShowDetailModal(false);
-                        }}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        <FaCheck className="inline mr-2" />
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => {
-                          const alasan = prompt('Alasan penolakan:');
-                          if (alasan) {
-                            handleStatusUpdate(selectedPermohonan.id, 'ditolak', { alasanTolak: alasan });
-                            setShowDetailModal(false);
-                          }
-                        }}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                      >
-                        <FaTimes className="inline mr-2" />
-                        Tolak
-                      </button>
-                    </>
-                  )}
-                  {selectedPermohonan.status === 'approved' && (
-                    <button
-                      onClick={() => {
-                        handleStatusUpdate(selectedPermohonan.id, 'selesai');
-                        setShowDetailModal(false);
-                      }}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                      <FaCheck className="inline mr-2" />
-                      Tandai Selesai
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Notification Panel */}
-      {showNotificationPanel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">
-                  Panel Notifikasi
-                </h3>
-                <button
-                  onClick={() => setShowNotificationPanel(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <FaTimes className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Failed Notifications */}
-                <div className="bg-red-900/30 border border-red-600 rounded-lg p-4">
-                  <h4 className="font-semibold text-red-300 mb-3">
-                    Notifikasi Gagal ({quickStats.notifikasiGagal})
-                  </h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {permohonanData
-                      .filter(item => item.notifikasi.error && !item.notifikasi.terkirim)
-                      .map(item => (
-                        <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded border border-gray-600">
-                          <div>
-                            <p className="font-medium text-white">{item.namaPemohon}</p>
-                            <p className="text-sm text-gray-300">{item.nomorPermohonan}</p>
-                            <p className="text-sm text-red-400">{item.notifikasi.error}</p>
-                          </div>
-                          <button
-                            onClick={() => handleSendNotification(item)}
-                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                          >
-                            Coba Lagi
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Successful Notifications */}
-                <div className="bg-green-900/30 border border-green-600 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-300 mb-3">
-                    Notifikasi Berhasil Terkirim (24 Jam Terakhir)
-                  </h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {permohonanData
-                      .filter(item => {
-                        const yesterday = new Date();
-                        yesterday.setDate(yesterday.getDate() - 1);
-                        return item.notifikasi.terkirim && 
-                               item.notifikasi.tanggal && 
-                               item.notifikasi.tanggal >= yesterday;
-                      })
-                      .map(item => (
-                        <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded border border-gray-600">
-                          <div>
-                            <p className="font-medium text-white">{item.namaPemohon}</p>
-                            <p className="text-sm text-gray-300">{item.nomorPermohonan}</p>
-                            <p className="text-sm text-green-400">
-                              Terkirim: {item.notifikasi.tanggal?.toLocaleString('id-ID')}
-                            </p>
-                          </div>
-                          <div className="text-green-400">
-                            <FaCheck />
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={async () => {
-                    const failedItems = permohonanData.filter(item => item.notifikasi.error && !item.notifikasi.terkirim);
-                    for (const item of failedItems) {
-                      try {
-                        await handleSendNotification(item);
-                      } catch (error) {
-                        console.error(`Failed to retry notification for ${item.nomorPermohonan}:`, error);
                       }
-                    }
-                    setShowNotificationPanel(false);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Coba Ulang Semua
-                </button>
-                <button
-                  onClick={() => setShowNotificationPanel(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Tutup
-                </button>
+                      setShowNotificationPanel(false);
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Coba Ulang Semua
+                  </button>
+                  <button
+                    onClick={() => setShowNotificationPanel(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Tutup
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Settings Panel */}
-      {showSettingsPanel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full m-4">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">
-                  Pengaturan
-                </h3>
-                <button
-                  onClick={() => setShowSettingsPanel(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <FaTimes className="h-6 w-6" />
-                </button>
-              </div>
+        {/* Settings Panel */}
+        {showSettingsPanel && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full m-4">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-white">
+                    Pengaturan
+                  </h3>
+                  <button
+                    onClick={() => setShowSettingsPanel(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <FaTimes className="h-6 w-6" />
+                  </button>
+                </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Auto Refresh
-                  </label>
-                  <div className="flex items-center space-x-3">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Auto Refresh
+                    </label>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={autoRefresh}
+                        onChange={(e) => setAutoRefresh(e.target.checked)}
+                        className="rounded border-gray-600 text-yellow-500 focus:ring-yellow-500 bg-gray-700"
+                      />
+                      <span className="text-sm text-gray-300">
+                        {autoRefresh ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Interval Refresh (detik)
+                    </label>
                     <input
-                      type="checkbox"
-                      checked={autoRefresh}
-                      onChange={(e) => setAutoRefresh(e.target.checked)}
-                      className="rounded border-gray-600 text-yellow-500 focus:ring-yellow-500 bg-gray-700"
+                      type="number"
+                      value={refreshInterval}
+                      onChange={(e) => setRefreshInterval(parseInt(e.target.value) || 30)}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      min="10"
+                      max="300"
+                      disabled={!autoRefresh}
                     />
-                    <span className="text-sm text-gray-300">
-                      {autoRefresh ? 'Aktif' : 'Nonaktif'}
-                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Template Notifikasi
+                    </label>
+                    <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                      <option value="default">Template Default</option>
+                      <option value="formal">Template Formal</option>
+                      <option value="casual">Template Casual</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Backup Otomatis
+                    </label>
+                    <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                      <option value="daily">Harian</option>
+                      <option value="weekly">Mingguan</option>
+                      <option value="monthly">Bulanan</option>
+                    </select>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Interval Refresh (detik)
-                  </label>
-                  <input
-                    type="number"
-                    value={refreshInterval}
-                    onChange={(e) => setRefreshInterval(parseInt(e.target.value) || 30)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                    min="10"
-                    max="300"
-                    disabled={!autoRefresh}
-                  />
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowSettingsPanel(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Handle save settings
+                      setShowSettingsPanel(false);
+                    }}
+                    className="px-4 py-2 bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                    Simpan
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Template Notifikasi
-                  </label>
-                  <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                    <option value="default">Template Default</option>
-                    <option value="formal">Template Formal</option>
-                    <option value="casual">Template Casual</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Backup Otomatis
-                  </label>
-                  <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                    <option value="daily">Harian</option>
-                    <option value="weekly">Mingguan</option>
-                    <option value="monthly">Bulanan</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowSettingsPanel(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={() => {
-                    // Handle save settings
-                    setShowSettingsPanel(false);
-                  }}
-                  className="px-4 py-2 bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700 transition-colors"
-                >
-                  Simpan
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Floating Actions */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-4">
-        <button
-          onClick={() => setShowBulkActions(!showBulkActions)}
-          className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors"
-        >
-          <FaCheckSquare className="h-6 w-6" />
-        </button>
-        
-        <button
-          onClick={() => handleExportData()}
-          className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-colors"
-        >
-          <FaFileExport className="h-6 w-6" />
-        </button>
-        
-        <button
-          onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-          className="bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-colors"
-        >
-          <FaCog className="h-6 w-6" />
-        </button>
+        {/* Floating Actions */}
+        <div className="fixed bottom-6 right-6 flex flex-col gap-4">
+          <button
+            onClick={() => setShowBulkActions(!showBulkActions)}
+            className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors"
+          >
+            <FaCheckSquare className="h-6 w-6" />
+          </button>
+          
+          <button
+            onClick={() => handleExportData()}
+            className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-colors"
+          >
+            <FaFileExport className="h-6 w-6" />
+          </button>
+          
+          <button
+            onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+            className="bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-colors"
+          >
+            <FaCog className="h-6 w-6" />
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+      </div>
+    )};
+
