@@ -182,7 +182,9 @@ export class DocxGenerator {
           : data.anggota_keluarga;
         
         // Debug log
-        console.log('Parsed anggota_keluarga:', anggotaKeluarga);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Parsed anggota_keluarga:', anggotaKeluarga);
+        }
       } catch (error) {
         console.error('Error parsing anggota_keluarga:', error);
         anggotaKeluarga = [];
