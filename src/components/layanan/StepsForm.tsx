@@ -1,91 +1,98 @@
-import React, { memo, useCallback } from 'react';
-import { layananList } from '@/data/layanan';
+import React from "react";
+import { aktaList, layananList } from "@/data/layanan";
 
 interface StepsFormProps {
   serviceTitle: string;
   onClose: () => void;
 }
 
-const StepsForm = memo<StepsFormProps>(({ serviceTitle, onClose }) => {
-  const service = layananList.find(s => s.title === serviceTitle);
+export default function StepsForm({ serviceTitle, onClose }: StepsFormProps) {
+  // Check if this is an administrative document (akta, KK, e-KTP, or surat pindah)
+  const isAdministrativeDoc = aktaList.some(
+    (akta) => akta.title === serviceTitle
+  );
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    alert(`Pengajuan ${serviceTitle} berhasil dikirim!`);
-    onClose();
-  }, [serviceTitle, onClose]);
+  // Find service in appropriate list
+  const service = isAdministrativeDoc
+    ? aktaList.find((akta) => akta.title === serviceTitle)
+    : layananList.find((layanan) => layanan.title === serviceTitle);
 
-  if (!service) return null;
+  if (!service) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Layanan tidak ditemukan</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="text-6xl mb-4">{service.icon}</div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{service.title}</h3>
-        <p className="text-gray-600">{service.description}</p>
+    <div className="p-6">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          {isAdministrativeDoc ? "Persyaratan" : "Langkah-langkah"}
+        </h3>
+        <p className="text-gray-600 text-sm">
+          {isAdministrativeDoc
+            ? `Berikut adalah persyaratan untuk pengurusan ${serviceTitle}:`
+            : `Ikuti langkah-langkah berikut untuk mengajukan ${serviceTitle}:`}
+        </p>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-semibold text-blue-900 mb-2">Persyaratan:</h4>
-        <ul className="space-y-1">
-          {service.items.map((item, idx) => (
-            <li key={idx} className="text-blue-800 text-sm flex items-start gap-2">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="space-y-3 mb-6">
+        {service.items.map((item, index) => (
+          <div
+            key={index}
+            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+          >
+            <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+              {index + 1}
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">{item}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <span className="font-semibold text-green-900">Estimasi:</span>
-          <p className="text-green-800">{service.estimasi}</p>
+      <div className="bg-blue-50 p-4 rounded-lg mb-6">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <span className="text-sm font-medium text-blue-800">
+            Informasi Tambahan
+          </span>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-          <span className="font-semibold text-purple-900">Biaya:</span>
-          <p className="text-purple-800">{service.biaya}</p>
+        <div className="text-sm text-blue-700 space-y-1">
+          <p>
+            <strong>Estimasi:</strong> {service.estimasi}
+          </p>
+          <p>
+            <strong>Biaya:</strong> {service.biaya}
+          </p>
         </div>
       </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h4 className="font-semibold text-yellow-900 mb-2">Langkah Pengajuan:</h4>
-        <ol className="space-y-2 text-yellow-800 text-sm">
-          <li className="flex gap-2">
-            <span className="font-bold">1.</span>
-            <span>Siapkan semua berkas persyaratan</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">2.</span>
-            <span>Datang ke kantor Wali Nagari pada jam kerja</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">3.</span>
-            <span>Isi formulir pengajuan</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">4.</span>
-            <span>Serahkan berkas kepada petugas</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">5.</span>
-            <span>Tunggu proses verifikasi dan penerbitan surat</span>
-          </li>
-        </ol>
-      </div>
-
-      <div className="flex justify-end pt-4 border-t">
+      {/* Only show submit button for non-administrative documents */}
+      <div className="flex justify-end space-x-3">
         <button
           onClick={onClose}
-          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+          className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
         >
           Tutup
         </button>
+
+        {!isAdministrativeDoc && (
+          <button
+            onClick={() => {
+              // Handle form submission logic here
+              alert(
+                "Permohonan akan diproses. Silakan datang ke kantor dengan membawa persyaratan yang diperlukan."
+              );
+              onClose();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Ajukan Permohonan
+          </button>
+        )}
       </div>
     </div>
   );
-});
-
-StepsForm.displayName = 'StepsForm';
-
-export default StepsForm;
+}
