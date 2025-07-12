@@ -1,5 +1,7 @@
 'use client';
 
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -23,6 +25,8 @@ import { galeriData } from '@/data/galeri';
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   
   // State for data counts
@@ -39,44 +43,150 @@ export default function AdminDashboard() {
     const adminAuth = localStorage.getItem('adminAuth');
     if (adminAuth !== 'true') {
       router.push('/admin/login');
-    } else {
-      setIsAuthenticated(true);
-      
-      // Load data counts from localStorage or use default data
-      const pejabatData = localStorage.getItem('pejabatData') ? 
-        JSON.parse(localStorage.getItem('pejabatData')!) : 
-        allPejabat;
-      
-      const faqItems = localStorage.getItem('faqData') ? 
-        JSON.parse(localStorage.getItem('faqData')!) : 
-        faqData;
-      
-      const newsItems = localStorage.getItem('newsData') ? 
-        JSON.parse(localStorage.getItem('newsData')!) : 
-        mockNewsData;
-      
-      const jorongItems = localStorage.getItem('jorongData') ? 
-        JSON.parse(localStorage.getItem('jorongData')!) : 
-        defaultJorongData;
-      
-      const galeriItems = localStorage.getItem('galeriData') ? 
-        JSON.parse(localStorage.getItem('galeriData')!) : 
-        galeriData;
-      
-      const agendaItems = localStorage.getItem('agendaData') ? 
-        JSON.parse(localStorage.getItem('agendaData')!) : 
-        mockAgendaData;
-      
-      // Update counts
-      setCounts({
-        pejabat: pejabatData.length,
-        faq: faqItems.length,
-        berita: newsItems.length,
-        jorong: jorongItems.length,
-        galeri: galeriItems.length,
-        agenda: agendaItems.length
-      });
+      return;
     }
+    
+    setIsAuthenticated(true);
+    
+    // Create a flag to prevent state updates after component unmounts
+    let isMounted = true;
+    
+    // Function to safely fetch data counts
+    const fetchDataCounts = async () => {
+      try {
+        setError(null);
+        setLoading(true);
+        
+        // Initialize with default counts
+        const countsData = {
+          pejabat: 0,
+          faq: 0,
+          berita: 0,
+          jorong: 0,
+          galeri: 0,
+          agenda: 0
+        };
+        
+        // Try to get data from Firestore with proper error handling
+        try {
+          // Fetch FAQ data
+          const faqSnapshot = await getDocs(collection(db, 'faq'));
+          if (isMounted) countsData.faq = faqSnapshot.docs.length;
+        } catch (error) {
+          console.warn('Error fetching FAQ data:', error);
+          // Fall back to localStorage
+          const faqItems = localStorage.getItem('faqData') ? 
+            JSON.parse(localStorage.getItem('faqData')!) : 
+            faqData;
+          if (isMounted) countsData.faq = faqItems.length;
+        }
+        
+        // Fetch jorong data
+        try {
+          const jorongSnapshot = await getDocs(collection(db, 'jorong'));
+          if (isMounted) countsData.jorong = jorongSnapshot.docs.length;
+        } catch (error) {
+          console.warn('Error fetching jorong data:', error);
+          // Fall back to localStorage
+          const jorongItems = localStorage.getItem('jorongData') ? 
+            JSON.parse(localStorage.getItem('jorongData')!) : 
+            defaultJorongData;
+          if (isMounted) countsData.jorong = jorongItems.length;
+        }
+        
+        // Fetch galeri data
+        try {
+          const galeriSnapshot = await getDocs(collection(db, 'galeri'));
+          if (isMounted) countsData.galeri = galeriSnapshot.docs.length;
+        } catch (error) {
+          console.warn('Error fetching galeri data:', error);
+          // Fall back to localStorage
+          const galeriItems = localStorage.getItem('galeriData') ? 
+            JSON.parse(localStorage.getItem('galeriData')!) : 
+            galeriData;
+          if (isMounted) countsData.galeri = galeriItems.length;
+        }
+        
+        // Fetch agenda data
+        try {
+          const agendaSnapshot = await getDocs(collection(db, 'agenda'));
+          if (isMounted) countsData.agenda = agendaSnapshot.docs.length;
+        } catch (error) {
+          console.warn('Error fetching agenda data:', error);
+          // Fall back to localStorage
+          const agendaItems = localStorage.getItem('agendaData') ? 
+            JSON.parse(localStorage.getItem('agendaData')!) : 
+            mockAgendaData;
+          if (isMounted) countsData.agenda = agendaItems.length;
+        }
+        
+        // For modules not yet migrated to Firestore, use localStorage
+        // Pejabat data
+        const pejabatData = localStorage.getItem('pejabatData') ? 
+          JSON.parse(localStorage.getItem('pejabatData')!) : 
+          allPejabat;
+        if (isMounted) countsData.pejabat = pejabatData.length;
+        
+        // News data
+        const newsItems = localStorage.getItem('newsData') ? 
+          JSON.parse(localStorage.getItem('newsData')!) : 
+          mockNewsData;
+        if (isMounted) countsData.berita = newsItems.length;
+        
+        // Update state only if component is still mounted
+        if (isMounted) {
+          setCounts(countsData);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in fetchDataCounts:', error);
+        // Set error message
+        if (isMounted) {
+          setError('Terjadi kesalahan saat memuat data. Menggunakan data lokal sebagai fallback.');
+        }
+        // Fall back to default counts from localStorage
+        if (!isMounted) return;
+        
+        // Load data counts from localStorage or use default data
+        const pejabatData = localStorage.getItem('pejabatData') ? JSON.parse(localStorage.getItem('pejabatData')!) : allPejabat;
+        const faqItems = localStorage.getItem('faqData') ? JSON.parse(localStorage.getItem('faqData')!) : faqData;
+        const newsItems = localStorage.getItem('newsData') ? JSON.parse(localStorage.getItem('newsData')!) : mockNewsData;
+        const jorongItems = localStorage.getItem('jorongData') ? JSON.parse(localStorage.getItem('jorongData')!) : defaultJorongData;
+        const galeriItems = localStorage.getItem('galeriData') ? JSON.parse(localStorage.getItem('galeriData')!) : galeriData;
+        const agendaItems = localStorage.getItem('agendaData') ? JSON.parse(localStorage.getItem('agendaData')!) : mockAgendaData;
+        
+        // Update counts
+        setCounts({
+          pejabat: pejabatData.length,
+          faq: faqItems.length,
+          berita: newsItems.length,
+          jorong: jorongItems.length,
+          galeri: galeriItems.length,
+          agenda: agendaItems.length
+        });
+        setLoading(false);
+      }
+    };
+    
+    fetchDataCounts();
+    
+    // Listen for dataUpdated events from other admin pages
+    const handleDataUpdated = (event: CustomEvent) => {
+      if (event.detail && event.detail.type) {
+        console.log(`Data updated for: ${event.detail.type}`);
+        // Re-fetch counts when data is updated elsewhere
+        fetchDataCounts();
+      }
+    };
+    
+    // Add event listener for data updates
+    window.addEventListener('dataUpdated', handleDataUpdated as EventListener);
+    
+    // Cleanup function to prevent state updates after unmounting
+    return () => {
+      isMounted = false;
+      window.removeEventListener('dataUpdated', handleDataUpdated as EventListener);
+    };
   }, [router]);
 
   const handleLogout = () => {
@@ -88,6 +198,17 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mb-4"></div>
+          <div>Loading dashboard data...</div>
+        </div>
       </div>
     );
   }
@@ -131,6 +252,16 @@ export default function AdminDashboard() {
             Kelola konten website Nagari Lima Koto
           </p>
         </div>
+        
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-900/20 border border-red-500 text-red-300 px-4 py-3 rounded mb-6 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

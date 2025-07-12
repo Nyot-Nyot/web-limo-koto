@@ -1,5 +1,14 @@
 'use client';
 
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  getDocs,
+  deleteDoc
+} from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -48,6 +57,29 @@ export default function AdminAgendaPage() {
     setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
   };
 
+  const fetchAgendaFromFirestore = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'agenda'));
+      const data = snapshot.docs.map(doc => {
+        const docData = doc.data();
+        return {
+          id: doc.id,
+          title: typeof docData.title === 'string' ? docData.title : '',
+          organizer: typeof docData.organizer === 'string' ? docData.organizer : '',
+          location: typeof docData.location === 'string' ? docData.location : '',
+          date: typeof docData.date === 'string' ? docData.date : '',
+          time: typeof docData.time === 'string' ? docData.time : ''
+        };
+      });
+      setAgendaItems(data);
+      // Update localStorage for offline fallback
+      localStorage.setItem('agendaData', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error fetching agenda data:', error);
+      showNotification('error', 'Gagal mengambil data agenda dari server');
+    }
+  };
+
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
     if (adminAuth !== 'true') {
@@ -55,20 +87,37 @@ export default function AdminAgendaPage() {
     } else {
       setIsAuthenticated(true);
       
-      // Load agenda data from localStorage or set default
-      const savedData = localStorage.getItem('agendaData');
-      if (savedData) {
-        setAgendaItems(JSON.parse(savedData));
-      } else {
-        setAgendaItems(mockAgendaData);
-        localStorage.setItem('agendaData', JSON.stringify(mockAgendaData));
-      }
+      // First try to load data from Firestore
+      const loadData = async () => {
+        try {
+          await fetchAgendaFromFirestore();
+        } catch (error) {
+          console.error('Failed to fetch from Firestore:', error);
+          // Fall back to localStorage if Firestore fails
+          const savedData = localStorage.getItem('agendaData');
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setAgendaItems(parsedData);
+            } catch (e) {
+              console.error('Error parsing localStorage data:', e);
+            }
+          } else {
+            // Set default data if no localStorage data
+            setAgendaItems(mockAgendaData);
+            localStorage.setItem('agendaData', JSON.stringify(mockAgendaData));
+          }
+        }
+      };
+      
+      loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // No emoji or color selection needed anymore
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
     
@@ -90,35 +139,45 @@ export default function AdminAgendaPage() {
       return;
     }
     
-    if (editingItem) {
-      // Update existing
-      const updatedData = agendaItems.map(item => 
-        item.id === editingItem.id 
-          ? { ...formData, id: editingItem.id }
-          : item
-      );
-      setAgendaItems(updatedData);
-      localStorage.setItem('agendaData', JSON.stringify(updatedData));
+    try {
+      if (editingItem && typeof editingItem.id === 'string') {
+        // Update existing agenda in Firestore
+        const agendaRef = doc(db, 'agenda', editingItem.id);
+        await updateDoc(agendaRef, { 
+          title: formData.title,
+          organizer: formData.organizer,
+          location: formData.location,
+          date: formData.date,
+          time: formData.time
+        });
+
+        showNotification('success', 'Agenda berhasil diperbarui!');
+      } else {
+        // Add new agenda to Firestore
+        await addDoc(collection(db, 'agenda'), {
+          title: formData.title,
+          organizer: formData.organizer,
+          location: formData.location,
+          date: formData.date,
+          time: formData.time
+        });
+
+        showNotification('success', 'Agenda berhasil ditambahkan!');
+      }
+
+      // Refresh data from Firestore
+      await fetchAgendaFromFirestore();
+      
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
-      showNotification('success', 'Agenda berhasil diperbarui!');
-    } else {
-      // Add new
-      const newItem: AgendaItem = {
-        ...formData,
-        id: Date.now().toString(),
-      };
-      const updatedData = [...agendaItems, newItem];
-      setAgendaItems(updatedData);
-      localStorage.setItem('agendaData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
-      showNotification('success', 'Agenda berhasil ditambahkan!');
+      
+      setIsModalOpen(false);
+      setEditingItem(null);
+      resetForm();
+    } catch (error) {
+      console.error('Error saving agenda:', error);
+      showNotification('error', 'Terjadi kesalahan saat menyimpan agenda');
     }
-    
-    setIsModalOpen(false);
-    setEditingItem(null);
-    resetForm();
   };
 
   const resetForm = () => {
@@ -149,14 +208,30 @@ export default function AdminAgendaPage() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    if (itemToDelete) {
-      const updatedData = agendaItems.filter(item => item.id !== itemToDelete.id);
-      setAgendaItems(updatedData);
-      localStorage.setItem('agendaData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
-      showNotification('success', 'Agenda berhasil dihapus!');
+  const confirmDelete = async () => {
+    if (itemToDelete && typeof itemToDelete.id === 'string') {
+      try {
+        // Delete from Firestore
+        const docRef = doc(db, 'agenda', itemToDelete.id);
+        await deleteDoc(docRef);
+        
+        // Update local state
+        const updatedData = agendaItems.filter(item => item.id !== itemToDelete.id);
+        setAgendaItems(updatedData);
+        
+        // Update localStorage for fallback
+        localStorage.setItem('agendaData', JSON.stringify(updatedData));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'agenda' } }));
+        
+        showNotification('success', 'Agenda berhasil dihapus!');
+      } catch (error) {
+        console.error('Error deleting agenda:', error);
+        showNotification('error', 'Gagal menghapus agenda');
+      }
+    } else {
+      showNotification('error', 'ID agenda tidak valid');
     }
     setShowDeleteConfirm(false);
     setItemToDelete(null);
