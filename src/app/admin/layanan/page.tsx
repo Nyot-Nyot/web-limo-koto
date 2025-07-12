@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, updateDoc, doc, query, orderBy } from 'firebase/firestore';
-import { sendWhatsAppNotification, exportToExcel } from '@/lib/adminLayananUtils';
+import { collection, getDocs, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { sendSMSNotification, exportToExcel } from '@/lib/adminLayananUtils';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { 
   FaFileAlt, 
@@ -19,7 +19,8 @@ import {
   FaFileExport,
   FaCog,
   FaCheckSquare,
-  FaSpinner
+  FaSpinner,
+  FaTrash
 } from 'react-icons/fa';
 import { 
   MdPending, 
@@ -352,6 +353,97 @@ export default function AdminLayananPage() {
     }
   };
 
+  // Handle delete completed data
+  const handleDeleteCompleted = async (id: string) => {
+    try {
+      const permohonan = permohonanData.find(item => item.id === id);
+      
+      if (!permohonan) {
+        alert('Data tidak ditemukan');
+        return;
+      }
+
+      if (permohonan.status !== 'selesai') {
+        alert('Hanya data yang sudah selesai yang dapat dihapus');
+        return;
+      }
+
+      const confirmDelete = confirm(
+        `Apakah Anda yakin ingin menghapus data permohonan ${permohonan.nomorPermohonan}?\n\n` +
+        `Nama: ${permohonan.namaPemohon}\n` +
+        `Jenis Layanan: ${permohonan.jenisLayanan}\n\n` +
+        `Data yang dihapus tidak dapat dikembalikan!`
+      );
+
+      if (!confirmDelete) return;
+
+      setActionLoading(id);
+      
+      // Delete from Firestore
+      const docRef = doc(db, 'permohonan_layanan', id);
+      await deleteDoc(docRef);
+      
+      // Update local state
+      setPermohonanData(prev => prev.filter(item => item.id !== id));
+      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+      
+      alert(`Data permohonan ${permohonan.nomorPermohonan} berhasil dihapus`);
+    } catch (error) {
+      console.error('Error deleting data:', error);
+      alert('Gagal menghapus data');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle bulk delete completed data
+  const handleBulkDeleteCompleted = async () => {
+    try {
+      const selectedData = permohonanData.filter(item => selectedItems.includes(item.id));
+      const completedData = selectedData.filter(item => item.status === 'selesai');
+      
+      if (completedData.length === 0) {
+        alert('Tidak ada data yang sudah selesai untuk dihapus');
+        return;
+      }
+
+      if (completedData.length < selectedData.length) {
+        alert(`Hanya ${completedData.length} dari ${selectedData.length} data yang dapat dihapus (hanya yang sudah selesai)`);
+      }
+
+      const confirmDelete = confirm(
+        `Apakah Anda yakin ingin menghapus ${completedData.length} data yang sudah selesai?\n\n` +
+        `Data yang dihapus tidak dapat dikembalikan!`
+      );
+
+      if (!confirmDelete) return;
+
+      let successCount = 0;
+      for (const item of completedData) {
+        try {
+          setActionLoading(item.id);
+          const docRef = doc(db, 'permohonan_layanan', item.id);
+          await deleteDoc(docRef);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to delete ${item.nomorPermohonan}:`, error);
+        }
+      }
+
+      // Update local state
+      const deletedIds = completedData.slice(0, successCount).map(item => item.id);
+      setPermohonanData(prev => prev.filter(item => !deletedIds.includes(item.id)));
+      setSelectedItems(prev => prev.filter(itemId => !deletedIds.includes(itemId)));
+      
+      alert(`${successCount}/${completedData.length} data berhasil dihapus`);
+    } catch (error) {
+      console.error('Error in bulk delete:', error);
+      alert('Gagal menghapus data');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Handle bulk actions
   const handleBulkAction = async (action: string) => {
     if (selectedItems.length === 0) return;
@@ -376,6 +468,10 @@ export default function AdminLayananPage() {
         case 'export':
           // Handle export to Excel
           await handleExportData();
+          break;
+        case 'delete':
+          // Handle bulk delete completed data
+          await handleBulkDeleteCompleted();
           break;
       }
       
@@ -481,11 +577,26 @@ export default function AdminLayananPage() {
         key="notify"
         onClick={() => handleSendNotification(permohonan)}
         className="p-2 text-green-400 hover:bg-gray-700 rounded-lg transition-colors"
-        title="Kirim Notifikasi"
+        title="Kirim SMS Notifikasi"
       >
         <FaWhatsapp />
       </button>
     );
+
+    // Delete button for completed data only
+    if (permohonan.status === 'selesai') {
+      buttons.push(
+        <button
+          key="delete"
+          onClick={() => handleDeleteCompleted(permohonan.id)}
+          disabled={actionLoading === permohonan.id}
+          className="p-2 text-red-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+          title="Hapus Data (Hanya data selesai)"
+        >
+          {actionLoading === permohonan.id ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+        </button>
+      );
+    }
 
     return buttons;
   };
@@ -534,8 +645,8 @@ export default function AdminLayananPage() {
     try {
       setActionLoading(permohonan.id);
       
-      // Send WhatsApp notification
-      const success = await sendWhatsAppNotification(
+      // Send SMS notification instead of WhatsApp
+      const success = await sendSMSNotification(
         permohonan.nomorHP,
         permohonan.jenisLayanan,
         permohonan.nomorPermohonan,
@@ -552,12 +663,12 @@ export default function AdminLayananPage() {
         });
         
         await fetchPermohonanData();
-        alert('Notifikasi berhasil dikirim!');
+        alert('SMS notifikasi berhasil dikirim!');
       } else {
-        throw new Error('Failed to send notification');
+        throw new Error('Failed to send SMS notification');
       }
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('Error sending SMS notification:', error);
       
       // Update notification error in Firebase
       const docRef = doc(db, 'permohonan_layanan', permohonan.id);
@@ -566,7 +677,7 @@ export default function AdminLayananPage() {
         'notifikasi.error': error instanceof Error ? error.message : 'Unknown error'
       });
       
-      alert('Gagal mengirim notifikasi. Silakan coba lagi.');
+      alert('Gagal mengirim SMS notifikasi. Silakan coba lagi.');
     } finally {
       setActionLoading(null);
     }
@@ -787,7 +898,7 @@ export default function AdminLayananPage() {
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm"
                   >
                     <FaWhatsapp className="inline mr-2" />
-                    Kirim Notifikasi
+                    Kirim SMS
                   </button>
                   <button
                     onClick={() => handleBulkAction('export')}
@@ -796,6 +907,15 @@ export default function AdminLayananPage() {
                   >
                     <FaFileExport className="inline mr-2" />
                     Export Excel
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction('delete')}
+                    disabled={actionLoading === 'bulk'}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-sm"
+                    title="Hapus data yang sudah selesai"
+                  >
+                    <FaTrash className="inline mr-2" />
+                    Hapus Selesai
                   </button>
                 </div>
               </div>
