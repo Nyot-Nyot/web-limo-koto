@@ -14,8 +14,12 @@ const PageHeader = dynamic(() => import("@/components/layanan/PageHeader"));
 const BackgroundLayer = dynamic(() => import("@/components/layanan/BackgroundLayer"));
 const OperationalHours = dynamic(() => import("@/components/layanan/OperationalHours"));
 const ReviewSection = dynamic(() => import("@/components/layanan/ReviewSection"));
-const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliForm"), { ssr: false });
-const SKTMForm = dynamic(() => import("@/components/layanan/SKTMForm"), { ssr: false });
+const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliFormNew"), { ssr: false });
+const SKKelahiranForm = dynamic(() => import("@/components/layanan/SKKelahiranForm"), { ssr: false });
+const SKUForm = dynamic(() => import("@/components/layanan/SKUForm"), { ssr: false });
+const SKMeninggalForm = dynamic(() => import("@/components/layanan/SKMeninggalForm"), { ssr: false });
+const SKPindahForm = dynamic(() => import("@/components/layanan/SKPindahForm"), { ssr: false });
+const SKTempatTinggalForm = dynamic(() => import("@/components/layanan/SKTempatTinggalForm"), { ssr: false });
 const StepsForm = dynamic(() => import("@/components/layanan/StepsForm"), { ssr: false });
 
 // Constants
@@ -52,11 +56,16 @@ export default function LayananPage() {
     switch (modalState.type) {
       case 'domisili':
         return <DomisiliForm onClose={closeModal} />;
-      case 'sktm':
-        return <SKTMForm onClose={closeModal} />;
+      case 'kelahiran':
+        return <SKKelahiranForm onClose={closeModal} />;
       case 'usaha':
-      case 'pengantar_nikah':
+        return <SKUForm onClose={closeModal} />;
       case 'surat_kematian':
+        return <SKMeninggalForm onClose={closeModal} />;
+      case 'pindah':
+        return <SKPindahForm onClose={closeModal} />;
+      case 'tempat_tinggal':
+        return <SKTempatTinggalForm onClose={closeModal} />;
       case 'surat_cerai':
         return <StepsForm serviceTitle={layananList.find(l => l.id === modalState.type)?.title || ''} onClose={closeModal} />;
       default:

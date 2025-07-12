@@ -5,22 +5,24 @@ export const layananList: LayananItem[] = [
   {
     id: "domisili",
     title: "Surat Keterangan Domisili",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
+    items: ["Kartu Keluarga (KK)", "Fotokopi KTP", "Surat Permohonan Pengajuan SK Domisili"],
     description: "Surat keterangan tempat tinggal untuk keperluan administrasi",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
     icon: "🏠",
-    color: "from-blue-500 to-blue-600"
+    color: "from-blue-500 to-blue-600",
+    hasForm: true
   },
   {
-    id: "sktm",
-    title: "Surat Keterangan Tidak Mampu (SKTM)",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
-    description: "Surat keterangan untuk bantuan sosial atau beasiswa",
+    id: "kelahiran",
+    title: "Surat Keterangan Kelahiran",
+    items: ["Surat Pengantar RT/RW", "Fotocopy Surat dari Bidan/Rumah Sakit", "Fotocopy Kartu Keluarga", "Fotocopy KTP Orangtua"],
+    description: "Surat keterangan kelahiran untuk administrasi akte kelahiran",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
-    icon: "📋",
-    color: "from-green-500 to-green-600"
+    icon: "�",
+    color: "from-pink-500 to-purple-600",
+    hasForm: true
   },
   {
     id: "usaha",
@@ -30,37 +32,41 @@ export const layananList: LayananItem[] = [
     estimasi: "2-3 hari kerja",
     biaya: "Gratis",
     icon: "🏪",
-    color: "from-purple-500 to-purple-600"
+    color: "from-purple-500 to-purple-600",
+    hasForm: true
   },
   {
-    id: "pengantar_nikah",
-    title: "Surat Pengantar Nikah",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
-    description: "Surat pengantar untuk pendaftaran pernikahan di KUA",
-    estimasi: "1 hari kerja",
+    id: "pindah",
+    title: "Surat Keterangan Pindah",
+    items: ["KK", "KTP", "Pas Photo"],
+    description: "Surat keterangan untuk keperluan pindah domisili",
+    estimasi: "2-3 hari kerja",
     biaya: "Gratis",
-    icon: "💒",
-    color: "from-pink-500 to-pink-600"
+    icon: "�",
+    color: "from-blue-500 to-green-600",
+    hasForm: true
   },
   {
     id: "surat_kematian",
-    title: "Surat Keterangan Kematian",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW", "Surat keterangan dokter/RS"],
-    description: "Surat keterangan untuk administrasi kematian",
+    title: "Surat Keterangan Meninggal Dunia",
+    items: ["Surat pengantar RT/RW", "KTP dan KK almarhum", "Surat dari rumah sakit (jika diperlukan)", "KTP pelapor"],
+    description: "Surat keterangan untuk administrasi kematian dan keperluan pemakaman",
     estimasi: "1 hari kerja",
     biaya: "Gratis",
-    icon: "📃",
-    color: "from-gray-500 to-gray-600"
+    icon: "�️",
+    color: "from-gray-500 to-gray-600",
+    hasForm: true
   },
   {
-    id: "surat_cerai",
-    title: "Surat Cerai",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW"],
-    description: "Surat keterangan untuk administrasi perceraian",
+    id: "tempat_tinggal",
+    title: "Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal",
+    items: ["KK", "Fotokopi KTP", "Surat Permohonan Pengajuan"],
+    description: "Surat keterangan untuk administrasi bagi yang tidak memiliki rumah/tempat tinggal tetap",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
-    icon: "📄",
-    color: "from-orange-500 to-orange-600"
+    icon: "🏘️",
+    color: "from-orange-500 to-red-600",
+    hasForm: true
   },
 ];
 

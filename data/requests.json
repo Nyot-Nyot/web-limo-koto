@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mcyjx4grxa7tfetlt1a",
+    "userId": "temp-user-id",
+    "serviceType": "SKU_AN",
+    "formData": {
+      "nama": "Dzaki Sultan Rabbani",
+      "nik": "1408061905040002",
+      "tempat_lahir": "Pekanbaru",
+      "tanggal_lahir": "2004-05-19",
+      "jenis_kelamin": "Laki-laki",
+      "alamat": "Jl. Srigunting no 3, Parupuk Tabing, Kec. Padang Utara, Kota Padang, Sumatera Barat",
+      "rt": "09",
+      "rw": "09",
+      "dusun": "Lokal",
+      "agama": "Islam",
+      "pekerjaan": "",
+      "nama_usaha": "Tambang emas",
+      "jenis_usaha": "Lainnya",
+      "alamat_usaha": "Jl. Srigunting no 3, Parupuk Tabing, Kec. Padang Utara, Kota Padang, Sumatera Barat",
+      "modal_usaha": "Lebih dari Rp 10.000.000",
+      "lama_usaha": "1",
+      "omzet_perbulan": "",
+      "keperluan": "izin usaha",
+      "no_hp": "081364217323"
+    },
+    "status": "pending",
+    "submittedAt": "2025-07-11T08:25:06.267Z",
+    "generatedDocumentUrl": "/uploads/temp-user-id-SKU_AN-1752222306246.docx",
+    "filename": "temp-user-id-SKU_AN-1752222306246.docx"
+  }
+]
