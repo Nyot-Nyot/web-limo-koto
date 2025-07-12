@@ -1,5 +1,14 @@
 'use client';
 
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  getDocs,
+  deleteDoc
+} from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -13,7 +22,7 @@ import {
 import NotificationModal from '@/components/admin/NotificationModal';
 
 interface FAQData {
-  id: number;
+  id: string;
   question: string;
   answer: string;
   category: string;
@@ -33,9 +42,9 @@ export default function FAQAdmin() {
   const [faqData, setFaqData] = useState<FAQData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQData | null>(null);
-  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [faqToDelete, setFaqToDelete] = useState<number | null>(null);
+  const [faqToDelete, setFaqToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     question: '',
     answer: '',
@@ -63,65 +72,109 @@ export default function FAQAdmin() {
       router.push('/admin/login');
     } else {
       setIsAuthenticated(true);
-      // Load existing data from localStorage or set default
-      const savedData = localStorage.getItem('faqData');
-      if (savedData) {
-        setFaqData(JSON.parse(savedData));
-      } else {
-        // Set default data from the existing FAQ data
-        const defaultData = [
-          {
-            id: 1,
-            question: "Bagaimana cara mengurus surat keterangan domisili?",
-            answer: "Untuk mengurus surat keterangan domisili, Anda perlu membawa KTP asli, KK asli, dan surat pengantar dari RT/RW. Datang ke kantor nagari pada jam kerja.",
-            category: "Administrasi"
-          },
-          {
-            id: 2,
-            question: "Kapan jam pelayanan kantor nagari?",
-            answer: "Kantor nagari buka setiap hari Senin-Jumat pukul 08:00-16:00 WIB, dengan istirahat pukul 12:00-13:00 WIB.",
-            category: "Pelayanan Publik"
+      
+      // First try to load data from Firestore
+      const loadData = async () => {
+        try {
+          await fetchFAQFromFirestore();
+        } catch (error) {
+          console.error('Failed to fetch from Firestore:', error);
+          // Fall back to localStorage if Firestore fails
+          const savedData = localStorage.getItem('faqData');
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setFaqData(parsedData);
+            } catch (e) {
+              console.error('Error parsing localStorage data:', e);
+            }
+          } else {
+            // Set default data if no localStorage data
+            const defaultData = [
+              {
+                id: '1',
+                question: "Bagaimana cara mengurus surat keterangan domisili?",
+                answer: "Untuk mengurus surat keterangan domisili, Anda perlu membawa KTP asli, KK asli, dan surat pengantar dari RT/RW. Datang ke kantor nagari pada jam kerja.",
+                category: "Administrasi"
+              },
+              {
+                id: '2',
+                question: "Kapan jam pelayanan kantor nagari?",
+                answer: "Kantor nagari buka setiap hari Senin-Jumat pukul 08:00-16:00 WIB, dengan istirahat pukul 12:00-13:00 WIB.",
+                category: "Pelayanan Publik"
+              }
+            ];
+            setFaqData(defaultData);
+            localStorage.setItem('faqData', JSON.stringify(defaultData));
           }
-        ];
-        setFaqData(defaultData);
-        localStorage.setItem('faqData', JSON.stringify(defaultData));
-      }
+        }
+      };
+      
+      loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingFAQ) {
-      // Update existing
-      const updatedData = faqData.map(f => 
-        f.id === editingFAQ.id 
-          ? { ...formData, id: editingFAQ.id }
-          : f
-      );
-      setFaqData(updatedData);
-      localStorage.setItem('faqData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'faq' } }));
+  const fetchFAQFromFirestore = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'faq'));
+      const data = snapshot.docs.map(doc => {
+        const docData = doc.data();
+        return {
+          id: doc.id,
+          question: typeof docData.question === 'string' ? docData.question : '',
+          answer: typeof docData.answer === 'string' ? docData.answer : '',
+          category: typeof docData.category === 'string' ? docData.category : ''
+        };
+      });
+      setFaqData(data);
+      // Update localStorage for offline fallback
+      localStorage.setItem('faqData', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error fetching FAQ data:', error);
+      showNotification('error', 'Gagal mengambil data dari server');
+    }
+  };
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    if (editingFAQ && typeof editingFAQ.id === 'string') {
+      // Update existing FAQ di Firestore
+      const faqRef = doc(db, 'faq', editingFAQ.id);
+      await updateDoc(faqRef, { 
+        question: formData.question,
+        answer: formData.answer,
+        category: formData.category 
+      });
+
       showNotification('success', 'Data FAQ berhasil diperbarui!');
     } else {
-      // Add new
-      const newFAQ = {
-        ...formData,
-        id: Date.now() // Simple ID generation
-      };
-      const updatedData = [...faqData, newFAQ];
-      setFaqData(updatedData);
-      localStorage.setItem('faqData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'faq' } }));
+      // Add new FAQ ke Firestore
+      await addDoc(collection(db, 'faq'), {
+        question: formData.question,
+        answer: formData.answer,
+        category: formData.category
+      });
+
       showNotification('success', 'Data FAQ berhasil ditambahkan!');
     }
-    
+
+    // Refresh data dari Firestore
+    await fetchFAQFromFirestore();
+
     setIsModalOpen(false);
     setEditingFAQ(null);
     setFormData({ question: '', answer: '', category: '' });
-  };
+
+  } catch (error) {
+    console.error(error);
+    showNotification('error', 'Terjadi kesalahan saat menyimpan FAQ');
+  }
+};
+
 
   const handleEdit = (faq: FAQData) => {
     setEditingFAQ(faq);
@@ -133,23 +186,40 @@ export default function FAQAdmin() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
+    // Instead of directly deleting, set the faqToDelete state and show confirmation modal
     setFaqToDelete(id);
     setDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (faqToDelete !== null) {
+
+  const confirmDelete = async () => {
+  if (faqToDelete && typeof faqToDelete === 'string') {
+    try {
+      // Make sure we're using a string ID
+      const docRef = doc(db, 'faq', faqToDelete);
+      
+      // Delete from Firestore
+      await deleteDoc(docRef);
+      
+      // Update local state
       const updatedData = faqData.filter(f => f.id !== faqToDelete);
       setFaqData(updatedData);
+      
+      // Update localStorage for fallback
       localStorage.setItem('faqData', JSON.stringify(updatedData));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('dataUpdated', { detail: { type: 'faq' } }));
+      
       showNotification('success', 'Data FAQ berhasil dihapus!');
+    } catch (error) {
+      console.error('Error deleting FAQ:', error);
+      showNotification('error', 'Gagal menghapus data FAQ');
     }
-    setDeleteModalOpen(false);
-    setFaqToDelete(null);
-  };
+  } else {
+    showNotification('error', 'ID FAQ tidak valid');
+  }
+  setDeleteModalOpen(false);
+  setFaqToDelete(null);
+};
 
   const openAddModal = () => {
     setEditingFAQ(null);
@@ -157,7 +227,7 @@ export default function FAQAdmin() {
     setIsModalOpen(true);
   };
 
-  const toggleExpand = (id: number) => {
+  const toggleExpand = (id: string) => {
     setExpandedFAQ(expandedFAQ === id ? null : id);
   };
 

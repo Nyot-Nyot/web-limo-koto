@@ -13,25 +13,16 @@ const Modal = dynamic(() => import("@/components/layanan/Modal"), {
 const LayananCard = dynamic(() => import("@/components/layanan/LayananCard"));
 const ContactCard = dynamic(() => import("@/components/layanan/ContactCard"));
 const PageHeader = dynamic(() => import("@/components/layanan/PageHeader"));
-const BackgroundLayer = dynamic(
-  () => import("@/components/layanan/BackgroundLayer")
-);
-const OperationalHours = dynamic(
-  () => import("@/components/layanan/OperationalHours")
-);
-const ReviewSection = dynamic(
-  () => import("@/components/layanan/ReviewSection")
-);
-const DomisiliForm = dynamic(
-  () => import("@/components/layanan/DomisiliForm"),
-  { ssr: false }
-);
-const SKTMForm = dynamic(() => import("@/components/layanan/SKTMForm"), {
-  ssr: false,
-});
-const StepsForm = dynamic(() => import("@/components/layanan/StepsForm"), {
-  ssr: false,
-});
+const BackgroundLayer = dynamic(() => import("@/components/layanan/BackgroundLayer"));
+const OperationalHours = dynamic(() => import("@/components/layanan/OperationalHours"));
+const ReviewSection = dynamic(() => import("@/components/layanan/ReviewSection"));
+const DomisiliForm = dynamic(() => import("@/components/layanan/DomisiliFormNew"), { ssr: false });
+const SKKelahiranForm = dynamic(() => import("@/components/layanan/SKKelahiranForm"), { ssr: false });
+const SKUForm = dynamic(() => import("@/components/layanan/SKUForm"), { ssr: false });
+const SKMeninggalForm = dynamic(() => import("@/components/layanan/SKMeninggalForm"), { ssr: false });
+const SKPindahForm = dynamic(() => import("@/components/layanan/SKPindahForm"), { ssr: false });
+const SKTempatTinggalForm = dynamic(() => import("@/components/layanan/SKTempatTinggalForm"), { ssr: false });
+const StepsForm = dynamic(() => import("@/components/layanan/StepsForm"), { ssr: false });
 
 // Constants
 const LAYOUT_CONSTANTS = {
@@ -73,39 +64,21 @@ export default function LayananPage() {
   }, []);
 
   const renderModalContent = useCallback(() => {
-    // Check if it's an administrative document
-    const isAdministrativeDoc = aktaList.some(
-      (akta) => akta.id === modalState.type
-    );
-
-    if (isAdministrativeDoc) {
-      const selectedAkta = aktaList.find((akta) => akta.id === modalState.type);
-      return (
-        <StepsForm
-          serviceTitle={selectedAkta?.title || ""}
-          onClose={closeModal}
-        />
-      );
-    }
-
-    // Original service forms
     switch (modalState.type) {
       case "domisili":
         return <DomisiliForm onClose={closeModal} />;
-      case "sktm":
-        return <SKTMForm onClose={closeModal} />;
-      case "usaha":
-      case "pengantar_nikah":
-      case "surat_kematian":
-      case "surat_cerai":
-        return (
-          <StepsForm
-            serviceTitle={
-              layananList.find((l) => l.id === modalState.type)?.title || ""
-            }
-            onClose={closeModal}
-          />
-        );
+      case 'kelahiran':
+        return <SKKelahiranForm onClose={closeModal} />;
+      case 'usaha':
+        return <SKUForm onClose={closeModal} />;
+      case 'surat_kematian':
+        return <SKMeninggalForm onClose={closeModal} />;
+      case 'pindah':
+        return <SKPindahForm onClose={closeModal} />;
+      case 'tempat_tinggal':
+        return <SKTempatTinggalForm onClose={closeModal} />;
+      case 'surat_cerai':
+        return <StepsForm serviceTitle={layananList.find(l => l.id === modalState.type)?.title || ''} onClose={closeModal} />;
       default:
         return null;
     }
