@@ -62,8 +62,8 @@ export default function Jorong() {
   }
 
   return (
-    <div className="flex items-center justify-center px-4 md:px-8 py-8 md:py-16">
-      <div className="max-w-7xl mx-auto">
+    <div className="flex items-center justify-center px-4 md:px-8 py-8 md:py-16 min-h-screen h-full">
+      <div className="max-w-5xl mx-auto w-full h-full">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -75,9 +75,9 @@ export default function Jorong() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 min-h-[600px] transition-all duration-300 items-stretch h-full">
           {/* Left Side - Google Maps */}
-          <div className="relative">
+          <div className="relative h-full flex flex-col">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-bold text-white mb-3 text-center">Peta Nagari Lima Koto</h3>
               <p className="text-gray-300 text-sm text-center mb-4">
@@ -184,7 +184,7 @@ export default function Jorong() {
           </div>
 
           {/* Right Side - Jorong Profile */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-4 md:space-y-6 h-full flex flex-col">
             {/* Main Info Card */}
             <div 
               className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 border-l-4 transition-all duration-300"
