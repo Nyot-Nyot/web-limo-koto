@@ -6,10 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "postbuild": "netlify build",
     "lint": "next lint"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@netlify/next": "^1.4.9",
     "@types/leaflet": "^1.9.19",
     "date-fns": "^4.1.0",
     "docxtemplater": "^3.65.2",
