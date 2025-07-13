@@ -63,9 +63,9 @@ export const savePermohonanToFirestore = async (
     const nik = String(formData.nik || formData.NIK || 'NIK tidak tersedia');
     
     // Clean formData to remove undefined/null and non-primitive values
-    const cleanedData: Record<string, string | number | boolean> = Object.fromEntries(
+    const cleanedData = Object.fromEntries(
       Object.entries(formData)
-        .filter(([, value]) => value != null && ['string', 'number', 'boolean'].includes(typeof value))
+        .filter(([, value]) => value !== null && value !== undefined && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'))
     );
     // Build the Firestore document data
     const permohonanData: any = {

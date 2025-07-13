@@ -94,7 +94,7 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
         Object.entries(formData).filter(([, value]) =>
           typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
         )
-      ) as Record<string, string | number | boolean>;
+      );
 
       // Build attachments object
       const attachments: Record<string, { url: string; filename: string; type: string }> = {};
