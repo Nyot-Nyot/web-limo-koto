@@ -26,24 +26,20 @@ export default function HeroSection() {
       <BackgroundImage src="/images/background.png" overlay={true} overlayOpacity={0.6} />
       <div className="relative z-10 flex flex-col pl-12 pr-6 md:pl-20 md:pr-0 lg:pl-24">
         <HeroMain />
-
         {/* Features Section */}
-        <Suspense fallback={<SectionFallback label="fitur" />}> 
+        <Suspense fallback={<SectionFallback label="fitur" />}>
           {loading ? <SectionFallback label="fitur" /> : error ? <div className="text-red-400">Gagal memuat fitur</div> : <FeaturesSection features={data.features} />}
         </Suspense>
-
         {/* Pejabat Section */}
-        <Suspense fallback={<SectionFallback label="struktur pemerintahan" />}> 
+        <Suspense fallback={<SectionFallback label="struktur pemerintahan" />}>
           {loading ? <SectionFallback label="struktur pemerintahan" /> : error ? <div className="text-red-400">Gagal memuat struktur pemerintahan</div> : <PejabatSection pejabatData={data.pejabat} />}
         </Suspense>
-
         {/* News Section */}
-        <Suspense fallback={<SectionFallback label="berita" />}> 
+        <Suspense fallback={<SectionFallback label="berita" />}>
           {loading ? <SectionFallback label="berita" /> : error ? <div className="text-red-400">Gagal memuat berita</div> : <NewsSection newsData={data.news} />}
         </Suspense>
-
         {/* FAQ Section */}
-        <Suspense fallback={<SectionFallback label="FAQ" />}> 
+        <Suspense fallback={<SectionFallback label="FAQ" />}>
           {loading ? <SectionFallback label="FAQ" /> : error ? <div className="text-red-400">Gagal memuat FAQ</div> : <FAQSection faqData={data.faq} />}
         </Suspense>
       </div>

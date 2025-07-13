@@ -29,9 +29,7 @@ const VisiMisi = memo(() => {
               <h3 className="text-3xl font-bold text-yellow-400 mb-4">VISI</h3>
             </div>
             <p className="text-white text-center text-lg leading-relaxed">
-              "Terwujudnya Nagari Lima Koto yang Maju, Mandiri, Bermartabat, 
-              dan Berbudaya berdasarkan Nilai-nilai Adat Basandi Syarak, 
-              Syarak Basandi Kitabullah"
+              Terwujudnya Nagari Lima Koto yang Maju, Mandiri, Bermartabat, dan Berbudaya berdasarkan Nilai-nilai Adat Basandi Syarak,  Syarak Basandi Kitabullah
             </p>
           </div>
 

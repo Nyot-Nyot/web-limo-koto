@@ -6,8 +6,9 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || '';
     
     let serviceType: string;
-    let formDataObj: Record<string, any>;
-    let files: Record<string, File> = {};
+    let formDataObj: Record<string, string | number | boolean>;
+    const files: Record<string, File> = {};
+    let nomorPermohonan: string | undefined;
     
     if (contentType.includes('multipart/form-data')) {
       // Handle FormData (with file uploads)
@@ -28,10 +29,11 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // Handle JSON (legacy support)
+      // Handle JSON (from admin interface or legacy)
       const body = await request.json();
-      serviceType = body.serviceType;
-      formDataObj = body.formData;
+      serviceType = body.serviceType || body.jenisLayanan;
+      formDataObj = body.formData || body.data;
+      nomorPermohonan = body.nomorPermohonan;
     }
     
     // Validate required fields
@@ -48,7 +50,9 @@ export async function POST(request: NextRequest) {
     
     // Create filename
     const timestamp = Date.now();
-    const filename = `${formDataObj.nama_orang_2 || formDataObj.nama || 'document'}-${serviceType}-${timestamp}.docx`;
+    const filename = nomorPermohonan 
+      ? `${nomorPermohonan}-${serviceType}.docx`
+      : `${formDataObj.nama_orang_2 || formDataObj.nama || 'document'}-${serviceType}-${timestamp}.docx`;
     
     // Return the file as download
     const uint8Array = new Uint8Array(docxBuffer);

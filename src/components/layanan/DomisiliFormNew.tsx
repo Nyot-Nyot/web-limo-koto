@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface DomisiliFormProps {
   onClose: () => void;
@@ -19,12 +20,27 @@ interface DomisiliFormData {
   nama_kecamatan: string;
   nama_kabupaten: string;
   tujuan: string;
+  nomorHP: string; // Tambahkan field nomor HP
   kk: File | null;
   ktp: File | null;
   surat_permohonan: File | null;
 }
 
 export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
+  // Upload file directly to Cloudinary
+  const uploadToCloudinary = async (file: File | null): Promise<string> => {
+    if (!file) return '';
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'limokoto-upload');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+      method: 'POST',
+      body: data,
+    });
+    const json = await res.json();
+    return json.secure_url;
+  };
+  
   const [formData, setFormData] = useState<DomisiliFormData>({
     nama_orang_2: '',
     tempat_tanggal_lahir: '',
@@ -35,10 +51,11 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
     pekerjaan: '',
     alamat: '',
     nama_jorong: '',
-    nama_nagari: 'Nagari Limo Koto',
-    nama_kecamatan: 'Koto IV',
-    nama_kabupaten: 'Kabupaten Sijunjung',
+    nama_nagari: 'Limo Koto',
+    nama_kecamatan: 'Koto VII',
+    nama_kabupaten: 'Sijunjung',
     tujuan: '',
+    nomorHP: '', // Tambahkan field nomor HP
     kk: null,
     ktp: null,
     surat_permohonan: null
@@ -51,7 +68,60 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Create FormData object
+      // Validasi nomor HP
+      if (!formData.nomorHP) {
+        alert('Nomor HP wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload attachments to Cloudinary
+      const kkUrl = await uploadToCloudinary(formData.kk);
+      const ktpUrl = await uploadToCloudinary(formData.ktp);
+      const suratUrl = await uploadToCloudinary(formData.surat_permohonan);
+
+      // Prepare submission data (primitive values)
+      const dataToSubmit = { ...formData };
+
+      // Build attachments object for Firestore
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (kkUrl) {
+        attachments.kk = {
+          url: kkUrl,
+          filename: formData.kk?.name || 'kk',
+          type: formData.kk?.type || 'application/octet-stream'
+        };
+      }
+      if (ktpUrl) {
+        attachments.ktp = {
+          url: ktpUrl,
+          filename: formData.ktp?.name || 'ktp',
+          type: formData.ktp?.type || 'application/octet-stream'
+        };
+      }
+      if (suratUrl) {
+        attachments.surat_permohonan = {
+          url: suratUrl,
+          filename: formData.surat_permohonan?.name || 'surat_permohonan',
+          type: formData.surat_permohonan?.type || 'application/octet-stream'
+        };
+      }
+
+      // Simpan data ke Firestore (filter out undefined values)
+      // Keep only primitive form values (string, number, boolean) to avoid undefined or object values
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(dataToSubmit).filter(([, value]) =>
+          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        )
+      ) as Record<string, string | number | boolean>;
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKDomisili',
+        cleanedDataToSubmit,
+        formData.nomorHP,
+        attachments
+      );
+
+      // Create FormData object untuk generate dokumen
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKDomisili');
       
@@ -91,7 +161,7 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!');
+        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!`);
         onClose();
       } else {
         const result = await response.json();
@@ -255,6 +325,21 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Pekerjaan utama"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP/WA <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>

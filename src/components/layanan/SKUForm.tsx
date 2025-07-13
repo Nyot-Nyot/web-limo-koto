@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { SKUFormData } from '@/types/layanan';
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface SKUFormProps {
   onClose: () => void;
@@ -17,9 +18,10 @@ export default function SKUForm({ onClose }: SKUFormProps) {
     alamat: '',
     nama_usaha: '',
     tempat_usaha: '',
-    nama_nagari: 'Nagari Limo Koto',
-    nama_kecamatan: 'Koto IV',
-    nama_kabupaten: 'Kabupaten Sijunjung',
+    nama_nagari: 'Limo Koto',
+    nama_kecamatan: 'Koto VII',
+    nama_kabupaten: 'Sijunjung',
+    nomorHP: '', // Tambahkan field nomor HP
     ktp: null,
     kk: null,
     pengantar_rt_rw: null,
@@ -28,12 +30,55 @@ export default function SKUForm({ onClose }: SKUFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Upload file directly to Cloudinary
+  const uploadToCloudinary = async (file: File | null): Promise<string> => {
+    if (!file) return '';
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'limokoto-upload');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+      method: 'POST', body: data
+    });
+    const json = await res.json();
+    return json.secure_url;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Create FormData object
+      // Validasi nomor HP
+      if (!formData.nomorHP) {
+        alert('Nomor HP wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload attachments to Cloudinary
+      const ktpUrl = await uploadToCloudinary(formData.ktp || null);
+      const kkUrl = await uploadToCloudinary(formData.kk || null);
+      const pengantarUrl = await uploadToCloudinary(formData.pengantar_rt_rw || null);
+      const usahaUrl = await uploadToCloudinary(formData.foto_tempat_usaha || null);
+
+      // Prepare primitive form data
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) =>
+          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        )
+      ) as Record<string, string | number | boolean>;
+
+      // Build attachments object
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (ktpUrl) attachments.ktp = { url: ktpUrl, filename: formData.ktp?.name || 'ktp', type: formData.ktp?.type || 'application/octet-stream' };
+      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
+      if (pengantarUrl) attachments.pengantar_rt_rw = { url: pengantarUrl, filename: formData.pengantar_rt_rw?.name || 'pengantar_rt_rw', type: formData.pengantar_rt_rw?.type || 'application/octet-stream' };
+      if (usahaUrl) attachments.foto_tempat_usaha = { url: usahaUrl, filename: formData.foto_tempat_usaha?.name || 'foto_tempat_usaha', type: formData.foto_tempat_usaha?.type || 'application/octet-stream' };
+
+      // Simpan data ke Firestore
+      const nomorPermohonan = await savePermohonanToFirestore('SKU_AN', cleanedDataToSubmit, formData.nomorHP, attachments);
+
+      // Create FormData object untuk generate dokumen
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKU_AN');
       
@@ -73,7 +118,7 @@ export default function SKUForm({ onClose }: SKUFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen SKU berhasil dibuat dan didownload!');
+        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen SKU berhasil dibuat dan didownload!`);
         onClose();
       } else {
         const result = await response.json();
@@ -235,6 +280,21 @@ export default function SKUForm({ onClose }: SKUFormProps) {
                 rows={3}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Alamat lengkap sesuai KTP"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP/WA <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>
