@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface SKMeninggalFormProps {
   onClose: () => void;
@@ -13,21 +13,20 @@ interface SKMeninggalFormData {
   agama: string;
   jenis_kelamin: string;
   alamat: string;
-  
+
   // Data kematian
   hari_tanggal_meninggal: string;
   jam: string;
   meninggal_di: string;
   disebabkan: string;
   dikebumikan_di: string;
-  
+
   // Static data
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
-  
+
   // File uploads
-  pengantar_rt_rw?: File | null;
   ktp_almarhum?: File | null;
   kk_almarhum?: File | null;
   surat_rs?: File | null;
@@ -36,25 +35,24 @@ interface SKMeninggalFormData {
 
 export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
   const [formData, setFormData] = useState<SKMeninggalFormData>({
-    nama_orang_2: '',
-    tempat_tanggal_lahir: '',
-    nik: '',
-    agama: '',
-    jenis_kelamin: '',
-    alamat: '',
-    hari_tanggal_meninggal: '',
-    jam: '',
-    meninggal_di: '',
-    disebabkan: '',
-    dikebumikan_di: '',
-    nama_nagari: 'Nagari Limo Koto',
-    nama_kecamatan: 'Koto IV',
-    nama_kabupaten: 'Kabupaten Sijunjung',
-    pengantar_rt_rw: null,
+    nama_orang_2: "",
+    tempat_tanggal_lahir: "",
+    nik: "",
+    agama: "",
+    jenis_kelamin: "",
+    alamat: "",
+    hari_tanggal_meninggal: "",
+    jam: "",
+    meninggal_di: "",
+    disebabkan: "",
+    dikebumikan_di: "",
+    nama_nagari: "Nagari Limo Koto",
+    nama_kecamatan: "Koto IV",
+    nama_kabupaten: "Kabupaten Sijunjung",
     ktp_almarhum: null,
     kk_almarhum: null,
     surat_rs: null,
-    ktp_pelapor: null
+    ktp_pelapor: null,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,82 +64,95 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
     try {
       // Create FormData object
       const submitFormData = new FormData();
-      submitFormData.append('serviceType', 'SKMeninggalDunia');
-      
+      submitFormData.append("serviceType", "SKMeninggalDunia");
+
       // Append form fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === 'string') {
+        if (value !== null && typeof value === "string") {
           submitFormData.append(key, value);
         } else if (value instanceof File) {
           submitFormData.append(key, value);
         }
       });
 
-      const response = await fetch('/api/documents/generate', {
-        method: 'POST',
+      const response = await fetch("/api/documents/generate", {
+        method: "POST",
         body: submitFormData,
       });
 
       if (response.ok) {
         // Get the blob from response
         const blob = await response.blob();
-        
+
         // Create download link
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        
+
         // Generate filename
         const timestamp = Date.now();
-        const filename = `SKMeninggalDunia-${formData.nama_orang_2 || 'Almarhum'}-${timestamp}.docx`;
+        const filename = `SKMeninggalDunia-${
+          formData.nama_orang_2 || "Almarhum"
+        }-${timestamp}.docx`;
         link.download = filename;
-        
+
         // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clean up
         window.URL.revokeObjectURL(url);
-        
-        alert('Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!');
+
+        alert(
+          "Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!"
+        );
         onClose();
       } else {
         const result = await response.json();
-        alert(`Error: ${result.error || 'Gagal membuat dokumen'}`);
+        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      console.error("Error:", error);
+      alert("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
-  const handleFileChange = (fieldName: keyof SKMeninggalFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({
-        ...prev,
-        [fieldName]: file
-      }));
-    }
-  };
+  const handleFileChange =
+    (fieldName: keyof SKMeninggalFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: file,
+        }));
+      }
+    };
 
   return (
     <div className="max-h-[80vh] overflow-y-auto">
       <div className="bg-gradient-to-r from-gray-50 to-slate-100 p-6 rounded-lg mb-4">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">🕊️ Surat Keterangan Meninggal Dunia</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-2">
+          🕊️ Surat Keterangan Meninggal Dunia
+        </h3>
         <p className="text-gray-600 text-sm">
-          Silakan isi formulir dengan lengkap dan benar untuk pembuatan surat keterangan meninggal dunia. 
-          Pastikan semua dokumen persyaratan telah disiapkan.
+          Silakan isi formulir dengan lengkap dan benar untuk pembuatan surat
+          keterangan meninggal dunia. Pastikan semua dokumen persyaratan telah
+          disiapkan.
         </p>
       </div>
 
@@ -150,9 +161,11 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
         <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
           <div className="flex items-center mb-4">
             <div className="w-3 h-3 bg-gray-500 rounded-full mr-3"></div>
-            <h3 className="text-lg font-semibold text-gray-800">Data Almarhum</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Data Almarhum
+            </h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -259,9 +272,11 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
         <div className="bg-white border border-red-200 rounded-lg p-5 shadow-sm">
           <div className="flex items-center mb-4">
             <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-            <h3 className="text-lg font-semibold text-red-900">Data Kematian</h3>
+            <h3 className="text-lg font-semibold text-red-900">
+              Data Kematian
+            </h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -343,36 +358,26 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
         <div className="bg-white border border-yellow-200 rounded-lg p-5 shadow-sm">
           <div className="flex items-center mb-4">
             <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-            <h3 className="text-lg font-semibold text-yellow-900">Berkas Persyaratan</h3>
+            <h3 className="text-lg font-semibold text-yellow-900">
+              Berkas Persyaratan
+            </h3>
           </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Surat Pengantar RT/RW <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="file"
-                onChange={handleFileChange('pengantar_rt_rw')}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
-              />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
-            </div>
 
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 KTP Almarhum <span className="text-red-500">*</span>
               </label>
               <input
                 type="file"
-                onChange={handleFileChange('ktp_almarhum')}
+                onChange={handleFileChange("ktp_almarhum")}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+              </p>
             </div>
 
             <div>
@@ -381,25 +386,31 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
               </label>
               <input
                 type="file"
-                onChange={handleFileChange('kk_almarhum')}
+                onChange={handleFileChange("kk_almarhum")}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+              </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Surat dari Rumah Sakit <span className="text-gray-500">(Jika diperlukan)</span>
+                Surat dari Rumah Sakit{" "}
+                <span className="text-gray-500">(Jika diperlukan)</span>
               </label>
               <input
                 type="file"
-                onChange={handleFileChange('surat_rs')}
+                onChange={handleFileChange("surat_rs")}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Wajib jika meninggal karena kejadian tertentu. Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Wajib jika meninggal karena kejadian tertentu. Format: PDF, JPG,
+                PNG, DOC, DOCX (Max: 5MB)
+              </p>
             </div>
 
             <div>
@@ -408,12 +419,14 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
               </label>
               <input
                 type="file"
-                onChange={handleFileChange('ktp_pelapor')}
+                onChange={handleFileChange("ktp_pelapor")}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+              </p>
             </div>
           </div>
         </div>
@@ -438,7 +451,7 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
                 Memproses...
               </div>
             ) : (
-              'Buat Surat Keterangan Meninggal Dunia'
+              "Buat Surat Keterangan Meninggal Dunia"
             )}
           </button>
         </div>

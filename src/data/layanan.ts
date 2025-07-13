@@ -1,90 +1,230 @@
-import { FaPhoneAlt, FaWhatsapp, FaEnvelope, FaInstagram, FaAmbulance, FaShieldAlt } from "react-icons/fa";
+import {
+  FaPhoneAlt,
+  FaWhatsapp,
+  FaEnvelope,
+  FaInstagram,
+  FaAmbulance,
+  FaShieldAlt,
+} from "react-icons/fa";
 import { LayananItem, ContactInfo, JamLayanan } from "@/types/layanan";
 
 export const layananList: LayananItem[] = [
   {
     id: "domisili",
     title: "Surat Keterangan Domisili",
-    items: ["Kartu Keluarga (KK)", "Fotokopi KTP", "Surat Permohonan Pengajuan SK Domisili"],
+    items: [
+      "Kartu Keluarga (KK)",
+      "Fotokopi KTP",
+      "Surat Permohonan Pengajuan SK Domisili",
+    ],
     description: "Surat keterangan tempat tinggal untuk keperluan administrasi",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
     icon: "🏠",
     color: "from-blue-500 to-blue-600",
-    hasForm: true
   },
   {
     id: "kelahiran",
     title: "Surat Keterangan Kelahiran",
-    items: ["Surat Pengantar RT/RW", "Fotocopy Surat dari Bidan/Rumah Sakit", "Fotocopy Kartu Keluarga", "Fotocopy KTP Orangtua"],
+    items: [
+      "Fotocopy Surat dari Bidan/Rumah Sakit",
+      "Fotocopy Kartu Keluarga",
+      "Fotocopy KTP Orangtua",
+    ],
     description: "Surat keterangan kelahiran untuk administrasi akte kelahiran",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
-    icon: "�",
-    color: "from-pink-500 to-purple-600",
-    hasForm: true
+    icon: "👶",
+    color: "from-green-500 to-green-600",
   },
   {
     id: "usaha",
     title: "Surat Keterangan Usaha",
-    items: ["FC KK dan KTP", "Surat pengantar RT/RW", "Foto tempat usaha"],
+    items: ["FC KK dan KTP", "Foto tempat usaha"],
     description: "Surat keterangan untuk legalisasi usaha mikro dan kecil",
     estimasi: "2-3 hari kerja",
     biaya: "Gratis",
     icon: "🏪",
     color: "from-purple-500 to-purple-600",
-    hasForm: true
   },
   {
     id: "pindah",
     title: "Surat Keterangan Pindah",
-    items: ["KK", "KTP", "Pas Photo"],
+    items: ["FC KK", "FC KTP", "Pas Photo"],
     description: "Surat keterangan untuk keperluan pindah domisili",
     estimasi: "2-3 hari kerja",
     biaya: "Gratis",
-    icon: "�",
-    color: "from-blue-500 to-green-600",
-    hasForm: true
+    icon: "📦",
+    color: "from-pink-500 to-pink-600",
   },
   {
     id: "surat_kematian",
-    title: "Surat Keterangan Meninggal Dunia",
-    items: ["Surat pengantar RT/RW", "KTP dan KK almarhum", "Surat dari rumah sakit (jika diperlukan)", "KTP pelapor"],
-    description: "Surat keterangan untuk administrasi kematian dan keperluan pemakaman",
+    title: "Surat Keterangan Kematian",
+    items: ["FC KK", "FC KTP", "Surat keterangan dokter/RS"],
+    description: "Surat keterangan untuk administrasi kematian",
     estimasi: "1 hari kerja",
     biaya: "Gratis",
-    icon: "�️",
+    icon: "📋",
     color: "from-gray-500 to-gray-600",
-    hasForm: true
   },
   {
     id: "tempat_tinggal",
     title: "Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal",
-    items: ["KK", "Fotokopi KTP", "Surat Permohonan Pengajuan"],
-    description: "Surat keterangan untuk administrasi bagi yang tidak memiliki rumah/tempat tinggal tetap",
+    items: ["FC KK", "Fotokopi KTP", "Surat Permohonan Pengajuan"],
+    description:
+      "Surat keterangan untuk administrasi bagi yang tidak memiliki rumah/tempat tinggal tetap",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
     icon: "🏘️",
+    color: "from-orange-500 to-orange-600",
+  },
+];
+
+export const aktaList: LayananItem[] = [
+  {
+    id: "akta_kelahiran",
+    title: "Akta Kelahiran",
+    items: [
+      "Mengisi formulir pelaporan kelahiran F.2.02",
+      "Foto Copy Kartu Keluarga (KK)",
+      "Asli Surat Keterangan Kelahiran dari Medis",
+      "Foto Copy Kutipan Akta Nikah Orang Tua dilegalisir KUA",
+      "Foto Copy KTP-el Orang Tua",
+      "Foto Copy KTP-el Saksi 2 Orang dihadirkan Pada Saat Pengurusan Akta",
+      "Foto Copy Ijazah Bagi Yang Sudah Memiliki",
+      "Kelahiran Terlambat melebihi usia 60 hari, melampirkan surat persetujuan kepala dinas kependudukan dan pencatatan sipil",
+      "Penerbitan akta kelahiran memakai azaz domisili",
+    ],
+    description: "Dokumen resmi yang mencatat kelahiran seseorang",
+    estimasi: "Paling lama 7 hari",
+    biaya: "Gratis",
+    icon: "👶",
+    color: "from-green-500 to-emerald-600",
+  },
+  {
+    id: "akta_kematian",
+    title: "Akta Kematian",
+    items: [
+      "Mengisi Formulir Permohonan Kematian F.2.15",
+      "Surat Kematian (Surat Keterangan Kematian Dari Wali Nagari/Petugas Kesehatan)",
+      "Asli Kartu Keluarga Yang Meninggal",
+      "Asli KTP-el Yang Meninggal",
+      "Asli Akta Kelahiran Yang Meninggal",
+      "Foto Copy KTP-el Saksi 2 Orang",
+    ],
+    description: "Dokumen resmi yang mencatat kematian seseorang",
+    estimasi: "Paling lama 7 hari",
+    biaya: "Gratis",
+    icon: "⚰️",
+    color: "from-gray-500 to-gray-600",
+  },
+  {
+    id: "akta_perkawinan",
+    title: "Akta Perkawinan (Non-Muslim)",
+    items: [
+      "Mengisi Formulir Pelaporan Pencatatan Perkawinan F.2.12",
+      "Foto Copy Surat Keterangan Perkawinan Dari Pemuka Agama Yang Dilegalisir",
+      "Foto Copy Kutipan Akta Kelahiran",
+      "Foto Copy Kartu Keluarga",
+      "Foto Copy KTP-el Suami/Istri",
+      "Pas Photo Berwarna Berdampingan Ukuran 3x4 cm Sebanyak 3 (Tiga) Lembar",
+      "Foto Copy KTP-el Saksi Yang Telah Berumur 21 Tahun Keatas",
+    ],
+    description: "Dokumen resmi pencatatan perkawinan untuk non-muslim",
+    estimasi: "Paling lama 7 hari",
+    biaya: "Gratis",
+    icon: "💒",
+    color: "from-pink-500 to-rose-600",
+  },
+  {
+    id: "kartu_keluarga",
+    title: "Kartu Keluarga (KK)",
+    items: [
+      "Mengisi formulir permohonan KK F.1.15 dan F.1.01 yang diketahui jorong, nagari, dan camat",
+      "Foto copy Kutipan Akta Nikah / Kutipan Akta Perkawinan",
+      "Surat Keterangan Pindah Datang Bagi Penduduk Yang Baru Pindah / Datang",
+      "Foto Copy Surat Keterangan Kelahiran/Akta Kelahiran / Ijazah (Data Anggota Keluarga)",
+    ],
+    description: "Dokumen identitas keluarga yang berisi data anggota keluarga",
+    estimasi: "Paling lama 7 hari",
+    biaya: "Gratis",
+    icon: "👨‍👩‍👧‍👦",
+    color: "from-indigo-500 to-purple-600",
+  },
+  {
+    id: "e_ktp",
+    title: "Kartu Tanda Penduduk Elektronik (e-KTP)",
+    items: [
+      "Mengisi Formulir Permohonan KTP-el F.1.21. Yang Diketahui Jorong, Nagari Dan Camat",
+      "Telah Berusia 17 Tahun Atau Sudah Kawin/Pernah Kawin Sebelumnya",
+      "Foto Copy Kartu Keluarga",
+      "Foto Copy Akta Nikah Bagi Penduduk Yang Belum Berusia 17 Tahun",
+      "Telah Melaksanakan Perekaman KTP-el",
+    ],
+    description: "Kartu identitas elektronik untuk penduduk Indonesia",
+    estimasi: "Paling lama 3 hari",
+    biaya: "Gratis",
+    icon: "🆔",
+    color: "from-blue-500 to-cyan-600",
+  },
+  {
+    id: "surat_pindah",
+    title: "Surat Pindah",
+    items: [
+      "Mengisi Formulir Pelaporan Surat Pengantar Pindah Antar Kabupaten / Provinsi F.1.35. Yang Diketahui Jorong. Nagari Dan Camat",
+      "Asli Kartu Keluarga (KK)",
+      "Asli KTP-el Dan Foto Copy KTP-el",
+      "Foto Copy Akta Nikah (Kalau Ada Perubahan Status)",
+      "Pas Photo Ukuran 3x4 Sebanyak 3 Lembar Dengan Latar Warna Merah Bagi Tahun Kelahiran Ganjil, Latar Warna Biru Bagi Kelahiran Genap",
+    ],
+    description:
+      "Surat untuk keperluan pindah domisili antar kabupaten/provinsi",
+    estimasi: "Paling lama 7 hari",
+    biaya: "Gratis",
+    icon: "📦",
     color: "from-orange-500 to-red-600",
-    hasForm: true
   },
 ];
 
 export const kontakInfo: ContactInfo = {
   pelayanan: [
-    { icon: FaPhoneAlt, text: "08123456789092", label: "Telepon", color: "text-blue-400" },
-    { icon: FaWhatsapp, text: "08123456789092", label: "WhatsApp", color: "text-green-400" },
-    { icon: FaEnvelope, text: "limoKoto69@gmail.com", label: "Email", color: "text-red-400" },
-    { icon: FaInstagram, text: "Limo Koto", label: "Instagram", color: "text-pink-400" },
+    {
+      icon: FaWhatsapp,
+      text: "0853-6464-1456",
+      label: "WhatsApp",
+      color: "text-green-400",
+    },
+    {
+      icon: FaEnvelope,
+      text: "limokotonagari@gmail.com",
+      label: "Email",
+      color: "text-red-400",
+    },
+    {
+      icon: FaInstagram,
+      text: "Limo Koto",
+      label: "Instagram",
+      color: "text-pink-400",
+    },
   ],
   emergency: [
-    { icon: FaAmbulance, text: "0823456789002", label: "Ambulance", color: "text-red-500" },
-    { icon: FaShieldAlt, text: "0823456789002", label: "Keamanan", color: "text-blue-500" },
-  ]
+    {
+      icon: FaAmbulance,
+      text: "0823-8742-7978",
+      label: "Puskesmas",
+      color: "text-red-500",
+    },
+    {
+      icon: FaShieldAlt,
+      text: "110",
+      label: "Polsek",
+      color: "text-blue-500",
+    },
+  ],
 };
 
 export const jamLayanan: JamLayanan = {
   senin_jumat: "08:00 - 12:00 & 13:30 - 16:00",
-  sabtu: "08:00 - 11:00",
-  minggu: "Tutup"
+  sabtu: "Tutup",
+  minggu: "Tutup",
 };
