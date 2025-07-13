@@ -219,23 +219,25 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold text-yellow-400">
+                Admin Panel - Nagari Lima Koto
+              </h1>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
               >
                 <HomeIcon className="w-5 h-5" />
-                <span>Kembali ke Website</span>
+                <span>Ke Website</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors"
               >
                 <ArrowRightOnRectangleIcon className="w-5 h-5" />
                 <span>Logout</span>
@@ -245,123 +247,231 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-md mx-4 mt-4">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Dashboard Content */}
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Pejabat Card */}
-          <Link
-            href="/admin/struktur"
-            className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors border border-gray-700"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Pejabat</h3>
-                <p className="text-gray-400 text-sm">Struktur pemerintahan</p>
-              </div>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-white mb-4">Dashboard</h2>
+          <p className="text-gray-400">
+            Kelola konten website Nagari Lima Koto
+          </p>
+        </div>
+        
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-900/20 border border-red-500 text-red-300 px-4 py-3 rounded mb-6 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </div>
+        )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
               <UserGroupIcon className="w-8 h-8 text-blue-400" />
-            </div>
-            <div className="mt-4">
-              <span className="text-2xl font-bold text-white">{counts.pejabat}</span>
-              <span className="text-gray-400 text-sm ml-2">data</span>
-            </div>
-          </Link>
-
-          {/* FAQ Card */}
-          <Link
-            href="/admin/faq"
-            className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors border border-gray-700"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">FAQ</h3>
-                <p className="text-gray-400 text-sm">Pertanyaan umum</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Pejabat</p>
+                <p className="text-2xl font-bold text-white">{counts.pejabat}</p>
               </div>
+            </div>
+          </div>
+          
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
               <QuestionMarkCircleIcon className="w-8 h-8 text-green-400" />
-            </div>
-            <div className="mt-4">
-              <span className="text-2xl font-bold text-white">{counts.faq}</span>
-              <span className="text-gray-400 text-sm ml-2">data</span>
-            </div>
-          </Link>
-
-          {/* Berita Card */}
-          <Link
-            href="/admin/berita"
-            className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors border border-gray-700"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Berita</h3>
-                <p className="text-gray-400 text-sm">Artikel dan informasi</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total FAQ</p>
+                <p className="text-2xl font-bold text-white">{counts.faq}</p>
               </div>
+            </div>
+          </div>
+          
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
               <DocumentTextIcon className="w-8 h-8 text-yellow-400" />
-            </div>
-            <div className="mt-4">
-              <span className="text-2xl font-bold text-white">{counts.berita}</span>
-              <span className="text-gray-400 text-sm ml-2">data</span>
-            </div>
-          </Link>
-
-          {/* Jorong Card */}
-          <Link
-            href="/admin/jorong"
-            className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors border border-gray-700"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Jorong</h3>
-                <p className="text-gray-400 text-sm">Data wilayah</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Berita</p>
+                <p className="text-2xl font-bold text-white">{counts.berita}</p>
               </div>
+            </div>
+          </div>
+          
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
               <MapPinIcon className="w-8 h-8 text-purple-400" />
-            </div>
-            <div className="mt-4">
-              <span className="text-2xl font-bold text-white">{counts.jorong}</span>
-              <span className="text-gray-400 text-sm ml-2">data</span>
-            </div>
-          </Link>
-
-          {/* Galeri Card */}
-          <Link
-            href="/admin/galeri"
-            className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors border border-gray-700"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Galeri</h3>
-                <p className="text-gray-400 text-sm">Foto dan dokumentasi</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Jorong</p>
+                <p className="text-2xl font-bold text-white">{counts.jorong}</p>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
               <PhotoIcon className="w-8 h-8 text-pink-400" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Galeri</p>
+                <p className="text-2xl font-bold text-white">{counts.galeri}</p>
+              </div>
             </div>
-            <div className="mt-4">
-              <span className="text-2xl font-bold text-white">{counts.galeri}</span>
-              <span className="text-gray-400 text-sm ml-2">data</span>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
+              <CalendarIcon className="w-8 h-8 text-cyan-400" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Agenda</p>
+                <p className="text-2xl font-bold text-white">{counts.agenda}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Management Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Struktur Pemerintahan */}
+          <Link href="/admin/struktur">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <UserGroupIcon className="w-8 h-8 text-blue-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Struktur Pemerintahan
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola data pejabat, foto, jabatan, dan deskripsi
+              </p>
+              <div className="flex items-center text-blue-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </Link>
 
-          {/* Agenda Card */}
-          <Link
-            href="/admin/agenda"
-            className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors border border-gray-700"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Agenda</h3>
-                <p className="text-gray-400 text-sm">Jadwal kegiatan</p>
+          {/* FAQ Management */}
+          <Link href="/admin/faq">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <QuestionMarkCircleIcon className="w-8 h-8 text-green-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  FAQ Management
+                </h3>
               </div>
-              <CalendarIcon className="w-8 h-8 text-orange-400" />
-            </div>
-            <div className="mt-4">
-              <span className="text-2xl font-bold text-white">{counts.agenda}</span>
-              <span className="text-gray-400 text-sm ml-2">data</span>
+              <p className="text-gray-400 mb-4">
+                Kelola pertanyaan, kategori, dan jawaban FAQ
+              </p>
+              <div className="flex items-center text-green-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </Link>
+
+          {/* Kelola Jorong */}
+          <Link href="/admin/jorong">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <MapPinIcon className="w-8 h-8 text-purple-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Jorong
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola data jorong, koordinat, fasilitas, dan informasi wilayah
+              </p>
+              <div className="flex items-center text-purple-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* Kelola Galeri */}
+          <Link href="/admin/galeri">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <PhotoIcon className="w-8 h-8 text-pink-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Galeri
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola foto galeri nagari dengan berbagai kategori
+              </p>
+              <div className="flex items-center text-pink-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* Kelola Berita */}
+          <Link href="/admin/berita">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <DocumentTextIcon className="w-8 h-8 text-blue-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Berita
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola berita, artikel, dan informasi terkini nagari
+              </p>
+              <div className="flex items-center text-blue-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* Kelola Agenda */}
+          <Link href="/admin/agenda">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <CalendarIcon className="w-8 h-8 text-cyan-400" />
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Agenda
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Kelola agenda terkini, kegiatan, dan jadwal acara nagari
+              </p>
+              <div className="flex items-center text-cyan-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* Coming Soon Cards */}
+          <div className="bg-gray-800 rounded-lg p-6 opacity-50">
+            <div className="flex items-center mb-4">
+              <DocumentTextIcon className="w-8 h-8 text-gray-400" />
+              <h3 className="text-xl font-semibold text-gray-400 ml-3">
+                Layanan (Coming Soon)
+              </h3>
+            </div>
+            <p className="text-gray-500 mb-4">
+              Kelola layanan masyarakat
+            </p>
+            <div className="flex items-center text-gray-500">
+              <span className="text-sm font-medium">Segera Hadir</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

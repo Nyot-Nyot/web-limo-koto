@@ -78,7 +78,7 @@ export default function HeroSection() {
         className="fixed inset-0 bg-black/60" 
         style={{ zIndex: -1 }} 
       />
-      
+
       {/* Content */}
       <div className="relative z-10 flex flex-col pl-12 pr-6 md:pl-20 md:pr-0 lg:pl-24">
         {/* Hero Main Section */}
