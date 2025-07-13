@@ -60,7 +60,7 @@ export const layananList: LayananItem[] = [
   {
     id: "surat_kematian",
     title: "Surat Keterangan Kematian",
-    items: ["FC KK","FC KTP","Surat keterangan dokter/RS",],
+    items: ["FC KK","FC KTP","Surat keterangan dokter/RS"],
     description: "Surat keterangan untuk administrasi kematian",
     estimasi: "1 hari kerja",
     biaya: "Gratis",
@@ -200,7 +200,7 @@ export const kontakInfo: ContactInfo = {
     },
     {
       icon: FaEnvelope,
-      text: "limoKoto69@gmail.com",
+      text: "limokotonagari@gmail.com",
       label: "Email",
       color: "text-red-400",
     },
@@ -214,14 +214,14 @@ export const kontakInfo: ContactInfo = {
   emergency: [
     {
       icon: FaAmbulance,
-      text: "0823456789002",
-      label: "Ambulance",
+      text: "0823-8742-7978",
+      label: "Puskesmas",
       color: "text-red-500",
     },
     {
       icon: FaShieldAlt,
-      text: "0823456789002",
-      label: "Keamanan",
+      text: "110",
+      label: "Polsek",
       color: "text-blue-500",
     },
   ],
