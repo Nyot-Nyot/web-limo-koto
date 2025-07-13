@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 export default function Sidebar() {
   const sections = useMemo(() => [
@@ -13,6 +13,45 @@ export default function Sidebar() {
 
   const [activeSection, setActiveSection] = useState('beranda');
 
+  // Memoized observer callback untuk performance
+  const observerCallback = useCallback((entries: IntersectionObserverEntry[]) => {
+    const visibleEntries = entries.filter(entry => entry.isIntersecting);
+    if (visibleEntries.length > 0) {
+      const mostVisibleEntry = visibleEntries.reduce((prev, current) => 
+        prev.intersectionRatio > current.intersectionRatio ? prev : current
+      );
+      setActiveSection(mostVisibleEntry.target.id);
+    }
+  }, []);
+
+  // Optimized scroll handler
+  const handleScroll = useCallback(() => {
+    if (document.visibilityState === 'visible') {
+      let maxVisiblePercentage = 0;
+      let mostVisibleSection = 'beranda';
+
+      sections.forEach(section => {
+        const element = document.getElementById(section.id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const windowHeight = window.innerHeight;
+          const visiblePercentage = 
+            Math.min(windowHeight, rect.bottom) - 
+            Math.max(0, rect.top);
+          
+          if (visiblePercentage > maxVisiblePercentage) {
+            maxVisiblePercentage = visiblePercentage;
+            mostVisibleSection = section.id;
+          }
+        }
+      });
+
+      if (maxVisiblePercentage > window.innerHeight * 0.4) {
+        setActiveSection(mostVisibleSection);
+      }
+    }
+  }, [sections]);
+
   useEffect(() => {
     const observerOptions = {
       root: null,
@@ -20,18 +59,9 @@ export default function Sidebar() {
       threshold: 0.3,
     };
 
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      const visibleEntries = entries.filter(entry => entry.isIntersecting);
-      if (visibleEntries.length > 0) {
-        const mostVisibleEntry = visibleEntries.reduce((prev, current) => 
-          prev.intersectionRatio > current.intersectionRatio ? prev : current
-        );
-        setActiveSection(mostVisibleEntry.target.id);
-      }
-    };
-
     const observer = new IntersectionObserver(observerCallback, observerOptions);
     
+    // Observe all sections
     sections.forEach(section => {
       const element = document.getElementById(section.id);
       if (element) {
@@ -39,26 +69,10 @@ export default function Sidebar() {
       }
     });
 
-    const handleScroll = () => {
-      if (document.visibilityState === 'visible') {
-        sections.forEach(section => {
-          const element = document.getElementById(section.id);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-            const visiblePercentage = 
-              Math.min(windowHeight, rect.bottom) - 
-              Math.max(0, rect.top);
-            
-            if (visiblePercentage > windowHeight * 0.4) {
-              setActiveSection(section.id);
-            }
-          }
-        });
-      }
-    };
-    
+    // Add scroll listener with passive option
     window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check
     setTimeout(handleScroll, 200);
 
     return () => {
@@ -68,7 +82,7 @@ export default function Sidebar() {
       });
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [sections]);
+  }, [sections, observerCallback, handleScroll]);
 
   return (
     <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40">
