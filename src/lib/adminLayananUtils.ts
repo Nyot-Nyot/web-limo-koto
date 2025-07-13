@@ -117,11 +117,12 @@ export const sendSMSNotification = async (
   nomorHP: string,
   jenisLayanan: string,
   nomorPermohonan: string,
-  status: string
+  status: string,
+  alasanTolak?: string
 ) => {
   try {
     let message = '';
-    
+
     switch (status) {
       case 'pending':
         message = `Halo! Permohonan ${jenisLayanan} Anda dengan nomor ${nomorPermohonan} telah diterima dan sedang dalam proses review. Terima kasih. - Nagari Lima Koto`;
@@ -133,57 +134,27 @@ export const sendSMSNotification = async (
         message = `Halo! Permohonan ${jenisLayanan} Anda dengan nomor ${nomorPermohonan} telah selesai diproses. Silakan datang ke kantor Wali Nagari untuk mengambil surat keterangan Anda pada jam kerja. - Nagari Lima Koto`;
         break;
       case 'ditolak':
-        message = `Halo! Permohonan ${jenisLayanan} Anda dengan nomor ${nomorPermohonan} tidak dapat diproses. Silakan hubungi kantor Wali Nagari untuk informasi lebih lanjut. - Nagari Lima Koto`;
+        message = `Halo! Permohonan ${jenisLayanan} Anda dengan nomor ${nomorPermohonan} tidak dapat diproses. Alasan: ${alasanTolak || 'Tidak disebutkan'}. Silakan hubungi kantor Wali Nagari untuk informasi lebih lanjut. - Nagari Lima Koto`;
         break;
       default:
         message = `Halo! Status permohonan ${jenisLayanan} Anda dengan nomor ${nomorPermohonan} telah diupdate. Silakan cek status terbaru. - Nagari Lima Koto`;
     }
-    
-    // Format nomor HP untuk SMS (hapus karakter non-digit dan pastikan format yang benar)
+
     const formattedNumber = nomorHP.replace(/\D/g, '').replace(/^0/, '62');
-    
-    // Untuk demo purposes, kita akan simulasikan pengiriman SMS
-    // Dalam implementasi nyata, Anda perlu menggunakan SMS service provider seperti:
-    // - Twilio SMS API
-    // - AWS SNS
-    // - Nexmo/Vonage
-    // - SMS gateway lokal
-    
+
     console.log(`SMS akan dikirim ke: ${formattedNumber}`);
     console.log(`Isi pesan: ${message}`);
-    
-    // Simulasi API call ke SMS service
+
     const smsData = {
       to: formattedNumber,
       message: message,
       from: 'NagariLimaKoto'
     };
-    
-    // Contoh implementasi dengan fetch ke SMS service
-    /*
-    const response = await fetch('https://api.sms-service.com/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer YOUR_SMS_API_KEY'
-      },
-      body: JSON.stringify(smsData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('SMS service error');
-    }
-    
-    const result = await response.json();
-    return result.success;
-    */
-    
-    // Untuk demo, kita anggap berhasil setelah delay singkat
+
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Tampilkan alert dengan informasi SMS yang akan dikirim
+
     alert(`SMS berhasil disiapkan untuk dikirim!\n\nNomor: ${formattedNumber}\nPesan: ${message}\n\nNote: Dalam implementasi produksi, SMS akan dikirim melalui SMS gateway.`);
-    
+
     return true;
   } catch (error) {
     console.error('Error sending SMS notification:', error);

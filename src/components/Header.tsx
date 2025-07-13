@@ -4,10 +4,10 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-	MagnifyingGlassIcon,
-	UserIcon,
 	Bars3Icon,
 	XMarkIcon,
+	MagnifyingGlassIcon,
+	UserIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Header() {
