@@ -6,10 +6,16 @@ import NewsCard from '@/components/berita/NewsCard';
 interface NewsData {
   id: string;
   title: string;
-  content: string;
-  image: string;
+  excerpt: string;
+  imageSrc?: string;
   date: string;
   category: string;
+  categoryColor?: string;
+  backgroundGradient?: string;
+  emoji?: string;
+  views?: number;
+  isFeatured?: boolean;
+  tags?: string[];
 }
 
 interface NewsSectionProps {
@@ -42,14 +48,15 @@ export default function NewsSection({ newsData }: NewsSectionProps) {
               key={news.id}
               href={`/berita/${news.id}`}
               title={news.title}
-              excerpt={news.content}
-              imageSrc={news.image}
+              excerpt={news.excerpt}
+              imageSrc={news.imageSrc}
               date={news.date}
-              views={Math.floor(Math.random() * 1000) + 100}
+              views={news.views || Math.floor(Math.random() * 1000) + 100}
               category={news.category}
-              categoryColor="bg-blue-500"
-              backgroundGradient="bg-gradient-to-br from-blue-500 to-purple-600"
-              emoji="📰"
+              categoryColor={news.categoryColor || "bg-blue-500"}
+              backgroundGradient={news.backgroundGradient || "bg-gradient-to-br from-blue-500 to-purple-600"}
+              emoji={news.emoji || "📰"}
+              isFeatured={news.isFeatured}
             />
           ))}
         </div>
