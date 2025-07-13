@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface SKKelahiranFormProps {
   onClose: () => void;
@@ -16,12 +17,12 @@ interface SKKelahiranFormData {
   nama_ibu: string;
   nama_ayah: string;
   alamat: string;
-
+  nomorHP: string; // Tambahkan field nomor HP
   // Static data
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
-
+  
   // File uploads
   surat_medis?: File | null;
   kk_orang_tua?: File | null;
@@ -30,6 +31,17 @@ interface SKKelahiranFormData {
 }
 
 export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
+  // Upload file directly to Cloudinary
+  const uploadToCloudinary = async (file: File | null): Promise<string> => {
+    if (!file) return '';
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'limokoto-upload');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', { method: 'POST', body: data });
+    const json = await res.json();
+    return json.secure_url;
+  };
+
   const [formData, setFormData] = useState<SKKelahiranFormData>({
     hari: "",
     tanggal: "",
@@ -40,6 +52,7 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
     nama_ibu: "",
     nama_ayah: "",
     alamat: "",
+    nomorHP: "",
     nama_nagari: "Nagari Limo Koto",
     nama_kecamatan: "Koto IV",
     nama_kabupaten: "Kabupaten Sijunjung",
@@ -56,7 +69,37 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Create FormData object
+      // Validasi nomor HP
+      if (!formData.nomorHP) {
+        alert('Nomor HP wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload attachments to Cloudinary
+      const suratMedisUrl = await uploadToCloudinary(formData.surat_medis || null);
+      const kkOrtuUrl = await uploadToCloudinary(formData.kk_orang_tua || null);
+      const ktpAyahUrl = await uploadToCloudinary(formData.ktp_ayah || null);
+      const ktpIbuUrl = await uploadToCloudinary(formData.ktp_ibu || null);
+
+      // Prepare primitive form data
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) =>
+          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        )
+      );
+
+      // Build attachments object
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (suratMedisUrl) attachments.surat_medis = { url: suratMedisUrl, filename: formData.surat_medis?.name || 'surat_medis', type: formData.surat_medis?.type || 'application/octet-stream' };
+      if (kkOrtuUrl) attachments.kk_orang_tua = { url: kkOrtuUrl, filename: formData.kk_orang_tua?.name || 'kk_orang_tua', type: formData.kk_orang_tua?.type || 'application/octet-stream' };
+      if (ktpAyahUrl) attachments.ktp_ayah = { url: ktpAyahUrl, filename: formData.ktp_ayah?.name || 'ktp_ayah', type: formData.ktp_ayah?.type || 'application/octet-stream' };
+      if (ktpIbuUrl) attachments.ktp_ibu = { url: ktpIbuUrl, filename: formData.ktp_ibu?.name || 'ktp_ibu', type: formData.ktp_ibu?.type || 'application/octet-stream' };
+
+      // Save data to Firestore
+      const nomorPermohonan = await savePermohonanToFirestore('SKKelahiran', cleanedDataToSubmit, formData.nomorHP, attachments);
+
+      // Create FormData object untuk generate dokumen
       const submitFormData = new FormData();
       submitFormData.append("serviceType", "SKKelahiran");
 
@@ -311,6 +354,21 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
                 rows={3}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Masukkan alamat lengkap orang tua"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>

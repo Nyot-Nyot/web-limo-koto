@@ -10,7 +10,7 @@ export function useNewsFilter(newsData: NewsItem[]) {
   const itemsPerPage = 9;
 
   const filteredNews = useMemo(() => {
-    let filtered = newsData.filter(news => 
+    const filtered = newsData.filter(news => 
       news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       news.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
       news.category.toLowerCase().includes(searchTerm.toLowerCase())

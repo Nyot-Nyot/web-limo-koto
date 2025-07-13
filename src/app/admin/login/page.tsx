@@ -27,7 +27,7 @@ export default function AdminLogin() {
       // Optional: bisa set localStorage kalo mau dipakai buat ngejaga session
       localStorage.setItem('adminAuth', 'true');
       router.push('/admin');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Username atau password salah');
     }

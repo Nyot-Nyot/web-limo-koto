@@ -3,69 +3,20 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
+import { useGaleriFirestore } from '@/lib/galeriService';
 
 export default function Galeri() {
   const [activeCategory, setActiveCategory] = useState('makanan');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
-  const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [loadingImages, setLoadingImages] = useState<Set<string | number>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [imageTransition, setImageTransition] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load data from localStorage or use default data
-  useEffect(() => {
-    const savedGallery = localStorage.getItem('galeriData');
-    if (savedGallery) {
-      try {
-        const parsedGallery = JSON.parse(savedGallery);
-        setGalleryItems(parsedGallery);
-      } catch (error) {
-        console.error('Error parsing gallery data:', error);
-        setGalleryItems(galeriData);
-      }
-    } else {
-      setGalleryItems(galeriData);
-    }
-
-    // Listen for localStorage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'galeriData' && e.newValue) {
-        try {
-          const parsedGallery = JSON.parse(e.newValue);
-          setGalleryItems(parsedGallery);
-        } catch (error) {
-          console.error('Error parsing updated gallery data:', error);
-        }
-      }
-    };
-
-    // Listen for custom events (for same-tab updates)
-    const handleCustomUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail.type === 'galeri') {
-        const savedGallery = localStorage.getItem('galeriData');
-        if (savedGallery) {
-          try {
-            const parsedGallery = JSON.parse(savedGallery);
-            setGalleryItems(parsedGallery);
-          } catch (error) {
-            console.error('Error parsing updated gallery data:', error);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('dataUpdated', handleCustomUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('dataUpdated', handleCustomUpdate);
-    };
-  }, []);
+  const { data: firestoreGallery, loading, error } = useGaleriFirestore();
+  const galleryItems = (firestoreGallery && firestoreGallery.length > 0) ? firestoreGallery : galeriData;
 
   // Group items by category
   const galleries = galleryItems.reduce((acc, item) => {
@@ -136,7 +87,7 @@ export default function Galeri() {
   };
 
   // Handle image loading
-  const handleImageLoad = (imageId: number) => {
+  const handleImageLoad = (imageId: string | number) => {
     setLoadingImages(prev => {
       const newSet = new Set(prev);
       newSet.delete(imageId);
@@ -144,7 +95,7 @@ export default function Galeri() {
     });
   };
 
-  const handleImageLoadStart = (imageId: number) => {
+  const handleImageLoadStart = (imageId: string | number) => {
     setLoadingImages(prev => new Set(prev).add(imageId));
   };
 
@@ -186,6 +137,34 @@ export default function Galeri() {
     setIsDragging(false);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Galeri <span className="text-yellow-400">Nagari</span>
+          </h2>
+          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
+          <p className="text-gray-200 text-base md:text-lg">Memuat data galeri...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Galeri <span className="text-yellow-400">Nagari</span>
+          </h2>
+          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
+          <p className="text-red-400 text-base md:text-lg">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen px-4 md:px-8 py-16 md:py-24">
       <div className="max-w-7xl mx-auto">
@@ -201,12 +180,12 @@ export default function Galeri() {
         </div>
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-12 px-2">
+        <div className="flex flex-wrap justify-center gap-1 sm:gap-2 md:gap-4 mb-12 px-2">
           {galeriCategories.map((category) => (
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
-              className={`px-4 md:px-6 py-2 md:py-3 rounded-full font-semibold transition-all duration-300 text-sm md:text-base ${
+              className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 rounded-full font-medium md:font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base whitespace-nowrap ${
                 activeCategory === category.id
                   ? 'bg-yellow-400 text-black'
                   : 'bg-white/10 text-white hover:bg-white/20'
@@ -418,22 +397,22 @@ export default function Galeri() {
             <p className="text-gray-200 mb-8 max-w-2xl mx-auto">
               Dokumentasi lengkap berbagai kegiatan dan kekayaan yang dimiliki oleh Nagari Lima Koto
             </p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-400">Pemerintahan</div>
-                <div className="text-white text-sm mt-1">Album Kegiatan</div>
+                <div className="text-lg sm:text-xl lg:text-3xl font-bold text-yellow-400 leading-tight">Pemerintahan</div>
+                <div className="text-white text-xs sm:text-sm mt-1">Album Kegiatan</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-400">Sosial & Budaya</div>
-                <div className="text-white text-sm mt-1">Album Kegiatan</div>
+                <div className="text-lg sm:text-xl lg:text-3xl font-bold text-yellow-400 leading-tight">Sosial & Budaya</div>
+                <div className="text-white text-xs sm:text-sm mt-1">Album Kegiatan</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-400">Pembangunan</div>
-                <div className="text-white text-sm mt-1">Infrastruktur</div>
+                <div className="text-lg sm:text-xl lg:text-3xl font-bold text-yellow-400 leading-tight">Pembangunan</div>
+                <div className="text-white text-xs sm:text-sm mt-1">Infrastruktur</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-400">Wisata</div>
-                <div className="text-white text-sm mt-1">& Kuliner</div>
+                <div className="text-lg sm:text-xl lg:text-3xl font-bold text-yellow-400 leading-tight">Wisata</div>
+                <div className="text-white text-xs sm:text-sm mt-1">& Kuliner</div>
               </div>
             </div>
           </div>

@@ -26,7 +26,10 @@ export default function Home() {
       </div>
 
       {/* Mobile Sidebar */}
-      <MobileSidebar />
+      <MobileSidebar 
+        activeSection="home" 
+        onSectionChange={() => {}} 
+      />
 
       {/* Main Content */}
       <main className="relative z-10">

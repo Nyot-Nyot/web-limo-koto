@@ -1,5 +1,19 @@
 "use client";
 import React, { useState } from "react";
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
+// Upload file directly to Cloudinary
+const uploadToCloudinary = async (file: File | null): Promise<string> => {
+  if (!file) return '';
+  const data = new FormData();
+  data.append('file', file);
+  data.append('upload_preset', 'limokoto-upload');
+  const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+    method: 'POST',
+    body: data,
+  });
+  const json = await res.json();
+  return json.secure_url;
+};
 
 interface SKMeninggalFormProps {
   onClose: () => void;
@@ -13,19 +27,18 @@ interface SKMeninggalFormData {
   agama: string;
   jenis_kelamin: string;
   alamat: string;
-
   // Data kematian
   hari_tanggal_meninggal: string;
   jam: string;
   meninggal_di: string;
   disebabkan: string;
   dikebumikan_di: string;
-
+  // Data pelapor
+  nomorHP: string; // Tambahkan field nomor HP pelapor
   // Static data
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
-
   // File uploads
   ktp_almarhum?: File | null;
   kk_almarhum?: File | null;
@@ -46,6 +59,7 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
     meninggal_di: "",
     disebabkan: "",
     dikebumikan_di: "",
+    nomorHP: "",
     nama_nagari: "Nagari Limo Koto",
     nama_kecamatan: "Koto IV",
     nama_kabupaten: "Kabupaten Sijunjung",
@@ -62,6 +76,41 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
     setIsSubmitting(true);
 
     try {
+      // Validasi input
+      if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
+        alert('Harap isi semua field yang wajib diisi!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload attachments to Cloudinary
+      const ktpAlmarhumUrl = await uploadToCloudinary(formData.ktp_almarhum || null);
+      const kkAlmarhumUrl = await uploadToCloudinary(formData.kk_almarhum || null);
+      const suratRsUrl = await uploadToCloudinary(formData.surat_rs || null);
+      const ktpPelaporUrl = await uploadToCloudinary(formData.ktp_pelapor || null);
+
+      // Prepare primitive form data
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) =>
+          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        )
+      );
+
+      // Build attachments object
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (ktpAlmarhumUrl) attachments.ktp_almarhum = { url: ktpAlmarhumUrl, filename: formData.ktp_almarhum?.name || 'ktp_almarhum', type: formData.ktp_almarhum?.type || 'application/octet-stream' };
+      if (kkAlmarhumUrl) attachments.kk_almarhum = { url: kkAlmarhumUrl, filename: formData.kk_almarhum?.name || 'kk_almarhum', type: formData.kk_almarhum?.type || 'application/octet-stream' };
+      if (suratRsUrl) attachments.surat_rs = { url: suratRsUrl, filename: formData.surat_rs?.name || 'surat_rs', type: formData.surat_rs?.type || 'application/octet-stream' };
+      if (ktpPelaporUrl) attachments.ktp_pelapor = { url: ktpPelaporUrl, filename: formData.ktp_pelapor?.name || 'ktp_pelapor', type: formData.ktp_pelapor?.type || 'application/octet-stream' };
+
+      // Save data to Firestore
+      const nomorPermohonan = await savePermohonanToFirestore(
+        'SKMeninggalDunia',
+        cleanedDataToSubmit,
+        formData.nomorHP,
+        attachments
+      );
+
       // Create FormData object
       const submitFormData = new FormData();
       submitFormData.append("serviceType", "SKMeninggalDunia");
@@ -210,6 +259,21 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
                 maxLength={16}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-black transition-colors"
                 placeholder="16 digit NIK"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP Pelapor <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
 

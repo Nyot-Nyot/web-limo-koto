@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { ADAT_IMAGES, PERFORMANCE_CONFIG, type AdatImageData } from './constants';
+import { ADAT_IMAGES, PERFORMANCE_CONFIG } from './constants';
+import { useGaleriFirestore } from '@/lib/galeriService';
+import type { GalleryItem } from '@/data/galeri';
 
 // Optimized touch handlers
 const useTouchHandlers = (onPrevious: () => void, onNext: () => void) => {
@@ -105,6 +107,20 @@ const useImageSlider = (totalImages: number) => {
   };
 };
 
+const getRandomUniqueItems = <T,>(arr: T[], count: number): T[] => {
+  if (arr.length <= count) return arr;
+  const result: T[] = [];
+  const used = new Set<number>();
+  while (result.length < count) {
+    const idx = Math.floor(Math.random() * arr.length);
+    if (!used.has(idx)) {
+      used.add(idx);
+      result.push(arr[idx]);
+    }
+  }
+  return result;
+};
+
 // Memoized components
 const StatCard = memo(({ title, value }: { title: string; value: string }) => (
   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -123,7 +139,7 @@ const ImageCard = memo(({
   isMobile,
   onClick 
 }: {
-  image: AdatImageData;
+  image: { src: string; title: string; description: string };
   index: number;
   currentIndex: number;
   totalImages: number;
@@ -190,8 +206,44 @@ ImageCard.displayName = 'ImageCard';
 
 const ProfilSingkat = memo(() => {
   const isMobile = useIsMobile();
-  const { currentImageIndex, goToPrevious, goToNext, goToSlide } = useImageSlider(ADAT_IMAGES.length);
+  const { data: galeri, loading, error } = useGaleriFirestore();
+
+  // Ambil 5 gambar random dari galeri jika ada, fallback ke ADAT_IMAGES
+  let images: { src: string; title: string; description: string }[] = [];
+  if (!loading && galeri && galeri.length > 0) {
+    images = getRandomUniqueItems(
+      galeri.map((item: GalleryItem) => ({
+        src: item.image,
+        title: item.title,
+        description: item.description
+      })),
+      5
+    );
+  } else {
+    images = getRandomUniqueItems([...ADAT_IMAGES], 5);
+  }
+
+  const { currentImageIndex, goToPrevious, goToNext, goToSlide } = useImageSlider(images.length);
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchHandlers(goToPrevious, goToNext);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Profil <span className="text-yellow-400">Singkat</span>
+          </h2>
+          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
+          <p className="text-gray-200 text-base md:text-lg">Memuat gambar...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    // Tetap tampilkan slider dengan ADAT_IMAGES jika error
+    images = getRandomUniqueItems([...ADAT_IMAGES], 5);
+  }
 
   return (
     <div className="flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
@@ -237,13 +289,13 @@ const ProfilSingkat = memo(() => {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >   
-            {ADAT_IMAGES.map((image, index) => (
+            {images.map((image, index) => (
               <ImageCard
                 key={index}
                 image={image}
                 index={index}
                 currentIndex={currentImageIndex}
-                totalImages={ADAT_IMAGES.length}
+                totalImages={images.length}
                 isMobile={isMobile}
                 onClick={() => goToSlide(index)}
               />
@@ -252,7 +304,7 @@ const ProfilSingkat = memo(() => {
 
           {/* Dots indicator */}
           <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            {ADAT_IMAGES.map((_, index) => (
+            {images.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}

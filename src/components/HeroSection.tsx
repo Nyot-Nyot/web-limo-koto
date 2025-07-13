@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { kepalaJorongData, sekretarisData, waliNagariData } from '@/data/pejabat';
 import { faqData } from '@/data/faq';
 import { featuresData } from '@/data/features';
-import { mockNewsData } from '@/data/newsData';
+import { mockNewsData, NewsItem } from '@/data/newsData';
 import NewsCard from '@/components/berita/NewsCard';
 import FAQCard from '@/components/FAQCard';
 import FeatureCard from '@/components/FeatureCard';
 
 interface PejabatData {
-  id: number;
+  id: string | number;
   name: string;
   title: string;
   image: string;
@@ -32,6 +33,7 @@ export default function HeroSection() {
   const [pejabatAnimate, setPejabatAnimate] = useState<'in' | 'out'>('in');
   const [allPejabatData, setAllPejabatData] = useState<PejabatData[]>([]);
   const [currentFaqData, setCurrentFaqData] = useState<FAQData[]>([]);
+  const [newsData, setNewsData] = useState<NewsItem[]>(mockNewsData);
   
   const [expandedFaqs, setExpandedFaqs] = useState<number[]>([]);
 
@@ -77,6 +79,22 @@ export default function HeroSection() {
       setCurrentFaqData(faqData);
     }
 
+    // Load News data
+    const savedNews = localStorage.getItem('newsData');
+    if (savedNews) {
+      try {
+        const parsedNews = JSON.parse(savedNews);
+        setNewsData(parsedNews);
+      } catch (error) {
+        console.error('Error parsing news data:', error);
+        // Fallback to default data
+        setNewsData(mockNewsData);
+      }
+    } else {
+      // Use default data
+      setNewsData(mockNewsData);
+    }
+
     // Listen for localStorage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'pejabatData' && e.newValue) {
@@ -93,6 +111,14 @@ export default function HeroSection() {
           setCurrentFaqData(parsedFaq);
         } catch (error) {
           console.error('Error parsing updated FAQ data:', error);
+        }
+      }
+      if (e.key === 'newsData' && e.newValue) {
+        try {
+          const parsedNews = JSON.parse(e.newValue);
+          setNewsData(parsedNews);
+        } catch (error) {
+          console.error('Error parsing updated news data:', error);
         }
       }
     };
@@ -119,6 +145,17 @@ export default function HeroSection() {
             setCurrentFaqData(parsedFaq);
           } catch (error) {
             console.error('Error parsing updated FAQ data:', error);
+          }
+        }
+      }
+      if (customEvent.detail.type === 'news' || customEvent.detail.type === 'berita') {
+        const savedNews = localStorage.getItem('newsData');
+        if (savedNews) {
+          try {
+            const parsedNews = JSON.parse(savedNews);
+            setNewsData(parsedNews);
+          } catch (error) {
+            console.error('Error parsing updated news data:', error);
           }
         }
       }
@@ -393,16 +430,26 @@ export default function HeroSection() {
             
             {/* Show only 3 latest news for both desktop and mobile */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              {mockNewsData
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .slice(0, 3)
-                .map((news) => (
-                  <NewsCard key={news.id} {...news} />
-                ))}
+              {newsData && newsData.length > 0 ? (
+                newsData
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 3)
+                  .map((news) => (
+                    <NewsCard 
+                      key={news.id} 
+                      {...news} 
+                      isFeatured={false} 
+                    />
+                  ))
+              ) : (
+                <div className="col-span-full text-center text-gray-300 py-8">
+                  <p>Tidak ada berita terbaru saat ini</p>
+                </div>
+              )}
             </div>
             
             <div className="text-center mt-10">
-              <a 
+              <Link 
                 href="/berita" 
                 className="inline-flex items-center px-6 py-3 border-white border-2 text-base font-semibold rounded-md text-white bg-transparent hover:bg-white hover:text-black transition"
               >
@@ -410,7 +457,7 @@ export default function HeroSection() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
