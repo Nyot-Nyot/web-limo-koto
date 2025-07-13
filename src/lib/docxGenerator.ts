@@ -172,6 +172,17 @@ export class DocxGenerator {
 
   private preparePindahData(data: any) {
     const currentDate = new Date();
+
+    let anggotaList: { nama: string; hubungan: string }[] = [];
+    if (data.anggota_keluarga) {
+      try {
+        anggotaList = Array.isArray(data.anggota_keluarga)
+          ? data.anggota_keluarga
+          : JSON.parse(data.anggota_keluarga);
+      } catch (e) {
+        console.error('Gagal parse anggota_keluarga:', e);
+      }
+    }
     
     return {
       // Placeholder yang sesuai dengan template pindah
@@ -194,6 +205,7 @@ export class DocxGenerator {
       kecamatan_tujuan: data.kecamatan_tujuan || '',
       kabupaten_kota_tujuan: data.kabupaten_kota_tujuan || '',
       provinsi_tujuan: data.provinsi_tujuan || '',
+      anggota_keluarga: anggotaList,
       
       tanggal: this.formatDate(currentDate)
     };

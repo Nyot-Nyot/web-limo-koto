@@ -2,77 +2,29 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
+import { galeriCategories, GalleryItem } from '@/data/galeri';
+import { useGalleryData } from '@/context/DataContext';
 
 export default function Galeri() {
   const [activeCategory, setActiveCategory] = useState('makanan');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [loadingImages, setLoadingImages] = useState<Set<string | number>>(new Set());
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [imageTransition, setImageTransition] = useState(false);
+  
+  // Use centralized data from context
+  const { data: galleryItems } = useGalleryData();
 
-  // Load data from localStorage or use default data
-  useEffect(() => {
-    const savedGallery = localStorage.getItem('galeriData');
-    if (savedGallery) {
-      try {
-        const parsedGallery = JSON.parse(savedGallery);
-        setGalleryItems(parsedGallery);
-      } catch (error) {
-        console.error('Error parsing gallery data:', error);
-        setGalleryItems(galeriData);
-      }
-    } else {
-      setGalleryItems(galeriData);
-    }
-
-    // Listen for localStorage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'galeriData' && e.newValue) {
-        try {
-          const parsedGallery = JSON.parse(e.newValue);
-          setGalleryItems(parsedGallery);
-        } catch (error) {
-          console.error('Error parsing updated gallery data:', error);
-        }
-      }
-    };
-
-    // Listen for custom events (for same-tab updates)
-    const handleCustomUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail.type === 'galeri') {
-        const savedGallery = localStorage.getItem('galeriData');
-        if (savedGallery) {
-          try {
-            const parsedGallery = JSON.parse(savedGallery);
-            setGalleryItems(parsedGallery);
-          } catch (error) {
-            console.error('Error parsing updated gallery data:', error);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('dataUpdated', handleCustomUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('dataUpdated', handleCustomUpdate);
-    };
-  }, []);
-
-  // Group items by category
+  // Group items by category - cast the data to the expected type
   const galleries = galleryItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
+    const galleryItem = item as GalleryItem; // Cast to handle type compatibility
+    if (!acc[galleryItem.category]) {
+      acc[galleryItem.category] = [];
     }
-    acc[item.category].push(item);
+    acc[galleryItem.category].push(galleryItem);
     return acc;
   }, {} as Record<string, GalleryItem[]>);
 

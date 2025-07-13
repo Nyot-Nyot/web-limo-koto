@@ -1,46 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useJorongData } from '@/data/jorong';
+import { useJorongData } from '@/context/DataContext';
 
 export default function Jorong() {
   const [selectedJorong, setSelectedJorong] = useState('tanjung-ampalu');
   const [mapKey, setMapKey] = useState(0);
-  const { getJorongData } = useJorongData();
-  const [jorongData, setJorongData] = useState(getJorongData());
+  const { data: jorongData } = useJorongData();
 
   // Update map when jorong changes
   useEffect(() => {
     setMapKey(prev => prev + 1);
   }, [selectedJorong]);
 
-  // Update jorong data when component mounts or localStorage changes
+  // Reset selected jorong if it no longer exists when data changes
   useEffect(() => {
-    const updateData = () => {
-      const newData = getJorongData();
-      setJorongData(newData);
-      
-      // Reset selected jorong if it no longer exists
-      if (!newData.find(j => j.id === selectedJorong) && newData.length > 0) {
-        setSelectedJorong(newData[0].id);
-      }
-    };
-    
-    // Listen for storage changes
-    window.addEventListener('storage', updateData);
-    
-    // Also check for updates on focus (for same-tab changes)
-    window.addEventListener('focus', updateData);
-    
-    // Check for changes on interval (fallback)
-    const interval = setInterval(updateData, 1000);
-    
-    return () => {
-      window.removeEventListener('storage', updateData);
-      window.removeEventListener('focus', updateData);
-      clearInterval(interval);
-    };
-  }, [getJorongData, selectedJorong]);
+    if (!jorongData.find(j => j.id === selectedJorong) && jorongData.length > 0) {
+      setSelectedJorong(jorongData[0].id);
+    }
+  }, [jorongData, selectedJorong]);
 
   const selectedJorongData = jorongData.find(j => j.id === selectedJorong) || jorongData[0];
 
