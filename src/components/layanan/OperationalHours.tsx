@@ -1,6 +1,5 @@
 import React from "react";
 import { FaClock } from "react-icons/fa";
-import { jamLayanan } from "@/data/layanan";
 
 const OperationalHours = () => {
   return (
@@ -16,17 +15,25 @@ const OperationalHours = () => {
 
         {/* Schedule */}
         <div className="space-y-3 flex-grow">
-          {/* Monday to Friday */}
+          {/* Monday to Thursday */}
           <div className="flex justify-between items-center py-2 border-b border-white/10">
-            <span className="text-gray-300 font-medium">Senin - Jumat</span>
+            <span className="text-gray-300 font-medium">Senin - Kamis</span>
             <span className="text-green-400 font-semibold">
-              {jamLayanan.senin_jumat}
+              08:00 - 12:00 & 13:30 - 16:00
             </span>
           </div>
 
-          {/* Saturday and Sunday combined */}
+          {/* Friday */}
+          <div className="flex justify-between items-center py-2 border-b border-white/10">
+            <span className="text-gray-300 font-medium">Jum'at</span>
+            <span className="text-green-400 font-semibold">
+              08:00 - 12:00 & 13:30 - 16:30
+            </span>
+          </div>
+
+          {/* Saturday and Sunday */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-300 font-medium">Sabtu - Minggu</span>
+            <span className="text-gray-300 font-medium">Sabtu & Minggu</span>
             <span className="text-red-400 font-semibold">Tutup</span>
           </div>
         </div>

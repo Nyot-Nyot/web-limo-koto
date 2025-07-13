@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
 // Upload file directly to Cloudinary
 const uploadToCloudinary = async (file: File | null): Promise<string> => {
@@ -27,7 +27,6 @@ interface SKMeninggalFormData {
   agama: string;
   jenis_kelamin: string;
   alamat: string;
-
   // Data kematian
   hari_tanggal_meninggal: string;
   jam: string;
@@ -40,7 +39,6 @@ interface SKMeninggalFormData {
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
-
   // File uploads
   ktp_almarhum?: File | null;
   kk_almarhum?: File | null;
@@ -50,22 +48,21 @@ interface SKMeninggalFormData {
 
 export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
   const [formData, setFormData] = useState<SKMeninggalFormData>({
-    nama_orang_2: '',
-    tempat_tanggal_lahir: '',
-    nik: '',
-    agama: '',
-    jenis_kelamin: '',
-    alamat: '',
-    hari_tanggal_meninggal: '',
-    jam: '',
-    meninggal_di: '',
-    disebabkan: '',
-    dikebumikan_di: '',
-    nomorHP: '', // Tambahkan field nomor HP pelapor
-    nama_nagari: 'Nagari Limo Koto',
-    nama_kecamatan: 'Koto IV',
-    nama_kabupaten: 'Kabupaten Sijunjung',
-    pengantar_rt_rw: null,
+    nama_orang_2: "",
+    tempat_tanggal_lahir: "",
+    nik: "",
+    agama: "",
+    jenis_kelamin: "",
+    alamat: "",
+    hari_tanggal_meninggal: "",
+    jam: "",
+    meninggal_di: "",
+    disebabkan: "",
+    dikebumikan_di: "",
+    nomorHP: "",
+    nama_nagari: "Nagari Limo Koto",
+    nama_kecamatan: "Koto IV",
+    nama_kabupaten: "Kabupaten Sijunjung",
     ktp_almarhum: null,
     kk_almarhum: null,
     surat_rs: null,
@@ -87,7 +84,6 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
       }
 
       // Upload attachments to Cloudinary
-      const pengantarUrl = await uploadToCloudinary(formData.pengantar_rt_rw || null);
       const ktpAlmarhumUrl = await uploadToCloudinary(formData.ktp_almarhum || null);
       const kkAlmarhumUrl = await uploadToCloudinary(formData.kk_almarhum || null);
       const suratRsUrl = await uploadToCloudinary(formData.surat_rs || null);
@@ -102,7 +98,6 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
 
       // Build attachments object
       const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (pengantarUrl) attachments.pengantar_rt_rw = { url: pengantarUrl, filename: formData.pengantar_rt_rw?.name || 'pengantar_rt_rw', type: formData.pengantar_rt_rw?.type || 'application/octet-stream' };
       if (ktpAlmarhumUrl) attachments.ktp_almarhum = { url: ktpAlmarhumUrl, filename: formData.ktp_almarhum?.name || 'ktp_almarhum', type: formData.ktp_almarhum?.type || 'application/octet-stream' };
       if (kkAlmarhumUrl) attachments.kk_almarhum = { url: kkAlmarhumUrl, filename: formData.kk_almarhum?.name || 'kk_almarhum', type: formData.kk_almarhum?.type || 'application/octet-stream' };
       if (suratRsUrl) attachments.surat_rs = { url: suratRsUrl, filename: formData.surat_rs?.name || 'surat_rs', type: formData.surat_rs?.type || 'application/octet-stream' };
@@ -157,7 +152,10 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
 
         // Clean up
         window.URL.revokeObjectURL(url);
-        alert(`Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
+
+        alert(
+          "Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!"
+        );
         onClose();
       } else {
         const result = await response.json();

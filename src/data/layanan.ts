@@ -60,7 +60,7 @@ export const layananList: LayananItem[] = [
   {
     id: "surat_kematian",
     title: "Surat Keterangan Kematian",
-    items: ["FC KK","FC KTP","Surat keterangan dokter/RS"],
+    items: ["FC KK", "FC KTP", "Surat keterangan dokter/RS"],
     description: "Surat keterangan untuk administrasi kematian",
     estimasi: "1 hari kerja",
     biaya: "Gratis",
@@ -71,7 +71,8 @@ export const layananList: LayananItem[] = [
     id: "tempat_tinggal",
     title: "Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal",
     items: ["FC KK", "Fotokopi KTP", "Surat Permohonan Pengajuan"],
-    description: "Surat keterangan untuk administrasi bagi yang tidak memiliki rumah/tempat tinggal tetap",
+    description:
+      "Surat keterangan untuk administrasi bagi yang tidak memiliki rumah/tempat tinggal tetap",
     estimasi: "1-2 hari kerja",
     biaya: "Gratis",
     icon: "🏘️",
@@ -176,7 +177,8 @@ export const aktaList: LayananItem[] = [
       "Foto Copy Akta Nikah (Kalau Ada Perubahan Status)",
       "Pas Photo Ukuran 3x4 Sebanyak 3 Lembar Dengan Latar Warna Merah Bagi Tahun Kelahiran Ganjil, Latar Warna Biru Bagi Kelahiran Genap",
     ],
-    description: "Surat untuk keperluan pindah domisili antar kabupaten/provinsi",
+    description:
+      "Surat untuk keperluan pindah domisili antar kabupaten/provinsi",
     estimasi: "Paling lama 7 hari",
     biaya: "Gratis",
     icon: "📦",
@@ -187,14 +189,8 @@ export const aktaList: LayananItem[] = [
 export const kontakInfo: ContactInfo = {
   pelayanan: [
     {
-      icon: FaPhoneAlt,
-      text: "08123456789092",
-      label: "Telepon",
-      color: "text-blue-400",
-    },
-    {
       icon: FaWhatsapp,
-      text: "08123456789092",
+      text: "0853-6464-1456",
       label: "WhatsApp",
       color: "text-green-400",
     },

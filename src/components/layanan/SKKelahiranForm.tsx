@@ -1,7 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
-
 
 interface SKKelahiranFormProps {
   onClose: () => void;
@@ -23,7 +22,6 @@ interface SKKelahiranFormData {
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
-
   // File uploads
   surat_medis?: File | null;
   kk_orang_tua?: File | null;
@@ -44,24 +42,23 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
   };
 
   const [formData, setFormData] = useState<SKKelahiranFormData>({
-    hari: '',
-    tanggal: '',
-    jam: '',
-    tempat: '',
-    nama_orang_2: '',
-    jenis_kelamin: '',
-    nama_ibu: '',
-    nama_ayah: '',
-    alamat: '',
-    nomorHP: '', // Tambahkan field nomor HP
-    nama_nagari: 'Nagari Limo Koto',
-    nama_kecamatan: 'Koto IV',
-    nama_kabupaten: 'Kabupaten Sijunjung',
-    pengantar_rt_rw: null,
-    surat_bidan: null,
-    kk: null,
-    ktp_orangtua: null
-
+    hari: "",
+    tanggal: "",
+    jam: "",
+    tempat: "",
+    nama_orang_2: "",
+    jenis_kelamin: "",
+    nama_ibu: "",
+    nama_ayah: "",
+    alamat: "",
+    nomorHP: "",
+    nama_nagari: "Nagari Limo Koto",
+    nama_kecamatan: "Koto IV",
+    nama_kabupaten: "Kabupaten Sijunjung",
+    surat_medis: null,
+    kk_orang_tua: null,
+    ktp_ayah: null,
+    ktp_ibu: null,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,10 +76,10 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
       }
 
       // Upload attachments to Cloudinary
-      const pengantarUrl = await uploadToCloudinary(formData.pengantar_rt_rw || null);
-      const suratBidanUrl = await uploadToCloudinary(formData.surat_bidan || null);
-      const kkUrl = await uploadToCloudinary(formData.kk || null);
-      const ktpOrtuUrl = await uploadToCloudinary(formData.ktp_orangtua || null);
+      const suratMedisUrl = await uploadToCloudinary(formData.surat_medis || null);
+      const kkOrtuUrl = await uploadToCloudinary(formData.kk_orang_tua || null);
+      const ktpAyahUrl = await uploadToCloudinary(formData.ktp_ayah || null);
+      const ktpIbuUrl = await uploadToCloudinary(formData.ktp_ibu || null);
 
       // Prepare primitive form data
       const cleanedDataToSubmit = Object.fromEntries(
@@ -93,10 +90,10 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
 
       // Build attachments object
       const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (pengantarUrl) attachments.pengantar_rt_rw = { url: pengantarUrl, filename: formData.pengantar_rt_rw?.name || 'pengantar_rt_rw', type: formData.pengantar_rt_rw?.type || 'application/octet-stream' };
-      if (suratBidanUrl) attachments.surat_bidan = { url: suratBidanUrl, filename: formData.surat_bidan?.name || 'surat_bidan', type: formData.surat_bidan?.type || 'application/octet-stream' };
-      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
-      if (ktpOrtuUrl) attachments.ktp_orangtua = { url: ktpOrtuUrl, filename: formData.ktp_orangtua?.name || 'ktp_orangtua', type: formData.ktp_orangtua?.type || 'application/octet-stream' };
+      if (suratMedisUrl) attachments.surat_medis = { url: suratMedisUrl, filename: formData.surat_medis?.name || 'surat_medis', type: formData.surat_medis?.type || 'application/octet-stream' };
+      if (kkOrtuUrl) attachments.kk_orang_tua = { url: kkOrtuUrl, filename: formData.kk_orang_tua?.name || 'kk_orang_tua', type: formData.kk_orang_tua?.type || 'application/octet-stream' };
+      if (ktpAyahUrl) attachments.ktp_ayah = { url: ktpAyahUrl, filename: formData.ktp_ayah?.name || 'ktp_ayah', type: formData.ktp_ayah?.type || 'application/octet-stream' };
+      if (ktpIbuUrl) attachments.ktp_ibu = { url: ktpIbuUrl, filename: formData.ktp_ibu?.name || 'ktp_ibu', type: formData.ktp_ibu?.type || 'application/octet-stream' };
 
       // Save data to Firestore
       const nomorPermohonan = await savePermohonanToFirestore('SKKelahiran', cleanedDataToSubmit, formData.nomorHP, attachments);
@@ -142,7 +139,10 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
 
         // Clean up
         window.URL.revokeObjectURL(url);
-        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!`);
+
+        alert(
+          "Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!"
+        );
         onClose();
       } else {
         const result = await response.json();
