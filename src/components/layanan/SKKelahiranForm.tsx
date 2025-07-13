@@ -22,6 +22,7 @@ interface SKKelahiranFormData {
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
+  
   // File uploads
   surat_medis?: File | null;
   kk_orang_tua?: File | null;

@@ -3,12 +3,12 @@ import { FaClock } from "react-icons/fa";
 
 const OperationalHours = () => {
   return (
-    <div className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group border border-white/20 h-full">
+    <div className="bg-white/10 backdrop-blur-lg text-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 group border border-green-500/30 h-full">
       <div className="p-6 h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <FaClock className="text-yellow-400 text-xl" />
-          <h3 className="text-xl font-bold group-hover:text-yellow-300 transition-colors">
+          <FaClock className="text-white text-xl" />
+          <h3 className="text-xl font-bold">
             Jam Operasional
           </h3>
         </div>
