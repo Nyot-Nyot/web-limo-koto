@@ -706,6 +706,21 @@ export default function AdminLayananPage() {
   // Handle download attachment
   const handleDownloadAttachment = async (attachment: { url: string; filename: string; type: string }) => {
     try {
+      // If URL is an external link (e.g., Cloudinary), fetch blob and download
+      if (/^https?:\/\//.test(attachment.url)) {
+        const response = await fetch(attachment.url);
+        if (!response.ok) throw new Error('Failed to fetch attachment');
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = attachment.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
       // Use our API endpoint for downloading files
       const response = await fetch(`/api/documents/download?path=${encodeURIComponent(attachment.url)}`);
       
@@ -725,6 +740,60 @@ export default function AdminLayananPage() {
     } catch (error) {
       console.error('Error downloading attachment:', error);
       alert('Gagal mengunduh lampiran. Silakan coba lagi.');
+    }
+  };
+  
+  // Handle bulk download attachments for a specific permohonan
+  const handleBulkDownloadSelectedAttachments = async (permohonan: PermohonanData) => {
+    try {
+      if (!permohonan.attachments || Object.keys(permohonan.attachments).length === 0) {
+        alert('Tidak ada lampiran yang dapat diunduh');
+        return;
+      }
+      
+      setActionLoading('downloading-attachments');
+      const attachments = Object.values(permohonan.attachments);
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const attachment of attachments) {
+        try {
+          // Use our API endpoint for downloading files
+          const response = await fetch(`/api/documents/download?path=${encodeURIComponent(attachment.url)}`);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to download ${attachment.filename}`);
+          }
+          
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = attachment.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          successCount++;
+          
+          // Small delay to prevent browser from blocking multiple downloads
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(`Error downloading attachment ${attachment.filename}:`, error);
+          failCount++;
+        }
+      }
+      
+      if (failCount > 0) {
+        alert(`${successCount} lampiran berhasil diunduh, ${failCount} lampiran gagal diunduh. Silakan coba lagi nanti.`);
+      } else {
+        alert(`${successCount} lampiran berhasil diunduh`);
+      }
+    } catch (error) {
+      console.error('Error in bulk download attachments:', error);
+      alert('Gagal mengunduh lampiran. Silakan coba lagi.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -1081,9 +1150,6 @@ export default function AdminLayananPage() {
                       Nomor HP
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Lampiran
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Aksi
                     </th>
                   </tr>
@@ -1091,14 +1157,14 @@ export default function AdminLayananPage() {
                 <tbody className="divide-y divide-gray-700">
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center">
+                      <td colSpan={7} className="px-6 py-12 text-center">
                         <FaSpinner className="animate-spin mx-auto h-8 w-8 text-yellow-400" />
                         <p className="mt-2 text-gray-400">Memuat data...</p>
                       </td>
                     </tr>
                   ) : filteredData.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
                         Tidak ada data permohonan
                       </td>
                     </tr>
@@ -1141,20 +1207,6 @@ export default function AdminLayananPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                             {permohonan.nomorHP}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-1">
-                              {permohonan.attachments && Object.keys(permohonan.attachments).length > 0 ? (
-                                <>
-                                  <FaPaperclip className="h-4 w-4 text-green-400" />
-                                  <span className="text-sm text-green-400">
-                                    {Object.keys(permohonan.attachments).length} file
-                                  </span>
-                                </>
-                              ) : (
-                                <span className="text-sm text-gray-400">-</span>
-                              )}
-                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-2">
@@ -1282,7 +1334,26 @@ export default function AdminLayananPage() {
                   {/* Attachments Section */}
                   {selectedPermohonan.attachments && Object.keys(selectedPermohonan.attachments).length > 0 && (
                     <div className="bg-gray-700 p-4 rounded-lg">
-                      <h4 className="font-semibold text-white mb-3">Berkas Lampiran</h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-white">Berkas Lampiran</h4>
+                        <button
+                          onClick={() => handleBulkDownloadSelectedAttachments(selectedPermohonan)}
+                          disabled={actionLoading === 'downloading-attachments'}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center disabled:opacity-50"
+                        >
+                          {actionLoading === 'downloading-attachments' ? (
+                            <>
+                              <FaSpinner className="animate-spin mr-2 h-4 w-4" />
+                              Mengunduh...
+                            </>
+                          ) : (
+                            <>
+                              <FaDownload className="mr-2 h-4 w-4" />
+                              Download Semua ({Object.keys(selectedPermohonan.attachments).length})
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {Object.entries(selectedPermohonan.attachments).map(([key, attachment]) => {
                           const FileIcon = getFileIcon(attachment.filename);
@@ -1325,7 +1396,7 @@ export default function AdminLayananPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex justify-end space-x-3 pt-4 border-t border-gray-600">
+                  <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-gray-600">
                     <button
                       onClick={() => handleDownload(selectedPermohonan)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -1333,6 +1404,25 @@ export default function AdminLayananPage() {
                       <FaDownload className="inline mr-2" />
                       Download Surat
                     </button>
+                    {selectedPermohonan.attachments && Object.keys(selectedPermohonan.attachments).length > 0 && (
+                      <button
+                        onClick={() => handleBulkDownloadSelectedAttachments(selectedPermohonan)}
+                        disabled={actionLoading === 'downloading-attachments'}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading === 'downloading-attachments' ? (
+                          <>
+                            <FaSpinner className="inline animate-spin mr-2" />
+                            Mengunduh Lampiran...
+                          </>
+                        ) : (
+                          <>
+                            <FaPaperclip className="inline mr-2" />
+                            Download Lampiran
+                          </>
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={() => handleSendNotification(selectedPermohonan)}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface DomisiliFormProps {
   onClose: () => void;
@@ -27,6 +27,20 @@ interface DomisiliFormData {
 }
 
 export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
+  // Upload file directly to Cloudinary
+  const uploadToCloudinary = async (file: File | null): Promise<string> => {
+    if (!file) return '';
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'limokoto-upload');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+      method: 'POST',
+      body: data,
+    });
+    const json = await res.json();
+    return json.secure_url;
+  };
+  
   const [formData, setFormData] = useState<DomisiliFormData>({
     nama_orang_2: '',
     tempat_tanggal_lahir: '',
@@ -61,24 +75,50 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
         return;
       }
 
-      // Proses file upload
-      const uploadedFiles = await processUploadedFiles({
-        kk: formData.kk,
-        ktp: formData.ktp,
-        surat_permohonan: formData.surat_permohonan
-      });
+      // Upload attachments to Cloudinary
+      const kkUrl = await uploadToCloudinary(formData.kk);
+      const ktpUrl = await uploadToCloudinary(formData.ktp);
+      const suratUrl = await uploadToCloudinary(formData.surat_permohonan);
 
-      // Gabungkan data form dengan file yang sudah diproses
-      const dataToSubmit = {
-        ...formData,
-        ...uploadedFiles, // File akan disimpan sebagai base64 dalam Firestore
-      };
+      // Prepare submission data (primitive values)
+      const dataToSubmit = { ...formData };
 
-      // Simpan data ke Firestore
+      // Build attachments object for Firestore
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (kkUrl) {
+        attachments.kk = {
+          url: kkUrl,
+          filename: formData.kk?.name || 'kk',
+          type: formData.kk?.type || 'application/octet-stream'
+        };
+      }
+      if (ktpUrl) {
+        attachments.ktp = {
+          url: ktpUrl,
+          filename: formData.ktp?.name || 'ktp',
+          type: formData.ktp?.type || 'application/octet-stream'
+        };
+      }
+      if (suratUrl) {
+        attachments.surat_permohonan = {
+          url: suratUrl,
+          filename: formData.surat_permohonan?.name || 'surat_permohonan',
+          type: formData.surat_permohonan?.type || 'application/octet-stream'
+        };
+      }
+
+      // Simpan data ke Firestore (filter out undefined values)
+      // Keep only primitive form values (string, number, boolean) to avoid undefined or object values
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(dataToSubmit).filter(([, value]) =>
+          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        )
+      ) as Record<string, string | number | boolean>;
       const nomorPermohonan = await savePermohonanToFirestore(
         'SKDomisili',
-        dataToSubmit,
-        formData.nomorHP
+        cleanedDataToSubmit,
+        formData.nomorHP,
+        attachments
       );
 
       // Create FormData object untuk generate dokumen

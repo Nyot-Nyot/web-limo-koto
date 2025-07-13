@@ -24,6 +24,7 @@ export interface PermohonanLayanan {
   };
   catatan?: string;
   alasanTolak?: string;
+  attachments?: Record<string, { url: string; filename: string; type: string }>;
 }
 
 // Fungsi untuk generate nomor permohonan
@@ -49,7 +50,8 @@ export const generateNomorPermohonan = (jenisLayanan: string): string => {
 export const savePermohonanToFirestore = async (
   jenisLayanan: string,
   formData: Record<string, string | number | boolean | File | null>,
-  nomorHP: string
+  nomorHP: string,
+  attachments?: Record<string, { url: string; filename: string; type: string }>
 ): Promise<string> => {
   try {
     const nomorPermohonan = generateNomorPermohonan(jenisLayanan);
@@ -60,7 +62,13 @@ export const savePermohonanToFirestore = async (
     // Ambil NIK dari berbagai kemungkinan field
     const nik = String(formData.nik || formData.NIK || 'NIK tidak tersedia');
     
-    const permohonanData: PermohonanLayanan = {
+    // Clean formData to remove undefined/null and non-primitive values
+    const cleanedData: Record<string, string | number | boolean> = Object.fromEntries(
+      Object.entries(formData)
+        .filter(([, value]) => value != null && ['string', 'number', 'boolean'].includes(typeof value))
+    );
+    // Build the Firestore document data
+    const permohonanData: any = {
       nomorPermohonan,
       namaPemohon,
       nik,
@@ -68,14 +76,12 @@ export const savePermohonanToFirestore = async (
       tanggalPengajuan: serverTimestamp(),
       status: 'pending',
       nomorHP,
-      data: formData,
-      timeline: {
-        diajukan: serverTimestamp()
-      },
-      notifikasi: {
-        terkirim: false
-      }
-    };
+      data: cleanedData,
+      timeline: { diajukan: serverTimestamp() },
+      notifikasi: { terkirim: false },
+      // Attach URLs for uploaded files
+      ...(attachments ? { attachments } : {})
+    } as PermohonanLayanan;
     
     const docRef = await addDoc(collection(db, 'permohonan_layanan'), permohonanData);
     console.log('Permohonan berhasil disimpan dengan ID:', docRef.id);
