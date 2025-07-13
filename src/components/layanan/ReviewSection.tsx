@@ -56,7 +56,7 @@ const ReviewSection = memo(() => {
           <textarea
             value={review}
             onChange={(e) => setReview(e.target.value)}
-            className="w-full bg-white/20 border border-white/30 rounded-lg p-4 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            className="w-full bg-white/20 border border-white/30 rounded-lg p-4 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             rows={5}
             placeholder="Bagikan masukan, saran, atau keluhan Anda tentang layanan kami..."
             required
@@ -83,7 +83,7 @@ const ReviewSection = memo(() => {
         <button
           type="submit"
           disabled={isSubmitting || !review.trim()}
-          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
         >
           <FaPaperPlane className="text-sm" />
           {isSubmitting ? "Mengirim..." : "Kirim Masukan"}

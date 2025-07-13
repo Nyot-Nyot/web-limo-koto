@@ -200,12 +200,6 @@ export const kontakInfo: ContactInfo = {
       label: "Email",
       color: "text-red-400",
     },
-    {
-      icon: FaInstagram,
-      text: "Limo Koto",
-      label: "Instagram",
-      color: "text-pink-400",
-    },
   ],
   emergency: [
     {
