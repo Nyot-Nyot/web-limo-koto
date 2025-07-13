@@ -36,19 +36,18 @@ export default function FeaturesSection({ features }: FeaturesSectionProps) {
 
   return (
     <section id="fitur" className="py-20 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-10">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Fitur-Fitur Website
+            Fitur-Fitur <span className="text-yellow-400">Website</span>
           </h2>
           <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Jelajahi berbagai fitur dan layanan yang tersedia di website Nagari Lima Koto
+            Akses mudah ke berbagai informasi dan layanan digital Nagari yang dirancang khusus untuk memudahkan masyarakat
           </p>
         </div>
-
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {features.map((feature) => (
             <FeatureCard
               key={feature.id}
