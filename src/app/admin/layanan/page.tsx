@@ -9,7 +9,6 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { 
   FaFileAlt, 
   FaDownload, 
-  FaEye, 
   FaCheck, 
   FaTimes, 
   FaWhatsapp, 
@@ -437,6 +436,39 @@ export default function AdminLayananPage() {
       setActionLoading(null);
     }
   };
+  
+  // Handle delete rejected data
+  const handleDeleteRejected = async (id: string) => {
+    try {
+      const permohonan = permohonanData.find(item => item.id === id);
+      if (!permohonan) {
+        alert('Data tidak ditemukan');
+        return;
+      }
+      if (permohonan.status !== 'ditolak') {
+        alert('Hanya data yang ditolak yang dapat dihapus dengan tombol ini');
+        return;
+      }
+      const confirmDelete = confirm(
+        `Apakah Anda yakin ingin menghapus data permohonan ${permohonan.nomorPermohonan} yang ditolak?\n\n` +
+        `Nama: ${permohonan.namaPemohon}\n` +
+        `Jenis Layanan: ${permohonan.jenisLayanan}\n\n` +
+        `Data yang dihapus tidak dapat dikembalikan!`
+      );
+      if (!confirmDelete) return;
+      setActionLoading(id);
+      const docRef = doc(db, 'permohonan_layanan', id);
+      await deleteDoc(docRef);
+      setPermohonanData(prev => prev.filter(item => item.id !== id));
+      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+      alert(`Data permohonan ${permohonan.nomorPermohonan} berhasil dihapus`);
+    } catch (error) {
+      console.error('Error deleting rejected data:', error);
+      alert('Gagal menghapus data');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   // Handle bulk delete completed data
   const handleBulkDeleteCompleted = async () => {
@@ -561,20 +593,21 @@ export default function AdminLayananPage() {
         <FaDownload />
       </button>
     );
-    
-    buttons.push(
-      <button
-        key="detail"
-        onClick={() => {
-          setSelectedPermohonan(permohonan);
-          setShowDetailModal(true);
-        }}
-        className="p-2 text-purple-400 hover:bg-gray-700 rounded-lg transition-colors"
-        title="Lihat Detail"
-      >
-        <FaEye />
-      </button>
-    );
+
+    // Remove detail (eye) button
+    // buttons.push(
+    //   <button
+    //     key="detail"
+    //     onClick={() => {
+    //       setSelectedPermohonan(permohonan);
+    //       setShowDetailModal(true);
+    //     }}
+    //     className="p-2 text-purple-400 hover:bg-gray-700 rounded-lg transition-colors"
+    //     title="Lihat Detail"
+    //   >
+    //     <FaEye />
+    //   </button>
+    // );
 
     // Add attachment download button if attachments exist
     if (permohonan.attachments && Object.keys(permohonan.attachments).length > 0) {
@@ -646,6 +679,21 @@ export default function AdminLayananPage() {
       </button>
     );
 
+    // Add delete button for rejected data
+    if (permohonan.status === 'ditolak') {
+      buttons.push(
+        <button
+          key="deleteRejected"
+          onClick={() => handleDeleteRejected(permohonan.id)}
+          disabled={actionLoading === permohonan.id}
+          className="p-2 text-red-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+          title="Hapus Data (Ditolak)"
+        >
+          {actionLoading === permohonan.id ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+        </button>
+      );
+    }
+
     // Delete button for completed data only
     if (permohonan.status === 'selesai') {
       buttons.push(
@@ -703,40 +751,30 @@ export default function AdminLayananPage() {
     }
   };
 
-  // Handle download attachment
+  // Helper to fetch blob for an attachment (Cloudinary or internal)
+  const fetchAttachmentBlob = async (attachment: { url: string; filename: string; type: string }) => {
+    let response: Response;
+    if (/^https?:\/\//.test(attachment.url)) {
+      response = await fetch(attachment.url);
+    } else {
+      response = await fetch(`/api/documents/download?path=${encodeURIComponent(attachment.url)}`);
+    }
+    if (!response.ok) throw new Error(`Failed to fetch attachment ${attachment.filename}`);
+    return await response.blob();
+  };
+  
+  // Handle download a single attachment
   const handleDownloadAttachment = async (attachment: { url: string; filename: string; type: string }) => {
     try {
-      // If URL is an external link (e.g., Cloudinary), fetch blob and download
-      if (/^https?:\/\//.test(attachment.url)) {
-        const response = await fetch(attachment.url);
-        if (!response.ok) throw new Error('Failed to fetch attachment');
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = objectUrl;
-        a.download = attachment.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(objectUrl);
-        return;
-      }
-      // Use our API endpoint for downloading files
-      const response = await fetch(`/api/documents/download?path=${encodeURIComponent(attachment.url)}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to download attachment');
-      }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const blob = await fetchAttachmentBlob(attachment);
+      const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = objectUrl;
       a.download = attachment.filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error('Error downloading attachment:', error);
       alert('Gagal mengunduh lampiran. Silakan coba lagi.');
@@ -745,56 +783,31 @@ export default function AdminLayananPage() {
   
   // Handle bulk download attachments for a specific permohonan
   const handleBulkDownloadSelectedAttachments = async (permohonan: PermohonanData) => {
-    try {
-      if (!permohonan.attachments || Object.keys(permohonan.attachments).length === 0) {
-        alert('Tidak ada lampiran yang dapat diunduh');
-        return;
-      }
-      
-      setActionLoading('downloading-attachments');
-      const attachments = Object.values(permohonan.attachments);
-      let successCount = 0;
-      let failCount = 0;
-      
-      for (const attachment of attachments) {
-        try {
-          // Use our API endpoint for downloading files
-          const response = await fetch(`/api/documents/download?path=${encodeURIComponent(attachment.url)}`);
-          
-          if (!response.ok) {
-            throw new Error(`Failed to download ${attachment.filename}`);
-          }
-          
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = attachment.filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          successCount++;
-          
-          // Small delay to prevent browser from blocking multiple downloads
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          console.error(`Error downloading attachment ${attachment.filename}:`, error);
-          failCount++;
-        }
-      }
-      
-      if (failCount > 0) {
-        alert(`${successCount} lampiran berhasil diunduh, ${failCount} lampiran gagal diunduh. Silakan coba lagi nanti.`);
-      } else {
-        alert(`${successCount} lampiran berhasil diunduh`);
-      }
-    } catch (error) {
-      console.error('Error in bulk download attachments:', error);
-      alert('Gagal mengunduh lampiran. Silakan coba lagi.');
-    } finally {
-      setActionLoading(null);
+    if (!permohonan.attachments || Object.keys(permohonan.attachments).length === 0) {
+      alert('Tidak ada lampiran yang dapat diunduh');
+      return;
     }
+    setActionLoading('downloading-attachments');
+    const attachments = Object.values(permohonan.attachments);
+    let successCount = 0;
+    let failCount = 0;
+    for (const attachment of attachments) {
+      try {
+        await handleDownloadAttachment(attachment);
+        successCount++;
+        // delay between downloads to avoid blocking
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Error downloading attachment ${attachment.filename}:`, error);
+        failCount++;
+      }
+    }
+    if (failCount > 0) {
+      alert(`${successCount} lampiran berhasil diunduh, ${failCount} lampiran gagal diunduh. Silakan coba lagi nanti.`);
+    } else {
+      alert(`${successCount} lampiran berhasil diunduh`);
+    }
+    setActionLoading(null);
   };
 
   // Get file icon based on file type

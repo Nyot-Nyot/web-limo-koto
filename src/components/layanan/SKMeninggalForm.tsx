@@ -1,6 +1,19 @@
 "use client";
 import React, { useState } from 'react';
-import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
+// Upload file directly to Cloudinary
+const uploadToCloudinary = async (file: File | null): Promise<string> => {
+  if (!file) return '';
+  const data = new FormData();
+  data.append('file', file);
+  data.append('upload_preset', 'limokoto-upload');
+  const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+    method: 'POST',
+    body: data,
+  });
+  const json = await res.json();
+  return json.secure_url;
+};
 
 interface SKMeninggalFormProps {
   onClose: () => void;
@@ -76,26 +89,34 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
         return;
       }
 
-      // Proses file upload menjadi base64
-      const processedFiles = await processUploadedFiles({
-        pengantar_rt_rw: formData.pengantar_rt_rw || null,
-        ktp_almarhum: formData.ktp_almarhum || null,
-        kk_almarhum: formData.kk_almarhum || null,
-        surat_rs: formData.surat_rs || null,
-        ktp_pelapor: formData.ktp_pelapor || null
-      });
+      // Upload attachments to Cloudinary
+      const pengantarUrl = await uploadToCloudinary(formData.pengantar_rt_rw || null);
+      const ktpAlmarhumUrl = await uploadToCloudinary(formData.ktp_almarhum || null);
+      const kkAlmarhumUrl = await uploadToCloudinary(formData.kk_almarhum || null);
+      const suratRsUrl = await uploadToCloudinary(formData.surat_rs || null);
+      const ktpPelaporUrl = await uploadToCloudinary(formData.ktp_pelapor || null);
 
-      // Buat data yang akan disimpan
-      const dataToSave = {
-        ...formData,
-        ...processedFiles
-      };
+      // Prepare primitive form data
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) =>
+          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        )
+      ) as Record<string, string | number | boolean>;
 
-      // Simpan data ke Firestore
+      // Build attachments object
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (pengantarUrl) attachments.pengantar_rt_rw = { url: pengantarUrl, filename: formData.pengantar_rt_rw?.name || 'pengantar_rt_rw', type: formData.pengantar_rt_rw?.type || 'application/octet-stream' };
+      if (ktpAlmarhumUrl) attachments.ktp_almarhum = { url: ktpAlmarhumUrl, filename: formData.ktp_almarhum?.name || 'ktp_almarhum', type: formData.ktp_almarhum?.type || 'application/octet-stream' };
+      if (kkAlmarhumUrl) attachments.kk_almarhum = { url: kkAlmarhumUrl, filename: formData.kk_almarhum?.name || 'kk_almarhum', type: formData.kk_almarhum?.type || 'application/octet-stream' };
+      if (suratRsUrl) attachments.surat_rs = { url: suratRsUrl, filename: formData.surat_rs?.name || 'surat_rs', type: formData.surat_rs?.type || 'application/octet-stream' };
+      if (ktpPelaporUrl) attachments.ktp_pelapor = { url: ktpPelaporUrl, filename: formData.ktp_pelapor?.name || 'ktp_pelapor', type: formData.ktp_pelapor?.type || 'application/octet-stream' };
+
+      // Save data to Firestore
       const nomorPermohonan = await savePermohonanToFirestore(
         'SKMeninggalDunia',
-        dataToSave,
-        formData.nomorHP
+        cleanedDataToSubmit,
+        formData.nomorHP,
+        attachments
       );
 
       // Create FormData object

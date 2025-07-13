@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { savePermohonanToFirestore, processUploadedFiles } from '@/lib/layananUtils';
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface SKPindahFormProps {
   onClose: () => void;
@@ -64,6 +64,19 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Upload file directly to Cloudinary
+  const uploadToCloudinary = async (file: File | null): Promise<string> => {
+    if (!file) return '';
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'limokoto-upload');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+      method: 'POST', body: data
+    });
+    const json = await res.json();
+    return json.secure_url;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -76,25 +89,24 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
         return;
       }
 
-      // Proses file upload menjadi base64
-      const processedFiles = await processUploadedFiles({
-        kk: formData.kk || null,
-        ktp: formData.ktp || null,
-        pas_photo: formData.pas_photo || null
-      });
+      // Upload attachments to Cloudinary
+      const kkUrl = await uploadToCloudinary(formData.kk || null);
+      const ktpUrl = await uploadToCloudinary(formData.ktp || null);
+      const photoUrl = await uploadToCloudinary(formData.pas_photo || null);
 
-      // Buat data yang akan disimpan
-      const dataToSave = {
-        ...formData,
-        ...processedFiles
-      };
+      // Prepare primitive form data
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+      ) as Record<string, string | number | boolean>;
 
-      // Simpan data ke Firestore
-      const nomorPermohonan = await savePermohonanToFirestore(
-        'SKPindah',
-        dataToSave,
-        formData.nomorHP
-      );
+      // Build attachments object
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
+      if (ktpUrl) attachments.ktp = { url: ktpUrl, filename: formData.ktp?.name || 'ktp', type: formData.ktp?.type || 'application/octet-stream' };
+      if (photoUrl) attachments.pas_photo = { url: photoUrl, filename: formData.pas_photo?.name || 'pas_photo', type: formData.pas_photo?.type || 'application/octet-stream' };
+
+      // Save data to Firestore
+      const nomorPermohonan = await savePermohonanToFirestore('SKPindah', cleanedDataToSubmit, formData.nomorHP, attachments);
 
       // Create FormData object
       const submitFormData = new FormData();
