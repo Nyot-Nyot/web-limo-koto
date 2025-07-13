@@ -474,6 +474,29 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          {/* Kelola Feedback */}
+          <Link href="/admin/feedback">
+            <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+              <div className="flex items-center mb-4">
+                <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m0 0V6a2 2 0 012-2h6a2 2 0 012 2v2" />
+                </svg>
+                <h3 className="text-xl font-semibold text-white ml-3">
+                  Kelola Feedback
+                </h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Lihat dan kelola masukan serta saran dari pengguna
+              </p>
+              <div className="flex items-center text-purple-400">
+                <span className="text-sm font-medium">Kelola Sekarang</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

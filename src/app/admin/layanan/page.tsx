@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import NotificationModal from '@/components/admin/NotificationModal';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
+import ReasonModal from '@/components/admin/ReasonModal';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
@@ -129,6 +130,13 @@ export default function AdminLayananPage() {
     title: '',
     message: '',
     onConfirm: () => {},
+    loading: false
+  });
+  
+  // Reason modal state for rejection reason input
+  const [reasonModal, setReasonModal] = useState<{ show: boolean; id: string | null; loading: boolean }>({
+    show: false,
+    id: null,
     loading: false
   });
   
@@ -647,18 +655,6 @@ export default function AdminLayananPage() {
   const getActionButtons = (permohonan: PermohonanData) => {
     const buttons = [];
     
-    // Common actions
-    buttons.push(
-      <button
-        key="download"
-        onClick={() => handleDownload(permohonan)}
-        className="p-2 text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
-        title="Download Surat"
-      >
-        <FaDownload />
-      </button>
-    );
-
     // Add attachment download button if attachments exist
     if (permohonan.attachments && Object.keys(permohonan.attachments).length > 0) {
       buttons.push(
@@ -693,7 +689,7 @@ export default function AdminLayananPage() {
       buttons.push(
         <button
           key="reject"
-          onClick={() => handleStatusUpdate(permohonan.id, 'ditolak')}
+          onClick={() => setReasonModal({ show: true, id: permohonan.id, loading: false })}
           disabled={actionLoading === permohonan.id}
           className="p-2 text-red-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
           title="Tolak"
@@ -879,7 +875,7 @@ export default function AdminLayananPage() {
     }
   };
 
-  // Handle send notification with confirmation
+  // Handle send notification
   const handleSendNotification = async (permohonan: PermohonanData) => {
     // Show custom confirmation modal
     setConfirmModal({
@@ -898,7 +894,8 @@ export default function AdminLayananPage() {
             permohonan.nomorHP,
             permohonan.jenisLayanan,
             permohonan.nomorPermohonan,
-            permohonan.status
+            permohonan.status,
+            permohonan.alasanTolak
           );
           
           if (success) {
@@ -959,6 +956,23 @@ export default function AdminLayananPage() {
         onCancel={() => setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} })}
       />
       
+      <ReasonModal
+        show={reasonModal.show}
+        title="Alasan Penolakan"
+        placeholder="Masukkan alasan penolakan"
+        confirmText="Kirim"
+        cancelText="Batal"
+        loading={reasonModal.loading}
+        onConfirm={async (reason) => {
+          if (reasonModal.id) {
+            setReasonModal(prev => ({ ...prev, loading: true }));
+            await handleStatusUpdate(reasonModal.id, 'ditolak', { alasanTolak: reason });
+            setReasonModal({ show: false, id: null, loading: false });
+          }
+        }}
+        onCancel={() => setReasonModal({ show: false, id: null, loading: false })}
+      />
+      
       <div className="min-h-screen bg-gray-900 text-white">
       {/* Header Section */}
       <div className="bg-gray-800 shadow-lg">
@@ -973,9 +987,6 @@ export default function AdminLayananPage() {
                 <span>Kembali</span>
               </button>
               <h1 className="text-2xl font-bold text-yellow-400">Management Surat Keterangan</h1>
-              <p className="text-gray-400 hidden md:block">
-                Kelola permohonan surat keterangan dari masyarakat
-              </p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -1509,11 +1520,8 @@ export default function AdminLayananPage() {
                         </button>
                         <button
                           onClick={() => {
-                            const alasan = prompt('Alasan penolakan:');
-                            if (alasan) {
-                              handleStatusUpdate(selectedPermohonan.id, 'ditolak', { alasanTolak: alasan });
-                              setShowDetailModal(false);
-                            }
+                            setReasonModal({ show: true, id: selectedPermohonan.id, loading: false });
+                            setShowDetailModal(false);
                           }}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                         >
