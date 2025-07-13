@@ -3,69 +3,20 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
+import { useGaleriFirestore } from '@/lib/galeriService';
 
 export default function Galeri() {
   const [activeCategory, setActiveCategory] = useState('makanan');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [loadingImages, setLoadingImages] = useState<Set<string | number>>(new Set());
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [imageTransition, setImageTransition] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load data from localStorage or use default data
-  useEffect(() => {
-    const savedGallery = localStorage.getItem('galeriData');
-    if (savedGallery) {
-      try {
-        const parsedGallery = JSON.parse(savedGallery);
-        setGalleryItems(parsedGallery);
-      } catch (error) {
-        console.error('Error parsing gallery data:', error);
-        setGalleryItems(galeriData);
-      }
-    } else {
-      setGalleryItems(galeriData);
-    }
-
-    // Listen for localStorage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'galeriData' && e.newValue) {
-        try {
-          const parsedGallery = JSON.parse(e.newValue);
-          setGalleryItems(parsedGallery);
-        } catch (error) {
-          console.error('Error parsing updated gallery data:', error);
-        }
-      }
-    };
-
-    // Listen for custom events (for same-tab updates)
-    const handleCustomUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail.type === 'galeri') {
-        const savedGallery = localStorage.getItem('galeriData');
-        if (savedGallery) {
-          try {
-            const parsedGallery = JSON.parse(savedGallery);
-            setGalleryItems(parsedGallery);
-          } catch (error) {
-            console.error('Error parsing updated gallery data:', error);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('dataUpdated', handleCustomUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('dataUpdated', handleCustomUpdate);
-    };
-  }, []);
+  const { data: firestoreGallery, loading, error } = useGaleriFirestore();
+  const galleryItems = (firestoreGallery && firestoreGallery.length > 0) ? firestoreGallery : galeriData;
 
   // Group items by category
   const galleries = galleryItems.reduce((acc, item) => {
@@ -185,6 +136,34 @@ export default function Galeri() {
   const handleTouchEnd = () => {
     setIsDragging(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Galeri <span className="text-yellow-400">Nagari</span>
+          </h2>
+          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
+          <p className="text-gray-200 text-base md:text-lg">Memuat data galeri...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Galeri <span className="text-yellow-400">Nagari</span>
+          </h2>
+          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
+          <p className="text-red-400 text-base md:text-lg">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 md:px-8 py-16 md:py-24">
