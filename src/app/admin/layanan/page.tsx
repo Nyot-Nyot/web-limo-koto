@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import NotificationModal from '@/components/admin/NotificationModal';
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
@@ -109,6 +111,27 @@ export default function AdminLayananPage() {
   
   // Loading states
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  // Notification modal state
+  const [notifModal, setNotifModal] = useState<{ show: boolean; type: 'success' | 'error' | 'warning'; message: string }>({ show: false, type: 'success', message: '' });
+  
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    type: 'delete' | 'sms' | 'action';
+    title: string;
+    message: string;
+    details?: string;
+    onConfirm: () => void;
+    loading?: boolean;
+  }>({
+    show: false,
+    type: 'action',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    loading: false
+  });
+  
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
   
@@ -318,10 +341,10 @@ export default function AdminLayananPage() {
         await handleDownload(permohonan);
       }
       
-      alert(`${selectedData.length} dokumen berhasil diunduh`);
+      setNotifModal({ show: true, type: 'success', message: `${selectedData.length} dokumen berhasil diunduh` });
     } catch (error) {
       console.error('Error in bulk download:', error);
-      alert('Gagal mengunduh beberapa dokumen');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal mengunduh beberapa dokumen' });
     }
   };
 
@@ -345,13 +368,13 @@ export default function AdminLayananPage() {
       }
       
       if (totalAttachments > 0) {
-        alert(`${totalAttachments} lampiran berhasil diunduh`);
+      setNotifModal({ show: true, type: 'success', message: `${totalAttachments} lampiran berhasil diunduh` });
       } else {
-        alert('Tidak ada lampiran yang dapat diunduh dari data yang dipilih');
+        setNotifModal({ show: true, type: 'warning', message: 'Tidak ada lampiran yang dapat diunduh dari data yang dipilih' });
       }
     } catch (error) {
       console.error('Error in bulk download attachments:', error);
-      alert('Gagal mengunduh lampiran');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal mengunduh lampiran' });
     }
   };
 
@@ -370,10 +393,10 @@ export default function AdminLayananPage() {
         }
       }
       
-      alert(`${successCount}/${selectedData.length} notifikasi berhasil dikirim`);
+      setNotifModal({ show: true, type: 'success', message: `${successCount}/${selectedData.length} notifikasi berhasil dikirim` });
     } catch (error) {
       console.error('Error in bulk notification:', error);
-      alert('Gagal mengirim notifikasi');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal mengirim notifikasi' });
     }
   };
 
@@ -384,13 +407,13 @@ export default function AdminLayananPage() {
       const success = exportToExcel(selectedData, `permohonan-layanan-${new Date().toISOString().split('T')[0]}.xlsx`);
       
       if (success) {
-        alert('Data berhasil diekspor ke Excel');
+        setNotifModal({ show: true, type: 'success', message: 'Data berhasil diekspor ke Excel' });
       } else {
         throw new Error('Export failed');
       }
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Gagal mengekspor data');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal mengekspor data' });
     }
   };
 
@@ -400,38 +423,52 @@ export default function AdminLayananPage() {
       const permohonan = permohonanData.find(item => item.id === id);
       
       if (!permohonan) {
-        alert('Data tidak ditemukan');
+        setNotifModal({ show: true, type: 'warning', message: 'Data tidak ditemukan' });
         return;
       }
 
       if (permohonan.status !== 'selesai') {
-        alert('Hanya data yang sudah selesai yang dapat dihapus');
+        setNotifModal({ show: true, type: 'warning', message: 'Hanya data yang sudah selesai yang dapat dihapus' });
         return;
       }
 
-      const confirmDelete = confirm(
-        `Apakah Anda yakin ingin menghapus data permohonan ${permohonan.nomorPermohonan}?\n\n` +
-        `Nama: ${permohonan.namaPemohon}\n` +
-        `Jenis Layanan: ${permohonan.jenisLayanan}\n\n` +
-        `Data yang dihapus tidak dapat dikembalikan!`
-      );
-
-      if (!confirmDelete) return;
-
-      setActionLoading(id);
-      
-      // Delete from Firestore
-      const docRef = doc(db, 'permohonan_layanan', id);
-      await deleteDoc(docRef);
-      
-      // Update local state
-      setPermohonanData(prev => prev.filter(item => item.id !== id));
-      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
-      
-      alert(`Data permohonan ${permohonan.nomorPermohonan} berhasil dihapus`);
+      // Show custom confirmation modal
+      setConfirmModal({
+        show: true,
+        type: 'delete',
+        title: 'Konfirmasi Hapus Data',
+        message: 'Apakah Anda yakin ingin menghapus data permohonan ini?',
+        details: `Nomor Permohonan: ${permohonan.nomorPermohonan}\nNama: ${permohonan.namaPemohon}\nJenis Layanan: ${permohonan.jenisLayanan}`,
+        loading: actionLoading === id,
+        onConfirm: async () => {
+          try {
+            setConfirmModal(prev => ({ ...prev, loading: true }));
+            setActionLoading(id);
+            
+            // Delete from Firestore
+            const docRef = doc(db, 'permohonan_layanan', id);
+            await deleteDoc(docRef);
+            
+            // Update local state
+            setPermohonanData(prev => prev.filter(item => item.id !== id));
+            setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+            
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+            setNotifModal({ show: true, type: 'success', message: `Data permohonan ${permohonan.nomorPermohonan} berhasil dihapus` });
+          } catch (error) {
+            console.error('Error deleting data:', error);
+            setNotifModal({ show: true, type: 'error', message: 'Gagal menghapus data' });
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+          } finally {
+            setActionLoading(null);
+            setConfirmModal(prev => ({ ...prev, loading: false }));
+          }
+        }
+      });
+      return;
     } catch (error) {
       console.error('Error deleting data:', error);
-      alert('Gagal menghapus data');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal menghapus data' });
     } finally {
       setActionLoading(null);
     }
@@ -442,29 +479,47 @@ export default function AdminLayananPage() {
     try {
       const permohonan = permohonanData.find(item => item.id === id);
       if (!permohonan) {
-        alert('Data tidak ditemukan');
+        setNotifModal({ show: true, type: 'warning', message: 'Data tidak ditemukan' });
         return;
       }
       if (permohonan.status !== 'ditolak') {
-        alert('Hanya data yang ditolak yang dapat dihapus dengan tombol ini');
+        setNotifModal({ show: true, type: 'warning', message: 'Hanya data yang ditolak yang dapat dihapus dengan tombol ini' });
         return;
       }
-      const confirmDelete = confirm(
-        `Apakah Anda yakin ingin menghapus data permohonan ${permohonan.nomorPermohonan} yang ditolak?\n\n` +
-        `Nama: ${permohonan.namaPemohon}\n` +
-        `Jenis Layanan: ${permohonan.jenisLayanan}\n\n` +
-        `Data yang dihapus tidak dapat dikembalikan!`
-      );
-      if (!confirmDelete) return;
-      setActionLoading(id);
-      const docRef = doc(db, 'permohonan_layanan', id);
-      await deleteDoc(docRef);
-      setPermohonanData(prev => prev.filter(item => item.id !== id));
-      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
-      alert(`Data permohonan ${permohonan.nomorPermohonan} berhasil dihapus`);
+      // Show custom confirmation modal
+      setConfirmModal({
+        show: true,
+        type: 'delete',
+        title: 'Konfirmasi Hapus Data Ditolak',
+        message: 'Apakah Anda yakin ingin menghapus data permohonan yang ditolak ini?',
+        details: `Nomor Permohonan: ${permohonan.nomorPermohonan}\nNama: ${permohonan.namaPemohon}\nJenis Layanan: ${permohonan.jenisLayanan}`,
+        loading: actionLoading === id,
+        onConfirm: async () => {
+          try {
+            setConfirmModal(prev => ({ ...prev, loading: true }));
+            setActionLoading(id);
+            
+            const docRef = doc(db, 'permohonan_layanan', id);
+            await deleteDoc(docRef);
+            setPermohonanData(prev => prev.filter(item => item.id !== id));
+            setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+            
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+            setNotifModal({ show: true, type: 'success', message: `Data permohonan ${permohonan.nomorPermohonan} berhasil dihapus` });
+          } catch (error) {
+            console.error('Error deleting rejected data:', error);
+            setNotifModal({ show: true, type: 'error', message: 'Gagal menghapus data' });
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+          } finally {
+            setActionLoading(null);
+            setConfirmModal(prev => ({ ...prev, loading: false }));
+          }
+        }
+      });
+      return;
     } catch (error) {
       console.error('Error deleting rejected data:', error);
-      alert('Gagal menghapus data');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal menghapus data' });
     } finally {
       setActionLoading(null);
     }
@@ -477,44 +532,54 @@ export default function AdminLayananPage() {
       const completedData = selectedData.filter(item => item.status === 'selesai');
       
       if (completedData.length === 0) {
-        alert('Tidak ada data yang sudah selesai untuk dihapus');
+        setNotifModal({ show: true, type: 'warning', message: 'Tidak ada data yang sudah selesai untuk dihapus' });
         return;
       }
 
       if (completedData.length < selectedData.length) {
-        alert(`Hanya ${completedData.length} dari ${selectedData.length} data yang dapat dihapus (hanya yang sudah selesai)`);
+        setNotifModal({ show: true, type: 'warning', message: `Hanya ${completedData.length} dari ${selectedData.length} data yang dapat dihapus (hanya yang sudah selesai)` });
       }
 
-      const confirmDelete = confirm(
-        `Apakah Anda yakin ingin menghapus ${completedData.length} data yang sudah selesai?\n\n` +
-        `Data yang dihapus tidak dapat dikembalikan!`
-      );
-
-      if (!confirmDelete) return;
-
-      let successCount = 0;
-      for (const item of completedData) {
-        try {
-          setActionLoading(item.id);
-          const docRef = doc(db, 'permohonan_layanan', item.id);
-          await deleteDoc(docRef);
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to delete ${item.nomorPermohonan}:`, error);
+      // Show custom confirmation modal
+      setConfirmModal({
+        show: true,
+        type: 'delete',
+        title: 'Konfirmasi Hapus Massal',
+        message: `Apakah Anda yakin ingin menghapus ${completedData.length} data yang sudah selesai?`,
+        details: `${completedData.length} data akan dihapus secara permanen`,
+        onConfirm: async () => {
+          try {
+            setConfirmModal(prev => ({ ...prev, loading: true }));
+            
+            let successCount = 0;
+            for (const item of completedData) {
+              try {
+                const docRef = doc(db, 'permohonan_layanan', item.id);
+                await deleteDoc(docRef);
+                successCount++;
+              } catch (error) {
+                console.error(`Failed to delete ${item.nomorPermohonan}:`, error);
+              }
+            }
+            
+            // Update local state
+            setPermohonanData(prev => prev.filter(item => !completedData.some(deleted => deleted.id === item.id)));
+            setSelectedItems([]);
+            
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+            setNotifModal({ show: true, type: 'success', message: `${successCount}/${completedData.length} data berhasil dihapus` });
+          } catch (error) {
+            console.error('Error in bulk delete:', error);
+            setNotifModal({ show: true, type: 'error', message: 'Gagal menghapus data' });
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+          } finally {
+            setConfirmModal(prev => ({ ...prev, loading: false }));
+          }
         }
-      }
-
-      // Update local state
-      const deletedIds = completedData.slice(0, successCount).map(item => item.id);
-      setPermohonanData(prev => prev.filter(item => !deletedIds.includes(item.id)));
-      setSelectedItems(prev => prev.filter(itemId => !deletedIds.includes(itemId)));
-      
-      alert(`${successCount}/${completedData.length} data berhasil dihapus`);
+      });
     } catch (error) {
-      console.error('Error in bulk delete:', error);
-      alert('Gagal menghapus data');
-    } finally {
-      setActionLoading(null);
+      console.error('Error in bulk delete confirmation:', error);
+      setNotifModal({ show: true, type: 'error', message: 'Terjadi kesalahan' });
     }
   };
 
@@ -593,21 +658,6 @@ export default function AdminLayananPage() {
         <FaDownload />
       </button>
     );
-
-    // Remove detail (eye) button
-    // buttons.push(
-    //   <button
-    //     key="detail"
-    //     onClick={() => {
-    //       setSelectedPermohonan(permohonan);
-    //       setShowDetailModal(true);
-    //     }}
-    //     className="p-2 text-purple-400 hover:bg-gray-700 rounded-lg transition-colors"
-    //     title="Lihat Detail"
-    //   >
-    //     <FaEye />
-    //   </button>
-    // );
 
     // Add attachment download button if attachments exist
     if (permohonan.attachments && Object.keys(permohonan.attachments).length > 0) {
@@ -745,7 +795,7 @@ export default function AdminLayananPage() {
       }
     } catch (error) {
       console.error('Error downloading document:', error);
-      alert('Gagal mengunduh dokumen. Silakan coba lagi.');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal mengunduh dokumen. Silakan coba lagi.' });
     } finally {
       setActionLoading(null);
     }
@@ -777,14 +827,14 @@ export default function AdminLayananPage() {
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error('Error downloading attachment:', error);
-      alert('Gagal mengunduh lampiran. Silakan coba lagi.');
+      setNotifModal({ show: true, type: 'error', message: 'Gagal mengunduh lampiran. Silakan coba lagi.' });
     }
   };
   
   // Handle bulk download attachments for a specific permohonan
   const handleBulkDownloadSelectedAttachments = async (permohonan: PermohonanData) => {
     if (!permohonan.attachments || Object.keys(permohonan.attachments).length === 0) {
-      alert('Tidak ada lampiran yang dapat diunduh');
+      setNotifModal({ show: true, type: 'warning', message: 'Tidak ada lampiran yang dapat diunduh' });
       return;
     }
     setActionLoading('downloading-attachments');
@@ -803,9 +853,9 @@ export default function AdminLayananPage() {
       }
     }
     if (failCount > 0) {
-      alert(`${successCount} lampiran berhasil diunduh, ${failCount} lampiran gagal diunduh. Silakan coba lagi nanti.`);
+      setNotifModal({ show: true, type: 'warning', message: `${successCount} lampiran berhasil diunduh, ${failCount} lampiran gagal diunduh. Silakan coba lagi nanti.` });
     } else {
-      alert(`${successCount} lampiran berhasil diunduh`);
+      setNotifModal({ show: true, type: 'success', message: `${successCount} lampiran berhasil diunduh` });
     }
     setActionLoading(null);
   };
@@ -829,47 +879,61 @@ export default function AdminLayananPage() {
     }
   };
 
-  // Handle send notification
+  // Handle send notification with confirmation
   const handleSendNotification = async (permohonan: PermohonanData) => {
-    try {
-      setActionLoading(permohonan.id);
-      
-      // Send SMS notification instead of WhatsApp
-      const success = await sendSMSNotification(
-        permohonan.nomorHP,
-        permohonan.jenisLayanan,
-        permohonan.nomorPermohonan,
-        permohonan.status
-      );
-      
-      if (success) {
-        // Update notification status in Firebase
-        const docRef = doc(db, 'permohonan_layanan', permohonan.id);
-        await updateDoc(docRef, {
-          'notifikasi.terkirim': true,
-          'notifikasi.tanggal': new Date(),
-          'notifikasi.error': ''
-        });
-        
-        await fetchPermohonanData();
-        alert('SMS notifikasi berhasil dikirim!');
-      } else {
-        throw new Error('Failed to send SMS notification');
+    // Show custom confirmation modal
+    setConfirmModal({
+      show: true,
+      type: 'sms',
+      title: 'Konfirmasi Kirim SMS',
+      message: 'Apakah Anda yakin ingin mengirim SMS notifikasi?',
+      details: `Nomor HP: ${permohonan.nomorHP}\nNama: ${permohonan.namaPemohon}\nJenis Layanan: ${permohonan.jenisLayanan}\nStatus: ${permohonan.status}`,
+      onConfirm: async () => {
+        try {
+          setConfirmModal(prev => ({ ...prev, loading: true }));
+          setActionLoading(permohonan.id);
+          
+          // Send SMS notification instead of WhatsApp
+          const success = await sendSMSNotification(
+            permohonan.nomorHP,
+            permohonan.jenisLayanan,
+            permohonan.nomorPermohonan,
+            permohonan.status
+          );
+          
+          if (success) {
+            // Update notification status in Firebase
+            const docRef = doc(db, 'permohonan_layanan', permohonan.id);
+            await updateDoc(docRef, {
+              'notifikasi.terkirim': true,
+              'notifikasi.tanggal': new Date(),
+              'notifikasi.error': ''
+            });
+            
+            await fetchPermohonanData();
+            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+            setNotifModal({ show: true, type: 'success', message: 'SMS notifikasi berhasil dikirim!' });
+          } else {
+            throw new Error('Failed to send SMS notification');
+          }
+        } catch (error) {
+          console.error('Error sending SMS notification:', error);
+          
+          // Update notification error in Firebase
+          const docRef = doc(db, 'permohonan_layanan', permohonan.id);
+          await updateDoc(docRef, {
+            'notifikasi.terkirim': false,
+            'notifikasi.error': error instanceof Error ? error.message : 'Unknown error'
+          });
+          
+          setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
+          setNotifModal({ show: true, type: 'error', message: 'Gagal mengirim SMS notifikasi. Silakan coba lagi.' });
+        } finally {
+          setActionLoading(null);
+          setConfirmModal(prev => ({ ...prev, loading: false }));
+        }
       }
-    } catch (error) {
-      console.error('Error sending SMS notification:', error);
-      
-      // Update notification error in Firebase
-      const docRef = doc(db, 'permohonan_layanan', permohonan.id);
-      await updateDoc(docRef, {
-        'notifikasi.terkirim': false,
-        'notifikasi.error': error instanceof Error ? error.message : 'Unknown error'
-      });
-      
-      alert('Gagal mengirim SMS notifikasi. Silakan coba lagi.');
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   if (!isAuthenticated) {
@@ -881,7 +945,21 @@ export default function AdminLayananPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <>
+      <NotificationModal show={notifModal.show} type={notifModal.type} message={notifModal.message} onClose={() => setNotifModal(prev => ({ ...prev, show: false }))} />
+      
+      <ConfirmationModal
+        show={confirmModal.show}
+        type={confirmModal.type}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        details={confirmModal.details}
+        loading={confirmModal.loading}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} })}
+      />
+      
+      <div className="min-h-screen bg-gray-900 text-white">
       {/* Header Section */}
       <div className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1081,14 +1159,6 @@ export default function AdminLayananPage() {
                     >
                       <FaDownload className="inline mr-2" />
                       Download Semua
-                    </button>
-                    <button
-                      onClick={() => handleBulkAction('download_attachments')}
-                      disabled={actionLoading === 'bulk'}
-                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 text-sm"
-                    >
-                      <FaPaperclip className="inline mr-2" />
-                      Download Lampiran
                     </button>
                     <button
                       onClick={() => handleBulkAction('notify')}
@@ -1417,25 +1487,7 @@ export default function AdminLayananPage() {
                       <FaDownload className="inline mr-2" />
                       Download Surat
                     </button>
-                    {selectedPermohonan.attachments && Object.keys(selectedPermohonan.attachments).length > 0 && (
-                      <button
-                        onClick={() => handleBulkDownloadSelectedAttachments(selectedPermohonan)}
-                        disabled={actionLoading === 'downloading-attachments'}
-                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading === 'downloading-attachments' ? (
-                          <>
-                            <FaSpinner className="inline animate-spin mr-2" />
-                            Mengunduh Lampiran...
-                          </>
-                        ) : (
-                          <>
-                            <FaPaperclip className="inline mr-2" />
-                            Download Lampiran
-                          </>
-                        )}
-                      </button>
-                    )}
+                    
                     <button
                       onClick={() => handleSendNotification(selectedPermohonan)}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -1714,5 +1766,6 @@ export default function AdminLayananPage() {
         </div>
       </div>
       </div>
+    </>
     )};
 
