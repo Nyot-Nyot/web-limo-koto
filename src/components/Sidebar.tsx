@@ -80,6 +80,7 @@ export default function Sidebar() {
         const element = document.getElementById(section.id);
         if (element) observer.unobserve(element);
       });
+      observer.disconnect();
       window.removeEventListener('scroll', handleScroll);
     };
   }, [sections, observerCallback, handleScroll]);

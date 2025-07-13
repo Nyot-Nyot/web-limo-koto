@@ -1,16 +1,10 @@
 'use client';
 
-import { db } from '@/lib/firebase';
-import {
-  collection,
-  addDoc,
-  doc,
-  updateDoc,
-  getDocs,
-  deleteDoc
-} from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { fetchWithFallback } from '@/lib/firebase';
+import { collection, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import {
   PlusIcon,
   PencilIcon,
@@ -19,6 +13,8 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
+import AdminProtectedRoute from '@/components/AdminProtectedRoute';
+import ModalForm from '@/components/admin/ModalForm';
 import NotificationModal from '@/components/admin/NotificationModal';
 
 interface FAQData {
@@ -39,6 +35,7 @@ const categoryOptions = [
 
 export default function FAQAdmin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [faqData, setFaqData] = useState<FAQData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQData | null>(null);
@@ -51,20 +48,37 @@ export default function FAQAdmin() {
     category: ''
   });
   const [notification, setNotification] = useState<{
-    show: boolean;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'warning';
     message: string;
-  }>({
-    show: false,
-    type: 'success',
-    message: ''
-  });
+  } | null>(null);
   const router = useRouter();
   
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ show: true, type, message });
-    setTimeout(() => setNotification({ show: false, type: 'success', message: '' }), 3000);
+  const showNotification = (type: 'success' | 'error' | 'warning', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
   };
+
+  const defaultFAQData: FAQData[] = [
+    {
+      id: '1',
+      question: "Bagaimana cara mengurus surat keterangan domisili?",
+      answer: "Untuk mengurus surat keterangan domisili, Anda perlu membawa KTP asli, KK asli, dan surat pengantar dari RT/RW. Datang ke kantor nagari pada jam kerja.",
+      category: "Administrasi"
+    },
+    {
+      id: '2',
+      question: "Kapan jam pelayanan kantor nagari?",
+      answer: "Kantor nagari buka setiap hari Senin-Jumat pukul 08:00-16:00 WIB, dengan istirahat pukul 12:00-13:00 WIB.",
+      category: "Pelayanan Publik"
+    }
+  ];
+
+  const dataTransformer = (docData: any): FAQData => ({
+    id: docData.id || '',
+    question: typeof docData.question === 'string' ? docData.question : '',
+    answer: typeof docData.answer === 'string' ? docData.answer : '',
+    category: typeof docData.category === 'string' ? docData.category : ''
+  });
 
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
@@ -72,70 +86,36 @@ export default function FAQAdmin() {
       router.push('/admin/login');
     } else {
       setIsAuthenticated(true);
+      setIsLoading(true);
       
-      // First try to load data from Firestore
+      // Use the new fetchWithFallback helper
       const loadData = async () => {
         try {
-          await fetchFAQFromFirestore();
-        } catch (error) {
-          console.error('Failed to fetch from Firestore:', error);
-          // Fall back to localStorage if Firestore fails
-          const savedData = localStorage.getItem('faqData');
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              setFaqData(parsedData);
-            } catch (e) {
-              console.error('Error parsing localStorage data:', e);
-            }
-          } else {
-            // Set default data if no localStorage data
-            const defaultData = [
-              {
-                id: '1',
-                question: "Bagaimana cara mengurus surat keterangan domisili?",
-                answer: "Untuk mengurus surat keterangan domisili, Anda perlu membawa KTP asli, KK asli, dan surat pengantar dari RT/RW. Datang ke kantor nagari pada jam kerja.",
-                category: "Administrasi"
-              },
-              {
-                id: '2',
-                question: "Kapan jam pelayanan kantor nagari?",
-                answer: "Kantor nagari buka setiap hari Senin-Jumat pukul 08:00-16:00 WIB, dengan istirahat pukul 12:00-13:00 WIB.",
-                category: "Pelayanan Publik"
-              }
-            ];
-            setFaqData(defaultData);
-            localStorage.setItem('faqData', JSON.stringify(defaultData));
+          const { data, source } = await fetchWithFallback(
+            'faq',
+            'faqData',
+            defaultFAQData,
+            dataTransformer
+          );
+          
+          setFaqData(data);
+          
+          if (source === 'localStorage') {
+            showNotification('warning', 'Menggunakan data lokal karena masalah jaringan');
+          } else if (source === 'default') {
+            showNotification('warning', 'Menggunakan data default karena masalah jaringan');
           }
+        } catch (error) {
+          console.error('Failed to load FAQ data:', error);
+          showNotification('error', 'Terjadi kesalahan saat memuat data');
+        } finally {
+          setIsLoading(false);
         }
       };
       
       loadData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
-
-  const fetchFAQFromFirestore = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'faq'));
-      const data = snapshot.docs.map(doc => {
-        const docData = doc.data();
-        return {
-          id: doc.id,
-          question: typeof docData.question === 'string' ? docData.question : '',
-          answer: typeof docData.answer === 'string' ? docData.answer : '',
-          category: typeof docData.category === 'string' ? docData.category : ''
-        };
-      });
-      setFaqData(data);
-      // Update localStorage for offline fallback
-      localStorage.setItem('faqData', JSON.stringify(data));
-    } catch (error) {
-      console.error('Error fetching FAQ data:', error);
-      showNotification('error', 'Gagal mengambil data dari server');
-    }
-  };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -163,7 +143,13 @@ export default function FAQAdmin() {
     }
 
     // Refresh data dari Firestore
-    await fetchFAQFromFirestore();
+    const { data, source } = await fetchWithFallback(
+      'faq',
+      'faqData',
+      defaultFAQData,
+      dataTransformer
+    );
+    setFaqData(data);
 
     setIsModalOpen(false);
     setEditingFAQ(null);
@@ -471,12 +457,14 @@ export default function FAQAdmin() {
       )}
 
       {/* Success/Error Notification Modal */}
-      <NotificationModal 
-        show={notification.show}
-        type={notification.type}
-        message={notification.message}
-        onClose={() => setNotification({ show: false, type: 'success', message: '' })}
-      />
+      {notification && (
+        <NotificationModal 
+          show={!!notification}
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }

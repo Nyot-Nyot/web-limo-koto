@@ -6,6 +6,7 @@ import PejabatSection from '@/components/home/PejabatSection';
 import FeaturesSection from '@/components/home/FeaturesSection';
 import FAQSection from '@/components/home/FAQSection';
 import NewsSection from '@/components/home/NewsSection';
+import BackgroundImage from '@/components/ui/BackgroundImage';
 
 export default function HeroSection() {
   const { data, loading, error } = useHomeData();
@@ -13,17 +14,7 @@ export default function HeroSection() {
   if (loading) {
     return (
       <div className="relative text-white min-h-screen flex items-center justify-center">
-        <div
-          className="fixed inset-0"
-          style={{
-            backgroundImage: 'url("/images/background.png")',
-            backgroundPosition: 'center',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            zIndex: -2
-          }}
-        />
-        <div className="fixed inset-0 bg-black/60" style={{ zIndex: -1 }} />
+        <BackgroundImage src="/images/background.png" overlay={true} overlayOpacity={0.6} />
         <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
           <p className="text-gray-300">Memuat data...</p>
@@ -35,17 +26,7 @@ export default function HeroSection() {
   if (error) {
     return (
       <div className="relative text-white min-h-screen flex items-center justify-center">
-        <div
-          className="fixed inset-0"
-          style={{
-            backgroundImage: 'url("/images/background.png")',
-            backgroundPosition: 'center',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            zIndex: -2
-          }}
-        />
-        <div className="fixed inset-0 bg-black/60" style={{ zIndex: -1 }} />
+        <BackgroundImage src="/images/background.png" overlay={true} overlayOpacity={0.6} />
         <div className="text-center relative z-10">
           <p className="text-red-400 mb-4">{error}</p>
           <button 
@@ -62,22 +43,7 @@ export default function HeroSection() {
   return (
     <div className="relative text-white min-h-screen">
       {/* Background Image */}
-      <div
-        className="fixed inset-0"
-        style={{
-          backgroundImage: 'url("/images/background.png")',
-          backgroundPosition: 'center',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          zIndex: -2
-        }}
-      />
-      
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/60" 
-        style={{ zIndex: -1 }} 
-      />
+      <BackgroundImage src="/images/background.png" overlay={true} overlayOpacity={0.6} />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col pl-12 pr-6 md:pl-20 md:pr-0 lg:pl-24">

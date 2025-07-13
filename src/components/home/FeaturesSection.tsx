@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import FeatureCard from '@/components/FeatureCard';
 
 interface Feature {
@@ -16,6 +17,8 @@ interface FeaturesSectionProps {
 }
 
 export default function FeaturesSection({ features }: FeaturesSectionProps) {
+  const router = useRouter();
+
   const handleFeatureClick = (link?: string) => {
     if (link) {
       if (link.startsWith('#')) {
@@ -25,8 +28,8 @@ export default function FeaturesSection({ features }: FeaturesSectionProps) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
       } else {
-        // Navigate to page
-        window.location.href = link;
+        // Navigate to page using Next.js router
+        router.push(link);
       }
     }
   };

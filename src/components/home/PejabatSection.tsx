@@ -20,9 +20,16 @@ export default function PejabatSection({ pejabatData }: PejabatSectionProps) {
   const [pejabatIndex, setPejabatIndex] = useState(0);
   const [pejabatAnimate, setPejabatAnimate] = useState<'in' | 'out'>('in');
 
-  // Memoize current pejabat untuk performance
+  // Memoize current pejabat untuk performance, handle out-of-bounds pejabatIndex explicitly
   const currentPejabat = useMemo(() => {
-    return pejabatData[pejabatIndex] || pejabatData[0];
+    if (
+      pejabatIndex < 0 ||
+      pejabatIndex >= pejabatData.length ||
+      pejabatData.length === 0
+    ) {
+      return undefined;
+    }
+    return pejabatData[pejabatIndex];
   }, [pejabatData, pejabatIndex]);
 
   // Optimized timer management
@@ -43,7 +50,7 @@ export default function PejabatSection({ pejabatData }: PejabatSectionProps) {
     return () => {
       clearInterval(interval);
     };
-  }, [pejabatData.length]);
+  }, [pejabatData]);
 
   if (!currentPejabat) return null;
 

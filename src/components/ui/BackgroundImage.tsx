@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 interface BackgroundImageProps {
   src?: string;
   overlay?: boolean;
@@ -13,6 +15,27 @@ export default function BackgroundImage({
   overlayOpacity = 0.6,
   className = ""
 }: BackgroundImageProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Utility to detect mobile devices
+    const checkMobile = () => {
+      if (typeof window !== 'undefined') {
+        const mobileRegex = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+        setIsMobile(mobileRegex.test(window.navigator.userAgent));
+      }
+    };
+
+    checkMobile();
+    
+    // Listen for resize events to update mobile detection
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
   return (
     <>
       {/* Background Image */}
@@ -23,7 +46,7 @@ export default function BackgroundImage({
           backgroundPosition: 'center',
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
+          backgroundAttachment: isMobile ? 'scroll' : 'fixed',
           zIndex: -2
         }}
       />

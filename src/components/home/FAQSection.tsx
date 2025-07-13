@@ -28,11 +28,11 @@ export default function FAQSection({ faqData }: FAQSectionProps) {
     return faqData.slice(0, 6); // Show only first 6 FAQs for performance
   }, [faqData]);
 
-  const toggleFaq = (index: number) => {
+  const toggleFaq = (faqId: number) => {
     setExpandedFaqs(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index) 
-        : [...prev, index]
+      prev.includes(faqId) 
+        ? prev.filter(id => id !== faqId) 
+        : [...prev, faqId]
     );
   };
 
@@ -63,14 +63,14 @@ export default function FAQSection({ faqData }: FAQSectionProps) {
 
         {/* FAQ List */}
         <div className="space-y-4">
-          {filteredFaqData.map((faq, index) => (
+          {filteredFaqData.map((faq) => (
             <FAQCard
               key={faq.id}
               question={faq.question}
               answer={faq.answer}
               category={faq.category}
-              isExpanded={expandedFaqs.includes(index)}
-              onToggle={() => toggleFaq(index)}
+              isExpanded={expandedFaqs.includes(faq.id)}
+              onToggle={() => toggleFaq(faq.id)}
             />
           ))}
         </div>
