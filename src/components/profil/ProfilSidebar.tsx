@@ -95,7 +95,7 @@ export const ProfilSidebar = memo(({ activeSection, onSectionChange, isMobile = 
   const { activeIndex } = useKeyboardNavigation(sectionIds, handleSectionSelect);
 
   const positionClass = isMobile 
-    ? "md:hidden fixed left-2 top-1/2 transform -translate-y-1/2 z-[100]"
+    ? "md:hidden fixed left-3 top-1/2 transform -translate-y-1/2 z-[100]"
     : "hidden md:block fixed left-4 top-1/2 transform -translate-y-1/2 z-40";
 
   return (

@@ -101,7 +101,7 @@ interface ProfilContentProps {
 export const ProfilContent = memo(({ sections, sectionsRef }: ProfilContentProps) => {
   return (
     <main className="relative z-10" role="main">
-      <div className="px-4 md:px-8 lg:px-12 xl:px-16">
+      <div className="pl-14 pr-4 md:pl-8 md:pr-8 lg:px-12 xl:px-16">
         {sections.map((section) => {
           const Component = COMPONENT_MAP[section.id as keyof typeof COMPONENT_MAP];
           
