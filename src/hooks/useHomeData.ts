@@ -1,111 +1,84 @@
-import { useState, useEffect, useCallback } from 'react';
-import { kepalaJorongData, sekretarisData, waliNagariData } from '@/data/pejabat';
-import { faqData as defaultFaqData } from '@/data/faq';
+import useSWR from 'swr';
 import { featuresData } from '@/data/features';
+import { allPejabat } from '@/data/pejabat';
 import { mockNewsData } from '@/data/newsData';
+import { faqData } from '@/data/faq';
 
-interface PejabatData {
-  id: string;
-  name: string;
-  title: string;
-  image: string;
-  jorong?: string;
-  description: string;
-}
-
-interface FAQData {
-  id: number;
-  question: string;
-  answer: string;
-  category: string;
-}
-
-interface HomeData {
-  pejabat: PejabatData[];
-  faq: FAQData[];
-  features: any[];
-  news: any[];
-}
-
-export const useHomeData = () => {
-  const [data, setData] = useState<HomeData>({
-    pejabat: [],
-    faq: [],
-    features: featuresData,
-    news: mockNewsData
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Memoized data loading function
-  const loadData = useCallback(() => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Load Pejabat data with fallback
-      const savedPejabat = localStorage.getItem('pejabatData');
-      const pejabatData = savedPejabat ? 
-        JSON.parse(savedPejabat) : 
-        [waliNagariData, ...kepalaJorongData, ...sekretarisData];
-
-      // Load FAQ data with fallback
-      const savedFaq = localStorage.getItem('faqData');
-      const faqData = savedFaq ? 
-        JSON.parse(savedFaq) : 
-        defaultFaqData;
-
-      setData({
-        pejabat: pejabatData,
-        faq: faqData,
-        features: featuresData,
-        news: mockNewsData
-      });
-    } catch (err) {
-      console.error('Error loading home data:', err);
-      setError('Terjadi kesalahan saat memuat data');
-      // Fallback to default data
-      setData({
-        pejabat: [waliNagariData, ...kepalaJorongData, ...sekretarisData],
-        faq: defaultFaqData,
-        features: featuresData,
-        news: mockNewsData
-      });
-    } finally {
-      setLoading(false);
+// Fetcher function untuk SWR
+const fetcher = async (url: string) => {
+  try {
+    console.log('Fetching data from:', url);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }, []);
-
-  // Listen for data updates
-  useEffect(() => {
-    loadData();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'pejabatData' || e.key === 'faqData') {
-        loadData();
+    
+    const data = await response.json();
+    console.log('Successfully fetched data from API:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching data from API:', error);
+    
+    // Fallback ke localStorage jika ada
+    if (typeof window !== 'undefined') {
+      const cachedData = localStorage.getItem('homeData');
+      if (cachedData) {
+        try {
+          console.log('Using cached data from localStorage');
+          return JSON.parse(cachedData);
+        } catch (parseError) {
+          console.warn('Error parsing cached data:', parseError);
+        }
       }
+    }
+    
+    // Return default data sebagai fallback terakhir
+    console.log('Using default local data as fallback');
+    return {
+      features: featuresData,
+      pejabat: allPejabat,
+      news: mockNewsData,
+      faq: faqData
     };
+  }
+};
 
-    const handleCustomUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail?.type === 'pejabat' || customEvent.detail?.type === 'faq') {
-        loadData();
+export function useHomeData() {
+  const { data, error, isLoading, mutate } = useSWR('/api/home', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: true,
+    dedupingInterval: 60000, // 1 menit
+    errorRetryCount: 3,
+    errorRetryInterval: 1000,
+    onSuccess: (data) => {
+      // Cache data ke localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('homeData', JSON.stringify(data));
+          console.log('Cached data to localStorage');
+        } catch (error) {
+          console.warn('Error caching data:', error);
+        }
       }
-    };
+    },
+    onError: (error) => {
+      console.error('Error fetching home data:', error);
+    }
+  });
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('dataUpdated', handleCustomUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('dataUpdated', handleCustomUpdate);
-    };
-  }, [loadData]);
+  // Fallback ke default data jika error
+  const fallbackData = {
+    features: featuresData,
+    pejabat: allPejabat,
+    news: mockNewsData,
+    faq: faqData
+  };
 
   return {
-    data,
-    loading,
-    error,
-    reloadData: loadData
+    data: data || fallbackData,
+    loading: isLoading,
+    error: error ? 'Gagal memuat data. Menggunakan data lokal.' : null,
+    mutate // Untuk manual refresh
   };
-}; 
+} 
