@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-	MagnifyingGlassIcon,
-	UserIcon,
 	Bars3Icon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -58,21 +56,6 @@ export default function Header() {
 						</Link>
 					</nav>
 
-					{/* Search and User */}
-					<div className="hidden md:flex items-center space-x-4">
-						<div className="relative">
-							<input
-								type="text"
-								placeholder="Search..."
-								className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-							/>
-							<MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
-						</div>
-						<Link href="/admin/login" className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
-							<UserIcon className="w-5 h-5" />
-						</Link>
-					</div>
-
 					{/* Mobile menu button */}
 					<button
 						className="md:hidden p-2"
@@ -111,20 +94,6 @@ export default function Header() {
 							>
 								Berita
 							</Link>
-							<div className="pt-4 border-t border-white/20">
-								<div className="relative mb-4">
-									<input
-										type="text"
-										placeholder="Search..."
-										className="w-full bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-									/>
-									<MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
-								</div>
-								<Link href="/admin/login" className="flex items-center space-x-2 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors">
-									<UserIcon className="w-5 h-5" />
-									<span>Profile</span>
-								</Link>
-							</div>
 						</nav>
 					</div>
 				)}

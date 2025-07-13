@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { kepalaJorongData, sekretarisData, waliNagariData } from '@/data/pejabat';
 import { faqData } from '@/data/faq';
 import { featuresData } from '@/data/features';
-import { mockNewsData } from '@/data/newsData';
+import { mockNewsData, NewsItem } from '@/data/newsData';
 import NewsCard from '@/components/berita/NewsCard';
 import FAQCard from '@/components/FAQCard';
 import FeatureCard from '@/components/FeatureCard';
@@ -33,6 +33,7 @@ export default function HeroSection() {
   const [pejabatAnimate, setPejabatAnimate] = useState<'in' | 'out'>('in');
   const [allPejabatData, setAllPejabatData] = useState<PejabatData[]>([]);
   const [currentFaqData, setCurrentFaqData] = useState<FAQData[]>([]);
+  const [newsData, setNewsData] = useState<NewsItem[]>(mockNewsData);
   
   const [expandedFaqs, setExpandedFaqs] = useState<number[]>([]);
 
@@ -78,6 +79,22 @@ export default function HeroSection() {
       setCurrentFaqData(faqData);
     }
 
+    // Load News data
+    const savedNews = localStorage.getItem('newsData');
+    if (savedNews) {
+      try {
+        const parsedNews = JSON.parse(savedNews);
+        setNewsData(parsedNews);
+      } catch (error) {
+        console.error('Error parsing news data:', error);
+        // Fallback to default data
+        setNewsData(mockNewsData);
+      }
+    } else {
+      // Use default data
+      setNewsData(mockNewsData);
+    }
+
     // Listen for localStorage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'pejabatData' && e.newValue) {
@@ -94,6 +111,14 @@ export default function HeroSection() {
           setCurrentFaqData(parsedFaq);
         } catch (error) {
           console.error('Error parsing updated FAQ data:', error);
+        }
+      }
+      if (e.key === 'newsData' && e.newValue) {
+        try {
+          const parsedNews = JSON.parse(e.newValue);
+          setNewsData(parsedNews);
+        } catch (error) {
+          console.error('Error parsing updated news data:', error);
         }
       }
     };
@@ -120,6 +145,17 @@ export default function HeroSection() {
             setCurrentFaqData(parsedFaq);
           } catch (error) {
             console.error('Error parsing updated FAQ data:', error);
+          }
+        }
+      }
+      if (customEvent.detail.type === 'news' || customEvent.detail.type === 'berita') {
+        const savedNews = localStorage.getItem('newsData');
+        if (savedNews) {
+          try {
+            const parsedNews = JSON.parse(savedNews);
+            setNewsData(parsedNews);
+          } catch (error) {
+            console.error('Error parsing updated news data:', error);
           }
         }
       }
@@ -394,12 +430,22 @@ export default function HeroSection() {
             
             {/* Show only 3 latest news for both desktop and mobile */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              {mockNewsData
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .slice(0, 3)
-                .map((news) => (
-                  <NewsCard key={news.id} {...news} />
-                ))}
+              {newsData && newsData.length > 0 ? (
+                newsData
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 3)
+                  .map((news) => (
+                    <NewsCard 
+                      key={news.id} 
+                      {...news} 
+                      isFeatured={false} 
+                    />
+                  ))
+              ) : (
+                <div className="col-span-full text-center text-gray-300 py-8">
+                  <p>Tidak ada berita terbaru saat ini</p>
+                </div>
+              )}
             </div>
             
             <div className="text-center mt-10">
