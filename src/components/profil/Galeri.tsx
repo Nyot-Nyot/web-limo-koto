@@ -16,7 +16,7 @@ export default function Galeri() {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [imageTransition, setImageTransition] = useState(false);
   // Use centralized data from context
-  const { data: galleryItems } = useGalleryData();
+  const { data: galleryItems, isLoading } = useGalleryData();
 
   // Group items by category - cast the data to the expected type
   const galleries = galleryItems.reduce((acc, item) => {
@@ -138,7 +138,7 @@ export default function Galeri() {
     setIsDragging(false);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
         <div className="max-w-7xl mx-auto text-center">
@@ -147,20 +147,6 @@ export default function Galeri() {
           </h2>
           <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
           <p className="text-gray-200 text-base md:text-lg">Memuat data galeri...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Galeri <span className="text-yellow-400">Nagari</span>
-          </h2>
-          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
-          <p className="text-red-400 text-base md:text-lg">{error}</p>
         </div>
       </div>
     );
