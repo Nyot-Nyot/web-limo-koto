@@ -192,7 +192,7 @@ const ImageCard = memo(({
           className="w-full h-full object-cover"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="absolute bottom-4 left-4 text-white">
           <h4 className="font-bold text-lg">{image.title}</h4>
           <p className="text-sm opacity-80">{image.description}</p>
@@ -259,25 +259,16 @@ const ProfilSingkat = memo(() => {
           
           <div className="space-y-4 text-gray-200 leading-relaxed">
             <p>
-              Nagari Lima Koto adalah salah satu nagari yang terletak di Kabupaten Sijunjung, 
-              Sumatera Barat. Nagari ini memiliki kekayaan budaya dan tradisi yang telah 
-              diwariskan secara turun-temurun.
+              Nagari Limo Koto adalah salah satu nagari adat di Kecamatan Koto VII, Kabupaten Sijunjung. Nagari ini merupakan himpunan suku dan koto yang bersatu dalam tatanan adat, dengan wilayah dan kekayaan yang diwarisi secara turun-temurun sejak berdirinya nagari.
             </p>
             <p>
-              Dengan luas wilayah sekitar 45,2 km² dan jumlah penduduk kurang lebih 8.500 jiwa, 
-              Nagari Lima Koto terdiri dari 5 korong yang masing-masing memiliki karakteristik 
-              dan keunikan tersendiri.
-            </p>
-            <p>
-              Mata pencaharian utama masyarakat adalah pertanian, perkebunan, dan perdagangan. 
-              Nagari ini juga dikenal dengan hasil perkebunan karet, kelapa sawit, dan produk 
-              pertanian lainnya.
+              Dengan luas wilayah sekitar 4.572 Ha dan jumlah penduduk lebih dari 10.000 jiwa, Nagari Limo Koto terdiri dari lima korong. Setiap korong memiliki sejarah, adat, dan peranan tersendiri dalam struktur masyarakat. Kepemimpinan adat dijalankan oleh Datuak Nan Balimo, yaitu lima penghulu utama yang mewakili suku dan wilayahnya, dibantu oleh unsur Urang Ampek Jinih sebagai penjaga nilai adat dan sosial.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-8">
-            <StatCard title="Luas Wilayah" value="45,2 km²" />
-            <StatCard title="Jumlah Penduduk" value="8.500 jiwa" />
+            <StatCard title="Luas Wilayah" value="4.572 Ha" />
+            <StatCard title="Jumlah Penduduk" value="10.000+ jiwa" />
           </div>
         </div>
 
