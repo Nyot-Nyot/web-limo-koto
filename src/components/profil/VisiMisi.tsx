@@ -29,7 +29,7 @@ const VisiMisi = memo(() => {
               <h3 className="text-3xl font-bold text-yellow-400 mb-4">VISI</h3>
             </div>
             <p className="text-white text-center text-lg leading-relaxed">
-              Terwujudnya Nagari Lima Koto yang Maju, Mandiri, Bermartabat, dan Berbudaya berdasarkan Nilai-nilai Adat Basandi Syarak,  Syarak Basandi Kitabullah
+              “Mewujudkan tata kelola pemerintahan nagari yang baik sehingga terciptanya nagari limo koto yang religius, sejahtera, adil, sdm unggul serta memegang teguh adat istiadat“
             </p>
           </div>
 
@@ -45,11 +45,13 @@ const VisiMisi = memo(() => {
             </div>
             <div className="space-y-4">
               {[
-                'Meningkatkan kualitas pelayanan publik yang prima dan transparan',
-                'Mengembangkan potensi ekonomi berbasis pertanian dan perkebunan',
-                'Melestarikan budaya dan adat istiadat Minangkabau',
-                'Meningkatkan kualitas pendidikan dan kesehatan masyarakat',
-                'Memperkuat tata kelola pemerintahan yang baik dan bersih'
+                'Menciptakan Pemerintahan Nagari yang Berkualitas, Transparan, Akuntabel serta Memberikan Pelayanan yang Prima.',
+                'Mendukung dan Menyelaraskan Program-program yang dilaksanakan oleh Pemerintah Daerah maupun pusat serta melanjutkan program yang dibuat oleh Pemerintah Nagari sebelumnya.',
+                'Mendorong terciptanya Masyarakat yang Religius serta memegang Teguh Adat Istiadat.',
+                'Mendorong dan Meningkatkan Perekonomian Masyarakat Nagari melalui Sumber Daya Alam dan Sumber Daya Manusia yang unggul dalam menggali Potensi Nagari.',
+                'Pendataan Aset Nagari dan Pengelolaannya secara Profesional.',
+                'Berkolaborasi dan Berkoordinasi dengan seluruh unsur yang ada seperti KAN, BPN, Bundo Kanduang, Alim Ulama, Tokoh Masyarakat, Para Perantau serta Karang Taruna.',
+                'Mewujudkan Nagari Baru dengan cara Musyawarah Mufakat dengan Pemangku kepentingan demi tercapainya pelayanan yang optimal.'
               ].map((misi, index) => (
                 <div key={index} className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
