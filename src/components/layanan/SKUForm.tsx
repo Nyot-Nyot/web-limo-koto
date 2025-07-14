@@ -2,13 +2,22 @@
 import { useState } from 'react';
 import { SKUFormData } from '@/types/layanan';
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
+import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
+import imageCompression from 'browser-image-compression';
 
 interface SKUFormProps {
   onClose: () => void;
 }
 
+// Pastikan tipe SKUFormData untuk file hanya string | null
+interface StrictSKUFormData extends Omit<SKUFormData, 'ktp' | 'kk' | 'foto_tempat_usaha'> {
+  ktp: string | null;
+  kk: string | null;
+  foto_tempat_usaha: string | null;
+}
+
 export default function SKUForm({ onClose }: SKUFormProps) {
-  const [formData, setFormData] = useState<SKUFormData>({
+  const [formData, setFormData] = useState<StrictSKUFormData>({
     nama_orang_2: '',
     tempat_tanggal_lahir: '',
     nik: '',
@@ -24,109 +33,68 @@ export default function SKUForm({ onClose }: SKUFormProps) {
     nomorHP: '', // Tambahkan field nomor HP
     ktp: null,
     kk: null,
-    pengantar_rt_rw: null,
     foto_tempat_usaha: null
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Upload file directly to Cloudinary
-  const uploadToCloudinary = async (file: File | null): Promise<string> => {
-    if (!file) return '';
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'limokoto-upload');
-    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
-      method: 'POST', body: data
-    });
-    const json = await res.json();
-    return json.secure_url;
-  };
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({
+    ktp: false,
+    kk: false,
+    foto_tempat_usaha: false,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // Validasi nomor HP
       if (!formData.nomorHP) {
         alert('Nomor HP wajib diisi');
         setIsSubmitting(false);
         return;
       }
-
-      // Upload attachments to Cloudinary
-      const ktpUrl = await uploadToCloudinary(formData.ktp || null);
-      const kkUrl = await uploadToCloudinary(formData.kk || null);
-      const pengantarUrl = await uploadToCloudinary(formData.pengantar_rt_rw || null);
-      const usahaUrl = await uploadToCloudinary(formData.foto_tempat_usaha || null);
-
-      // Prepare primitive form data
-      const cleanedDataToSubmit = Object.fromEntries(
-        Object.entries(formData).filter(([, value]) =>
-          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-        )
-      ) as Record<string, string | number | boolean>;
-
-      // Build attachments object
-      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (ktpUrl) attachments.ktp = { url: ktpUrl, filename: formData.ktp?.name || 'ktp', type: formData.ktp?.type || 'application/octet-stream' };
-      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
-      if (pengantarUrl) attachments.pengantar_rt_rw = { url: pengantarUrl, filename: formData.pengantar_rt_rw?.name || 'pengantar_rt_rw', type: formData.pengantar_rt_rw?.type || 'application/octet-stream' };
-      if (usahaUrl) attachments.foto_tempat_usaha = { url: usahaUrl, filename: formData.foto_tempat_usaha?.name || 'foto_tempat_usaha', type: formData.foto_tempat_usaha?.type || 'application/octet-stream' };
-
-      // Simpan data ke Firestore
-      const nomorPermohonan = await savePermohonanToFirestore('SKU_AN', cleanedDataToSubmit, formData.nomorHP, attachments);
-
-      // Create FormData object untuk generate dokumen
-      const submitFormData = new FormData();
-      submitFormData.append('serviceType', 'SKU_AN');
-      
-      // Append form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === 'string') {
-          submitFormData.append(key, value);
-        } else if (value instanceof File) {
-          submitFormData.append(key, value);
+      await savePermohonanToFirestore(
+        'SKU_AN',
+        Object.fromEntries(
+          Object.entries(formData).filter(([, v]) =>
+            typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null
+          )
+        ),
+        formData.nomorHP,
+        {
+          ktp: { url: formData.ktp || '', filename: 'ktp', type: '' },
+          kk: { url: formData.kk || '', filename: 'kk', type: '' },
+          foto_tempat_usaha: { url: formData.foto_tempat_usaha || '', filename: 'foto_tempat_usaha', type: '' },
         }
+      );
+      const response = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: 'SKU_AN',
+          ...formData,
+        }),
       });
-
-      const response = await fetch('/api/documents/generate', {
-        method: 'POST',
-        body: submitFormData, // Send FormData instead of JSON
-      });
-
       if (response.ok) {
-        // Get the blob from response
         const blob = await response.blob();
-        
-        // Create download link
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        
-        // Generate filename
         const timestamp = Date.now();
-        const filename = `${formData.nama_orang_2 || 'SKU'}-${timestamp}.docx`;
+        const filename = `SKU-${formData.nama_orang_2 || "SKU"}-${timestamp}.docx`;
         link.download = filename;
-        
-        // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        // Clean up
         window.URL.revokeObjectURL(url);
-        
-        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen SKU berhasil dibuat dan didownload!`);
+        alert("Dokumen SKU berhasil dibuat dan didownload!");
         onClose();
       } else {
         const result = await response.json();
-        alert(`Error: ${result.error || 'Gagal membuat dokumen'}`);
+        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      console.error("Error:", error);
+      alert("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -139,13 +107,30 @@ export default function SKUForm({ onClose }: SKUFormProps) {
     }));
   };
 
-  const handleFileChange = (fieldName: keyof SKUFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (fieldName: keyof SKUFormData) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        [fieldName]: file
-      }));
+      if (!file.type.startsWith('image/')) {
+        alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!');
+        return;
+      }
+      setUploading((prev) => ({ ...prev, [fieldName]: true }));
+      try {
+        file = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
+        const url = await uploadToCloudinary(file);
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: url as string, // pastikan hanya string URL
+        }));
+      } catch {
+        alert('Gagal upload file. Silakan coba lagi.');
+      } finally {
+        setUploading((prev) => ({ ...prev, [fieldName]: false }));
+      }
     }
   };
 
@@ -409,12 +394,15 @@ export default function SKUForm({ onClose }: SKUFormProps) {
               </label>
               <input
                 type="file"
-                accept="image/*,application/pdf"
+                accept=".jpg,.jpeg,.png,.webp"
                 onChange={handleFileChange('ktp')}
                 required
+                disabled={uploading.ktp}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, atau PDF (max 5MB)</p>
+              {uploading.ktp && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp && !uploading.ktp && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)</p>
             </div>
 
             <div>
@@ -423,26 +411,15 @@ export default function SKUForm({ onClose }: SKUFormProps) {
               </label>
               <input
                 type="file"
-                accept="image/*,application/pdf"
+                accept=".jpg,.jpeg,.png,.webp"
                 onChange={handleFileChange('kk')}
                 required
+                disabled={uploading.kk}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, atau PDF (max 5MB)</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Surat Pengantar RT/RW <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={handleFileChange('pengantar_rt_rw')}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
-              />
-              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, atau PDF (max 5MB)</p>
+              {uploading.kk && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.kk && !uploading.kk && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)</p>
             </div>
 
             <div>
@@ -451,12 +428,15 @@ export default function SKUForm({ onClose }: SKUFormProps) {
               </label>
               <input
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.webp"
                 onChange={handleFileChange('foto_tempat_usaha')}
                 required
+                disabled={uploading.foto_tempat_usaha}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG (max 5MB) - Foto harus menunjukkan papan nama atau aktivitas usaha</p>
+              {uploading.foto_tempat_usaha && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.foto_tempat_usaha && !uploading.foto_tempat_usaha && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi) - Foto harus menunjukkan papan nama atau aktivitas usaha</p>
             </div>
           </div>
         </div>
@@ -476,7 +456,7 @@ export default function SKUForm({ onClose }: SKUFormProps) {
               <div className="mt-2 text-sm text-yellow-700">
                 <ul className="list-disc list-inside space-y-1">
                   <li>Pastikan semua data yang diisi sudah benar dan sesuai dengan dokumen resmi</li>
-                  <li>Semua berkas persyaratan wajib dilampirkan (KTP, KK, Surat RT/RW, Foto Usaha)</li>
+                  <li>Semua berkas persyaratan wajib dilampirkan (KTP, KK, Foto Usaha)</li>
                   <li>Foto tempat usaha harus jelas menunjukkan papan nama atau aktivitas usaha</li>
                   <li>Dokumen akan dibuat otomatis dan siap untuk ditandatangani oleh pejabat berwenang</li>
                   <li>Tanggal surat akan menggunakan tanggal hari ini</li>
@@ -498,7 +478,7 @@ export default function SKUForm({ onClose }: SKUFormProps) {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Object.values(uploading).some(Boolean)}
             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center"
           >
             {isSubmitting ? (

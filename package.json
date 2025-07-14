@@ -12,6 +12,7 @@
     "@heroicons/react": "^2.2.0",
     "@netlify/next": "^1.4.9",
     "@types/leaflet": "^1.9.19",
+    "browser-image-compression": "^2.0.2",
     "date-fns": "^4.1.0",
     "docxtemplater": "^3.65.2",
     "firebase": "^11.10.0",

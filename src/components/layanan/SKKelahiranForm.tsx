@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from "react";
+import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
+import imageCompression from 'browser-image-compression';
 
 interface SKKelahiranFormProps {
   onClose: () => void;
@@ -23,25 +25,14 @@ interface SKKelahiranFormData {
   nama_kecamatan: string;
   nama_kabupaten: string;
   
-  // File uploads
-  surat_medis?: File | null;
-  kk_orang_tua?: File | null;
-  ktp_ayah?: File | null;
-  ktp_ibu?: File | null;
+  // File uploads (sekarang URL string, bukan File)
+  surat_medis?: string | null;
+  kk_orang_tua?: string | null;
+  ktp_ayah?: string | null;
+  ktp_ibu?: string | null;
 }
 
 export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
-  // Upload file directly to Cloudinary
-  const uploadToCloudinary = async (file: File | null): Promise<string> => {
-    if (!file) return '';
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'limokoto-upload');
-    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', { method: 'POST', body: data });
-    const json = await res.json();
-    return json.secure_url;
-  };
-
   const [formData, setFormData] = useState<SKKelahiranFormData>({
     hari: "",
     tanggal: "",
@@ -61,88 +52,87 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
     ktp_ayah: null,
     ktp_ibu: null,
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
 
+  // Handler baru: upload file ke Cloudinary saat dipilih, simpan URL di state
+  const handleFileChange = (fieldName: keyof SKKelahiranFormData) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
+    if (file) {
+      // Validasi hanya gambar
+      if (!file.type.startsWith('image/')) {
+        alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!');
+        return;
+      }
+      setUploading((prev) => ({ ...prev, [fieldName]: true }));
+      try {
+        // Kompres gambar sebelum upload
+        file = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
+        const url = await uploadToCloudinary(file);
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: url,
+        }));
+      } catch {
+        alert('Gagal upload file. Silakan coba lagi.');
+      } finally {
+        setUploading((prev) => ({ ...prev, [fieldName]: false }));
+      }
+    }
+  };
+
+  // Handler submit: kirim data JSON (bukan FormData)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // Validasi nomor HP
       if (!formData.nomorHP) {
         alert('Nomor HP wajib diisi');
         setIsSubmitting(false);
         return;
       }
-
-      // Upload attachments to Cloudinary
-      const suratMedisUrl = await uploadToCloudinary(formData.surat_medis || null);
-      const kkOrtuUrl = await uploadToCloudinary(formData.kk_orang_tua || null);
-      const ktpAyahUrl = await uploadToCloudinary(formData.ktp_ayah || null);
-      const ktpIbuUrl = await uploadToCloudinary(formData.ktp_ibu || null);
-
-      // Prepare primitive form data
-      const cleanedDataToSubmit = Object.fromEntries(
-        Object.entries(formData).filter(([, value]) =>
-          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-        )
-      );
-
-      // Build attachments object
-      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (suratMedisUrl) attachments.surat_medis = { url: suratMedisUrl, filename: formData.surat_medis?.name || 'surat_medis', type: formData.surat_medis?.type || 'application/octet-stream' };
-      if (kkOrtuUrl) attachments.kk_orang_tua = { url: kkOrtuUrl, filename: formData.kk_orang_tua?.name || 'kk_orang_tua', type: formData.kk_orang_tua?.type || 'application/octet-stream' };
-      if (ktpAyahUrl) attachments.ktp_ayah = { url: ktpAyahUrl, filename: formData.ktp_ayah?.name || 'ktp_ayah', type: formData.ktp_ayah?.type || 'application/octet-stream' };
-      if (ktpIbuUrl) attachments.ktp_ibu = { url: ktpIbuUrl, filename: formData.ktp_ibu?.name || 'ktp_ibu', type: formData.ktp_ibu?.type || 'application/octet-stream' };
-
-      // Save data to Firestore
-      const nomorPermohonan = await savePermohonanToFirestore('SKKelahiran', cleanedDataToSubmit, formData.nomorHP, attachments);
-
-      // Create FormData object untuk generate dokumen
-      const submitFormData = new FormData();
-      submitFormData.append("serviceType", "SKKelahiran");
-
-      // Append form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === "string") {
-          submitFormData.append(key, value);
-        } else if (value instanceof File) {
-          submitFormData.append(key, value);
+      // Simpan ke Firestore (jika perlu, bisa tetap pakai savePermohonanToFirestore)
+      await savePermohonanToFirestore(
+        'SKKelahiran',
+        Object.fromEntries(
+          Object.entries(formData).filter(([, v]) =>
+            typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null
+          )
+        ),
+        formData.nomorHP,
+        {
+          surat_medis: { url: formData.surat_medis || '', filename: 'surat_medis', type: '' },
+          kk_orang_tua: { url: formData.kk_orang_tua || '', filename: 'kk_orang_tua', type: '' },
+          ktp_ayah: { url: formData.ktp_ayah || '', filename: 'ktp_ayah', type: '' },
+          ktp_ibu: { url: formData.ktp_ibu || '', filename: 'ktp_ibu', type: '' },
         }
-      });
-
+      );
+      // Kirim ke API generate dokumen (JSON)
       const response = await fetch("/api/documents/generate", {
         method: "POST",
-        body: submitFormData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: 'SKKelahiran',
+          ...formData,
+        }),
       });
-
       if (response.ok) {
-        // Get the blob from response
         const blob = await response.blob();
-
-        // Create download link
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-
-        // Generate filename
         const timestamp = Date.now();
-        const filename = `SKKelahiran-${
-          formData.nama_orang_2 || "Bayi"
-        }-${timestamp}.docx`;
+        const filename = `SKKelahiran-${formData.nama_orang_2 || "Bayi"}-${timestamp}.docx`;
         link.download = filename;
-
-        // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        // Clean up
         window.URL.revokeObjectURL(url);
-        alert(
-          "Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!"
-        );
+        alert("Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!");
         onClose();
       } else {
         const result = await response.json();
@@ -166,18 +156,6 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
       [e.target.name]: e.target.value,
     }));
   };
-
-  const handleFileChange =
-    (fieldName: keyof SKKelahiranFormData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setFormData((prev) => ({
-          ...prev,
-          [fieldName]: file,
-        }));
-      }
-    };
 
   return (
     <div className="max-h-[80vh] overflow-y-auto">
@@ -391,12 +369,15 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("surat_medis")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                required
+                accept=".jpg,.jpeg,.png,.webp"
+                required={!formData.surat_medis}
+                disabled={uploading.surat_medis}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.surat_medis && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.surat_medis && !uploading.surat_medis && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
 
@@ -407,12 +388,15 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("kk_orang_tua")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                required
+                accept=".jpg,.jpeg,.png,.webp"
+                required={!formData.kk_orang_tua}
+                disabled={uploading.kk_orang_tua}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.kk_orang_tua && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.kk_orang_tua && !uploading.kk_orang_tua && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
 
@@ -423,12 +407,15 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("ktp_ayah")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                required
+                accept=".jpg,.jpeg,.png,.webp"
+                required={!formData.ktp_ayah}
+                disabled={uploading.ktp_ayah}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.ktp_ayah && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp_ayah && !uploading.ktp_ayah && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
 
@@ -439,12 +426,15 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("ktp_ibu")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                required
+                accept=".jpg,.jpeg,.png,.webp"
+                required={!formData.ktp_ibu}
+                disabled={uploading.ktp_ibu}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.ktp_ibu && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp_ibu && !uploading.ktp_ibu && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import imageCompression from 'browser-image-compression';
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface SKTempatTinggalFormProps {
@@ -25,9 +26,8 @@ interface SKTempatTinggalFormData {
   nama_kabupaten: string;
   
   // File uploads (persyaratan)
-  kk?: File | null;
-  ktp?: File | null;
-  surat_permohonan?: File | null;
+  kk?: string | null;
+  ktp?: string | null;
 }
 
 export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProps) {
@@ -46,15 +46,17 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
     nama_kecamatan: 'Koto IV',
     nama_kabupaten: 'Kabupaten Sijunjung',
     kk: null,
-    ktp: null,
-    surat_permohonan: null
+    ktp: null
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState({
+    kk: false,
+    ktp: false
+  });
 
   // Upload file directly to Cloudinary
-  const uploadToCloudinary = async (file: File | null): Promise<string> => {
-    if (!file) return '';
+  const uploadToCloudinary = async (file: File): Promise<string> => {
     const data = new FormData();
     data.append('file', file);
     data.append('upload_preset', 'limokoto-upload');
@@ -77,76 +79,50 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
         return;
       }
 
-      // Upload attachments to Cloudinary
-      const kkUrl = await uploadToCloudinary(formData.kk || null);
-      const ktpUrl = await uploadToCloudinary(formData.ktp || null);
-      const suratUrl = await uploadToCloudinary(formData.surat_permohonan || null);
-
-      // Prepare primitive form data
-      const cleanedDataToSubmit = Object.fromEntries(
-        Object.entries(formData).filter(([, value]) =>
-          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-        )
-      ) as Record<string, string | number | boolean>;
-
-      // Build attachments object
-      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
-      if (ktpUrl) attachments.ktp = { url: ktpUrl, filename: formData.ktp?.name || 'ktp', type: formData.ktp?.type || 'application/octet-stream' };
-      if (suratUrl) attachments.surat_permohonan = { url: suratUrl, filename: formData.surat_permohonan?.name || 'surat_permohonan', type: formData.surat_permohonan?.type || 'application/octet-stream' };
-
-      // Save data to Firestore
-      const nomorPermohonan = await savePermohonanToFirestore('SKTempatTinggal', cleanedDataToSubmit, formData.nomorHP, attachments);
-
-      // Create FormData object
-      const submitFormData = new FormData();
-      submitFormData.append('serviceType', 'SKTempatTinggal');
-      
-      // Append form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === 'string') {
-          submitFormData.append(key, value);
-        } else if (value instanceof File) {
-          submitFormData.append(key, value);
+      await savePermohonanToFirestore(
+        'SKTempatTinggal',
+        Object.fromEntries(
+          Object.entries(formData).filter(([, v]) =>
+            typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null
+          )
+        ),
+        formData.nomorHP,
+        {
+          kk: { url: formData.kk || '', filename: 'kk', type: '' },
+          ktp: { url: formData.ktp || '', filename: 'ktp', type: '' },
         }
-      });
+      );
 
-      const response = await fetch('/api/documents/generate', {
-        method: 'POST',
-        body: submitFormData,
+      const response = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: 'SKTempatTinggal',
+          ...formData,
+        }),
       });
 
       if (response.ok) {
-        // Get the blob from response
         const blob = await response.blob();
-        
-        // Create download link
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        
-        // Generate filename
         const timestamp = Date.now();
-        const filename = `SKTempatTinggal-${formData.nama_orang_2 || 'Pemohon'}-${timestamp}.docx`;
+        const filename = `SKTempatTinggal-${formData.nama_orang_2 || "Pemohon"}-${timestamp}.docx`;
         link.download = filename;
-        
-        // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        // Clean up
         window.URL.revokeObjectURL(url);
-        
-        alert(`Dokumen Surat Keterangan Tidak Memiliki Rumah/Tempat Tinggal berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
+        alert("Dokumen Surat Keterangan Tempat Tinggal berhasil dibuat dan didownload!");
         onClose();
       } else {
         const result = await response.json();
-        alert(`Error: ${result.error || 'Gagal membuat dokumen'}`);
+        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      console.error("Error:", error);
+      alert("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -159,13 +135,32 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
     }));
   };
 
-  const handleFileChange = (fieldName: keyof SKTempatTinggalFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (fieldName: keyof SKTempatTinggalFormData) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        [fieldName]: file
-      }));
+      if (!file.type.startsWith('image/')) {
+        alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!');
+        return;
+      }
+      setUploading((prev) => ({ ...prev, [fieldName]: true }));
+      try {
+        const compressedFile = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
+        if (compressedFile) {
+          const url = await uploadToCloudinary(compressedFile);
+          setFormData((prev) => ({
+            ...prev,
+            [fieldName]: url,
+          }));
+        }
+      } catch {
+        alert('Gagal upload file. Silakan coba lagi.');
+      } finally {
+        setUploading((prev) => ({ ...prev, [fieldName]: false }));
+      }
     }
   };
 
@@ -367,11 +362,17 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
               <input
                 type="file"
                 onChange={handleFileChange('kk')}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+                disabled={uploading.kk}
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              {uploading.kk && (
+                <div className="text-xs text-gray-500 mt-1">Uploading KK...</div>
+              )}
+              {!uploading.kk && (
+                <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB)</p>
+              )}
             </div>
 
             <div>
@@ -381,25 +382,17 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
               <input
                 type="file"
                 onChange={handleFileChange('ktp')}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
+                disabled={uploading.ktp}
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Surat Permohonan Pengajuan <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="file"
-                onChange={handleFileChange('surat_permohonan')}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
-              />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              {uploading.ktp && (
+                <div className="text-xs text-gray-500 mt-1">Uploading KTP...</div>
+              )}
+              {!uploading.ktp && (
+                <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB)</p>
+              )}
             </div>
           </div>
         </div>
@@ -415,7 +408,7 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || uploading.kk || uploading.ktp}
             className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg"
           >
             {isSubmitting ? (

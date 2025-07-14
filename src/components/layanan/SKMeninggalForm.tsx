@@ -1,19 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
-// Upload file directly to Cloudinary
-const uploadToCloudinary = async (file: File | null): Promise<string> => {
-  if (!file) return '';
-  const data = new FormData();
-  data.append('file', file);
-  data.append('upload_preset', 'limokoto-upload');
-  const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
-    method: 'POST',
-    body: data,
-  });
-  const json = await res.json();
-  return json.secure_url;
-};
+import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
+import imageCompression from 'browser-image-compression';
 
 interface SKMeninggalFormProps {
   onClose: () => void;
@@ -39,11 +28,11 @@ interface SKMeninggalFormData {
   nama_nagari: string;
   nama_kecamatan: string;
   nama_kabupaten: string;
-  // File uploads
-  ktp_almarhum?: File | null;
-  kk_almarhum?: File | null;
-  surat_rs?: File | null;
-  ktp_pelapor?: File | null;
+  // File uploads (sekarang URL string, bukan File)
+  ktp_almarhum?: string | null;
+  kk_almarhum?: string | null;
+  surat_rs?: string | null;
+  ktp_pelapor?: string | null;
 }
 
 export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
@@ -70,89 +59,60 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({
+    ktp_almarhum: false,
+    kk_almarhum: false,
+    surat_rs: false,
+    ktp_pelapor: false,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // Validasi input
       if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
         alert('Harap isi semua field yang wajib diisi!');
         setIsSubmitting(false);
         return;
       }
-
-      // Upload attachments to Cloudinary
-      const ktpAlmarhumUrl = await uploadToCloudinary(formData.ktp_almarhum || null);
-      const kkAlmarhumUrl = await uploadToCloudinary(formData.kk_almarhum || null);
-      const suratRsUrl = await uploadToCloudinary(formData.surat_rs || null);
-      const ktpPelaporUrl = await uploadToCloudinary(formData.ktp_pelapor || null);
-
-      // Prepare primitive form data
-      const cleanedDataToSubmit = Object.fromEntries(
-        Object.entries(formData).filter(([, value]) =>
-          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-        )
-      );
-      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (ktpAlmarhumUrl) attachments.ktp_almarhum = { url: ktpAlmarhumUrl, filename: formData.ktp_almarhum?.name || 'ktp_almarhum', type: formData.ktp_almarhum?.type || 'application/octet-stream' };
-      if (kkAlmarhumUrl) attachments.kk_almarhum = { url: kkAlmarhumUrl, filename: formData.kk_almarhum?.name || 'kk_almarhum', type: formData.kk_almarhum?.type || 'application/octet-stream' };
-      if (suratRsUrl) attachments.surat_rs = { url: suratRsUrl, filename: formData.surat_rs?.name || 'surat_rs', type: formData.surat_rs?.type || 'application/octet-stream' };
-      if (ktpPelaporUrl) attachments.ktp_pelapor = { url: ktpPelaporUrl, filename: formData.ktp_pelapor?.name || 'ktp_pelapor', type: formData.ktp_pelapor?.type || 'application/octet-stream' };
-
-      // Save data to Firestore
-      const nomorPermohonan = await savePermohonanToFirestore(
+      // Simpan ke Firestore
+      await savePermohonanToFirestore(
         'SKMeninggalDunia',
-        cleanedDataToSubmit,
+        Object.fromEntries(
+          Object.entries(formData).filter(([, v]) =>
+            typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null
+          )
+        ),
         formData.nomorHP,
-        attachments
-      );
-
-      // Create FormData object
-      const submitFormData = new FormData();
-      submitFormData.append("serviceType", "SKMeninggalDunia");
-
-      // Append form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === "string") {
-          submitFormData.append(key, value);
-        } else if (value instanceof File) {
-          submitFormData.append(key, value);
+        {
+          ktp_almarhum: { url: formData.ktp_almarhum || '', filename: 'ktp_almarhum', type: '' },
+          kk_almarhum: { url: formData.kk_almarhum || '', filename: 'kk_almarhum', type: '' },
+          surat_rs: { url: formData.surat_rs || '', filename: 'surat_rs', type: '' },
+          ktp_pelapor: { url: formData.ktp_pelapor || '', filename: 'ktp_pelapor', type: '' },
         }
-      });
-
+      );
+      // Kirim ke API generate dokumen (JSON)
       const response = await fetch("/api/documents/generate", {
         method: "POST",
-        body: submitFormData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: 'SKMeninggalDunia',
+          ...formData,
+        }),
       });
-
       if (response.ok) {
-        // Get the blob from response
         const blob = await response.blob();
-
-        // Create download link
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-
-        // Generate filename
         const timestamp = Date.now();
-        const filename = `SKMeninggalDunia-${
-          formData.nama_orang_2 || "Almarhum"
-        }-${timestamp}.docx`;
+        const filename = `SKMeninggalDunia-${formData.nama_orang_2 || "Almarhum"}-${timestamp}.docx`;
         link.download = filename;
-
-        // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        // Clean up
         window.URL.revokeObjectURL(url);
-        alert(
-          "Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!"
-        );
+        alert("Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!");
         onClose();
       } else {
         const result = await response.json();
@@ -177,17 +137,32 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
     }));
   };
 
-  const handleFileChange =
-    (fieldName: keyof SKMeninggalFormData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
+  const handleFileChange = (fieldName: keyof SKMeninggalFormData) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!');
+        return;
+      }
+      setUploading((prev) => ({ ...prev, [fieldName]: true }));
+      try {
+        file = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
+        const url = await uploadToCloudinary(file);
         setFormData((prev) => ({
           ...prev,
-          [fieldName]: file,
+          [fieldName]: url,
         }));
+      } catch {
+        alert('Gagal upload file. Silakan coba lagi.');
+      } finally {
+        setUploading((prev) => ({ ...prev, [fieldName]: false }));
       }
-    };
+    }
+  };
 
   return (
     <div className="max-h-[80vh] overflow-y-auto">
@@ -432,12 +407,15 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("ktp_almarhum")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
+                disabled={uploading.ktp_almarhum}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.ktp_almarhum && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp_almarhum && !uploading.ktp_almarhum && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
 
@@ -448,12 +426,15 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("kk_almarhum")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
+                disabled={uploading.kk_almarhum}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.kk_almarhum && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.kk_almarhum && !uploading.kk_almarhum && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
 
@@ -465,12 +446,15 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("surat_rs")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
+                disabled={uploading.surat_rs}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.surat_rs && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.surat_rs && !uploading.surat_rs && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Wajib jika meninggal karena kejadian tertentu. Format: PDF, JPG,
-                PNG, DOC, DOCX (Max: 5MB)
+                Wajib jika meninggal karena kejadian tertentu. Format: JPG, JPEG,
+                PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
 
@@ -481,12 +465,15 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange("ktp_pelapor")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
+                disabled={uploading.ktp_pelapor}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
+              {uploading.ktp_pelapor && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp_pelapor && !uploading.ktp_pelapor && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
               <p className="text-xs text-gray-500 mt-1">
-                Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)
+                Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)
               </p>
             </div>
           </div>
@@ -503,7 +490,7 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Object.values(uploading).some(Boolean)}
             className="px-6 py-3 bg-gradient-to-r from-gray-600 to-slate-700 text-white rounded-lg hover:from-gray-700 hover:to-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg"
           >
             {isSubmitting ? (
