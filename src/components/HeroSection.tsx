@@ -119,15 +119,11 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/profil" passHref legacyBehavior>
-                <a className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
-                  Jelajahi Profil Nagari
-                </a>
+              <Link href="/profil" className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
+                Jelajahi Profil Nagari
               </Link>
-              <Link href="/berita" passHref legacyBehavior>
-                <a className="bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
-                  Baca Portal Berita
-                </a>
+              <Link href="/berita" className="bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
+                Baca Portal Berita
               </Link>
             </div>
           </div>
