@@ -367,12 +367,9 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
                 disabled={uploading.kk}
               />
-              {uploading.kk && (
-                <div className="text-xs text-gray-500 mt-1">Uploading KK...</div>
-              )}
-              {!uploading.kk && (
-                <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB)</p>
-              )}
+              {uploading.kk && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.kk && !uploading.kk && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB)</p>
             </div>
 
             <div>
@@ -387,12 +384,9 @@ export default function SKTempatTinggalForm({ onClose }: SKTempatTinggalFormProp
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
                 disabled={uploading.ktp}
               />
-              {uploading.ktp && (
-                <div className="text-xs text-gray-500 mt-1">Uploading KTP...</div>
-              )}
-              {!uploading.ktp && (
-                <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB)</p>
-              )}
+              {uploading.ktp && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp && !uploading.ktp && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB)</p>
             </div>
           </div>
         </div>
