@@ -160,17 +160,17 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
             <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
             <h3 className="text-lg font-semibold text-blue-900">Data Pribadi Pemohon</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nama Lengkap <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                name="nama"
+            name="nama"
                 value={formData.nama}
-                onChange={handleChange}
-                required
+            onChange={handleChange}
+            required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Masukkan nama lengkap sesuai KTP"
               />
@@ -181,10 +181,10 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="nik"
+            name="nik"
                 value={formData.nik}
-                onChange={handleChange}
-                required
+            onChange={handleChange}
+            required
                 maxLength={16}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="16 digit NIK"
@@ -198,8 +198,8 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
                 type="text"
                 name="tempat_tanggal_lahir"
                 value={formData.tempat_tanggal_lahir}
-                onChange={handleChange}
-                required
+            onChange={handleChange}
+            required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Contoh: Pekanbaru, 19 Mei 2004"
               />
@@ -211,8 +211,8 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               <select
                 name="jenis_kelamin"
                 value={formData.jenis_kelamin}
-                onChange={handleChange}
-                required
+            onChange={handleChange}
+            required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
               >
                 <option value="">Pilih Jenis Kelamin</option>
@@ -225,7 +225,7 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
                 Agama <span className="text-red-500">*</span>
               </label>
               <select
-                name="agama"
+            name="agama"
                 value={formData.agama}
                 onChange={handleChange}
                 required
@@ -266,8 +266,8 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
                 type="text"
                 name="pekerjaan"
                 value={formData.pekerjaan}
-                onChange={handleChange}
-                required
+            onChange={handleChange}
+            required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Pekerjaan utama"
               />
@@ -278,15 +278,15 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="kewarganegaraan"
+            name="kewarganegaraan"
                 value={formData.kewarganegaraan}
-                onChange={handleChange}
+            onChange={handleChange}
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
-                placeholder="Contoh: WNI"
-              />
-            </div>
-            <div>
+            placeholder="Contoh: WNI"
+          />
+        </div>
+      <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nomor HP/WA <span className="text-red-500">*</span>
               </label>
@@ -295,14 +295,14 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
                 name="nomorHP"
                 value={formData.nomorHP}
                 onChange={handleChange}
-                required
+            required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Contoh: 08123456789"
-              />
-            </div>
-          </div>
+          />
         </div>
-        {/* Data Domisili */}
+      </div>
+        </div>
+      {/* Data Domisili */}
         <div className="bg-white border border-cyan-200 rounded-lg p-5 shadow-sm">
           <div className="flex items-center mb-4">
             <div className="w-3 h-3 bg-cyan-500 rounded-full mr-3"></div>
@@ -329,10 +329,10 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="provinsi"
+              name="provinsi"
                 value={formData.provinsi}
-                onChange={handleChange}
-                required
+              onChange={handleChange}
+              required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-black transition-colors"
                 placeholder="Provinsi"
               />
@@ -343,10 +343,10 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="kabupaten"
+              name="kabupaten"
                 value={formData.kabupaten}
-                onChange={handleChange}
-                required
+              onChange={handleChange}
+              required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-black transition-colors"
                 placeholder="Kabupaten"
               />
@@ -357,10 +357,10 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="kecamatan"
+              name="kecamatan"
                 value={formData.kecamatan}
-                onChange={handleChange}
-                required
+              onChange={handleChange}
+              required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-black transition-colors"
                 placeholder="Kecamatan"
               />
@@ -371,7 +371,7 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="kampung"
+              name="kampung"
                 value={formData.kampung}
                 onChange={handleChange}
                 required
@@ -387,8 +387,8 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
                 type="text"
                 name="dusun"
                 value={formData.dusun}
-                onChange={handleChange}
-                required
+              onChange={handleChange}
+              required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-black transition-colors"
                 placeholder="Dusun"
               />
@@ -399,10 +399,10 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="rk"
+              name="rk"
                 value={formData.rk}
-                onChange={handleChange}
-                required
+              onChange={handleChange}
+              required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-black transition-colors"
                 placeholder="RK"
               />
@@ -413,10 +413,10 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
               </label>
               <input
                 type="text"
-                name="rt"
+              name="rt"
                 value={formData.rt}
-                onChange={handleChange}
-                required
+              onChange={handleChange}
+              required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-black transition-colors"
                 placeholder="RT"
               />
@@ -517,6 +517,6 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
           </button>
         </div>
       </form>
-    </div>
+      </div>
   );
 }
