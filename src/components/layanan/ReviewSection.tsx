@@ -189,6 +189,6 @@ const ReviewSection = memo(() => {
   );
 });
 
-ReviewSection.displayName = 'ReviewSection';
+ReviewSection.displayName = "ReviewSection";
 
 export default ReviewSection;

@@ -184,7 +184,25 @@ export class DocxGenerator {
       }
     }
     
-    return {
+    // Parse anggota_keluarga if it's a JSON string
+    let anggotaKeluarga = [];
+    if (data.anggota_keluarga) {
+      try {
+        anggotaKeluarga = typeof data.anggota_keluarga === 'string' 
+          ? JSON.parse(data.anggota_keluarga) 
+          : data.anggota_keluarga;
+        
+        // Debug log
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Parsed anggota_keluarga:', anggotaKeluarga);
+        }
+      } catch (error) {
+        console.error('Error parsing anggota_keluarga:', error);
+        anggotaKeluarga = [];
+      }
+    }
+    
+    const templateData = {
       // Placeholder yang sesuai dengan template pindah
       nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
@@ -207,8 +225,16 @@ export class DocxGenerator {
       provinsi_tujuan: data.provinsi_tujuan || '',
       anggota_keluarga: anggotaList,
       
+      // Anggota keluarga untuk template loop
+      anggota_keluarga: anggotaKeluarga,
+      
       tanggal: this.formatDate(currentDate)
     };
+    
+    // Debug log complete template data
+    console.log('Complete template data for SKPindah:', templateData);
+    
+    return templateData;
   }
 
   private prepareTempatTinggalData(data: any) {

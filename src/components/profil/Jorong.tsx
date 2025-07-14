@@ -40,8 +40,8 @@ export default function Jorong() {
   }
 
   return (
-    <div className="flex items-center justify-center px-4 md:px-8 py-8 md:py-16">
-      <div className="max-w-7xl mx-auto">
+    <div className="flex items-center justify-center px-4 md:px-8 py-8 md:py-16 min-h-screen h-full">
+      <div className="max-w-5xl mx-auto w-full h-full">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -53,9 +53,9 @@ export default function Jorong() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 min-h-[600px] transition-all duration-300 items-stretch h-full">
           {/* Left Side - Google Maps */}
-          <div className="relative">
+          <div className="relative h-full flex flex-col">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-bold text-white mb-3 text-center">Peta Nagari Lima Koto</h3>
               <p className="text-gray-300 text-sm text-center mb-4">
@@ -65,8 +65,7 @@ export default function Jorong() {
               {/* Google Maps Container */}
               <div className="relative w-full h-[350px] md:h-[400px] bg-white/5 rounded-lg overflow-hidden border-2 border-white/20 mb-4">{/* Reduced height from 500px to 350px/400px */}
                 <iframe
-                  key={mapKey}
-                  src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63560.0!2d${selectedJorongData.coordinates.lng}!3d${selectedJorongData.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z!5e0!3m2!1sid!2sid!4v${Date.now()}!5m2!1sid!2sid&q=Nagari+Lima+Koto+Sijunjung+Sumatera+Barat`}
+                  src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63560.0!2d${selectedJorongData.coordinates.lng}!3d${selectedJorongData.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z!5e0!3m2!1sid!2sid!5m2!1sid!2sid&q=Nagari+Lima+Koto+Sijunjung+Sumatera+Barat`}
                   width="100%"
                   height="100%"
                   style={{ 
@@ -162,7 +161,7 @@ export default function Jorong() {
           </div>
 
           {/* Right Side - Jorong Profile */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-4 md:space-y-6 h-full flex flex-col">
             {/* Main Info Card */}
             <div 
               className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 border-l-4 transition-all duration-300"

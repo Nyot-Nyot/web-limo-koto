@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { savePermohonanToFirestore } from '@/lib/layananUtils';
 
 interface SKPindahFormProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface SKPindahFormData {
   nomor_kk: string;
   nama_orang_2: string; // nama yang pindah
   nik: string;
+  nomorHP: string; // Tambahkan field nomor HP
   
   // Data daerah asal
   desa_kelurahan_asal: string;
@@ -49,6 +51,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     nomor_kk: '',
     nama_orang_2: '',
     nik: '',
+    nomorHP: '', // Tambahkan field nomor HP
     desa_kelurahan_asal: '',
     kecamatan_asal: '',
     kabupaten_kota_asal: '',
@@ -93,12 +96,49 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
       )
     }));
   };
-
+  // Upload file directly to Cloudinary
+  const uploadToCloudinary = async (file: File | null): Promise<string> => {
+    if (!file) return '';
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'limokoto-upload');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
+      method: 'POST', body: data
+    });
+    const json = await res.json();
+    return json.secure_url;
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Validasi input
+      if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
+        alert('Harap isi semua field yang wajib diisi!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload attachments to Cloudinary
+      const kkUrl = await uploadToCloudinary(formData.kk || null);
+      const ktpUrl = await uploadToCloudinary(formData.ktp || null);
+      const photoUrl = await uploadToCloudinary(formData.pas_photo || null);
+
+      // Prepare primitive form data
+      const cleanedDataToSubmit = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+      ) as Record<string, string | number | boolean>;
+
+      // Build attachments object
+      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
+      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
+      if (ktpUrl) attachments.ktp = { url: ktpUrl, filename: formData.ktp?.name || 'ktp', type: formData.ktp?.type || 'application/octet-stream' };
+      if (photoUrl) attachments.pas_photo = { url: photoUrl, filename: formData.pas_photo?.name || 'pas_photo', type: formData.pas_photo?.type || 'application/octet-stream' };
+
+      // Save data to Firestore
+      const nomorPermohonan = await savePermohonanToFirestore('SKPindah', cleanedDataToSubmit, formData.nomorHP, attachments);
+
       // Create FormData object
       const submitFormData = new FormData();
       submitFormData.append('serviceType', 'SKPindah');
@@ -145,7 +185,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
-        alert('Dokumen Surat Keterangan Pindah berhasil dibuat dan didownload!');
+        alert(`Dokumen Surat Keterangan Pindah berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
         onClose();
       } else {
         const result = await response.json();
@@ -238,6 +278,21 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
                 maxLength={16}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
                 placeholder="Masukkan NIK"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor HP <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="nomorHP"
+                value={formData.nomorHP}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-colors"
+                placeholder="Contoh: 08123456789"
               />
             </div>
           </div>
@@ -442,7 +497,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
           {formData.anggota_keluarga.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>Belum ada anggota keluarga yang ditambahkan.</p>
-              <p className="text-sm">Klik &quot;Tambah Anggota&quot; untuk menambahkan data anggota keluarga yang ikut pindah.</p>
+              <p className="text-sm">Klik "Tambah Anggota" untuk menambahkan data anggota keluarga yang ikut pindah.</p>
             </div>
           ) : (
             <div className="space-y-4">
