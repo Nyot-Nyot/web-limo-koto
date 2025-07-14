@@ -2,28 +2,29 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { galeriData, galeriCategories, GalleryItem } from '@/data/galeri';
-import { useGaleriFirestore } from '@/lib/galeriService';
+import { galeriCategories, GalleryItem } from '@/data/galeri';
+import { useGalleryData } from '@/context/DataContext';
 
 export default function Galeri() {
   const [activeCategory, setActiveCategory] = useState('makanan');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [loadingImages, setLoadingImages] = useState<Set<string | number>>(new Set());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [imageTransition, setImageTransition] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Use centralized data from context
+  const { data: galleryItems, isLoading } = useGalleryData();
 
-  const { data: firestoreGallery, loading, error } = useGaleriFirestore();
-  const galleryItems = (firestoreGallery && firestoreGallery.length > 0) ? firestoreGallery : galeriData;
-
-  // Group items by category
+  // Group items by category - cast the data to the expected type
   const galleries = galleryItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
+    const galleryItem = item as GalleryItem; // Cast to handle type compatibility
+    if (!acc[galleryItem.category]) {
+      acc[galleryItem.category] = [];
     }
-    acc[item.category].push(item);
+    acc[galleryItem.category].push(galleryItem);
     return acc;
   }, {} as Record<string, GalleryItem[]>);
 
@@ -137,7 +138,7 @@ export default function Galeri() {
     setIsDragging(false);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
         <div className="max-w-7xl mx-auto text-center">
@@ -146,20 +147,6 @@ export default function Galeri() {
           </h2>
           <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
           <p className="text-gray-200 text-base md:text-lg">Memuat data galeri...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 md:px-8 py-16 md:py-24">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Galeri <span className="text-yellow-400">Nagari</span>
-          </h2>
-          <div className="w-20 h-1 bg-yellow-400 mx-auto mb-4"></div>
-          <p className="text-red-400 text-base md:text-lg">{error}</p>
         </div>
       </div>
     );

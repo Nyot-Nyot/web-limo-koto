@@ -140,7 +140,6 @@ export default function SKKelahiranForm({ onClose }: SKKelahiranFormProps) {
 
         // Clean up
         window.URL.revokeObjectURL(url);
-
         alert(
           "Dokumen Surat Keterangan Kelahiran berhasil dibuat dan didownload!"
         );

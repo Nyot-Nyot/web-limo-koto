@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import Header from "@/components/Header";
 import SearchFilter from "@/components/berita/SearchFilter";
 import NewsCard from "@/components/berita/NewsCard";
@@ -8,7 +8,26 @@ import AgendaSidebar from "@/components/berita/AgendaSidebar";
 import Pagination from "@/components/berita/Pagination";
 import SectionHeader from "@/components/berita/SectionHeader";
 import { useNewsFilter } from "@/hooks/useNewsFilter";
-import { mockNewsData, mockAgendaData, NewsItem } from "@/data/newsData";
+import { useNewsData, useAgendaData } from "@/context/DataContext";
+
+// Extended interface untuk raw news data dari context
+interface ExtendedNewsData {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  image?: string;
+  author?: string;
+  category?: string;
+  // Properties yang mungkin ada dari data asli
+  excerpt?: string;
+  views?: number;
+  categoryColor?: string;
+  backgroundGradient?: string;
+  emoji?: string;
+  isFeatured?: boolean;
+  imageSrc?: string;
+}
 
 // Constants for better maintainability
 const PAGE_CONFIG = {
@@ -68,65 +87,46 @@ const NoResultsState = React.memo(() => (
 NoResultsState.displayName = 'NoResultsState';
 
 export default function BeritaPage() {
-  const [newsData, setNewsData] = useState<NewsItem[]>(mockNewsData);
-  const [agendaData, setAgendaData] = useState(mockAgendaData);
+  // Use centralized data from context
+  const { data: rawNewsData } = useNewsData();
+  const { data: rawAgendaData } = useAgendaData();
   
-  // Load news data from localStorage or use mock data
-  useEffect(() => {
-    // Check if we're in the browser environment
-    if (typeof window !== 'undefined') {
-      // Load news data
-      const savedNewsData = localStorage.getItem('newsData');
-      if (savedNewsData) {
-        try {
-          const parsedData = JSON.parse(savedNewsData);
-          setNewsData(parsedData);
-        } catch (error) {
-          console.error('Error parsing news data from localStorage:', error);
-        }
-      }
+  // Convert data to expected format
+  const newsData = useMemo(() => 
+    rawNewsData.map(news => {
+      // Safely access properties that might exist in the raw data
+      const rawNewsItem = news as ExtendedNewsData;
       
-      // Load agenda data
-      const savedAgendaData = localStorage.getItem('agendaData');
-      if (savedAgendaData) {
-        try {
-          const parsedData = JSON.parse(savedAgendaData);
-          setAgendaData(parsedData);
-        } catch (error) {
-          console.error('Error parsing agenda data from localStorage:', error);
-        }
-      }
-    }
-    
-    // Listen for data update events from admin
-    const handleDataUpdate = (event: CustomEvent) => {
-      if (event.detail?.type === 'berita') {
-        const updatedData = localStorage.getItem('newsData');
-        if (updatedData) {
-          try {
-            setNewsData(JSON.parse(updatedData));
-          } catch (error) {
-            console.error('Error parsing updated news data:', error);
-          }
-        }
-      } else if (event.detail?.type === 'agenda') {
-        const updatedData = localStorage.getItem('agendaData');
-        if (updatedData) {
-          try {
-            setAgendaData(JSON.parse(updatedData));
-          } catch (error) {
-            console.error('Error parsing updated agenda data:', error);
-          }
-        }
-      }
-    };
-    
-    window.addEventListener('dataUpdated', handleDataUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('dataUpdated', handleDataUpdate as EventListener);
-    };
-  }, []);
+      return {
+        ...news,
+        href: `/berita/${news.id}`,
+        // Use excerpt if available, otherwise create from content
+        excerpt: rawNewsItem.excerpt || 
+                (news.content ? news.content.substring(0, 150) + '...' : 'Tidak ada deskripsi tersedia'),
+        views: rawNewsItem.views || 0,
+        category: news.category || 'Berita',
+        categoryColor: rawNewsItem.categoryColor || 'bg-blue-500',
+        backgroundGradient: rawNewsItem.backgroundGradient || 'bg-gradient-to-r from-blue-500 to-purple-600',
+        emoji: rawNewsItem.emoji || '📰',
+        // Preserve featured status from original data
+        isFeatured: rawNewsItem.isFeatured || false,
+        imageSrc: news.image || rawNewsItem.imageSrc
+      };
+    }), 
+    [rawNewsData]
+  );
+  
+  const agendaData = useMemo(() => 
+    rawAgendaData.map(agenda => ({
+      id: agenda.id,
+      title: agenda.title,
+      organizer: agenda.author || 'Nagari Lima Koto',
+      location: 'Nagari Lima Koto',
+      date: agenda.date,
+      time: '08:00'
+    })), 
+    [rawAgendaData]
+  );
 
   const {
     searchTerm,

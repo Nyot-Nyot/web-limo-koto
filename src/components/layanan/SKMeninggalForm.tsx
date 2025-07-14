@@ -95,8 +95,6 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
           typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
         )
       );
-
-      // Build attachments object
       const attachments: Record<string, { url: string; filename: string; type: string }> = {};
       if (ktpAlmarhumUrl) attachments.ktp_almarhum = { url: ktpAlmarhumUrl, filename: formData.ktp_almarhum?.name || 'ktp_almarhum', type: formData.ktp_almarhum?.type || 'application/octet-stream' };
       if (kkAlmarhumUrl) attachments.kk_almarhum = { url: kkAlmarhumUrl, filename: formData.kk_almarhum?.name || 'kk_almarhum', type: formData.kk_almarhum?.type || 'application/octet-stream' };
@@ -152,7 +150,6 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
 
         // Clean up
         window.URL.revokeObjectURL(url);
-
         alert(
           "Dokumen Surat Keterangan Meninggal Dunia berhasil dibuat dan didownload!"
         );

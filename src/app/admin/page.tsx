@@ -13,7 +13,8 @@ import {
   DocumentTextIcon,
   PhotoIcon,
   MapPinIcon,
-  CalendarIcon
+  CalendarIcon,
+  ChatBubbleLeftEllipsisIcon
 } from '@heroicons/react/24/outline';
 
 // Import default data for each module
@@ -36,7 +37,8 @@ export default function AdminDashboard() {
     berita: 0,
     jorong: 0,
     galeri: 0,
-    agenda: 0
+    agenda: 0,
+    feedback: 0
   });
 
   useEffect(() => {
@@ -64,7 +66,8 @@ export default function AdminDashboard() {
           berita: 0,
           jorong: 0,
           galeri: 0,
-          agenda: 0
+          agenda: 0,
+          feedback: 0
         };
         
         // Try to get data from Firestore with proper error handling
@@ -133,6 +136,15 @@ export default function AdminDashboard() {
           mockNewsData;
         if (isMounted) countsData.berita = newsItems.length;
         
+        // Fetch feedback data
+        try {
+          const feedbackSnapshot = await getDocs(collection(db, 'feedback'));
+          if (isMounted) countsData.feedback = feedbackSnapshot.docs.length;
+        } catch (error) {
+          console.warn('Error fetching feedback data:', error);
+          if (isMounted) countsData.feedback = 0;
+        }
+        
         // Update state only if component is still mounted
         if (isMounted) {
           setCounts(countsData);
@@ -162,7 +174,8 @@ export default function AdminDashboard() {
           berita: newsItems.length,
           jorong: jorongItems.length,
           galeri: galeriItems.length,
-          agenda: agendaItems.length
+          agenda: agendaItems.length,
+          feedback: 0
         });
         setLoading(false);
       }
@@ -321,6 +334,15 @@ export default function AdminDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total Agenda</p>
                 <p className="text-2xl font-bold text-white">{counts.agenda}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center">
+              <ChatBubbleLeftEllipsisIcon className="w-8 h-8 text-purple-400" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Total Feedback</p>
+                <p className="text-2xl font-bold text-white">{counts.feedback}</p>
               </div>
             </div>
           </div>

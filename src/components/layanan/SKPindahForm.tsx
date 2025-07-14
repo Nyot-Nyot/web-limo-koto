@@ -96,7 +96,6 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
       )
     }));
   };
-
   // Upload file directly to Cloudinary
   const uploadToCloudinary = async (file: File | null): Promise<string> => {
     if (!file) return '';
@@ -109,7 +108,6 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     const json = await res.json();
     return json.secure_url;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
