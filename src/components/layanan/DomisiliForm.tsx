@@ -131,18 +131,7 @@ export default function DomisiliForm({ onClose }: DomisiliFormProps) {
         }),
       });
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        const timestamp = Date.now();
-        const filename = `SKDomisili-${formData.nama || "Pemohon"}-${timestamp}.docx`;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        alert("Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!");
+        alert("Permohonan berhasil dikirim! Silakan tunggu proses dari admin.");
         onClose();
       } else {
         const result = await response.json();
