@@ -22,7 +22,7 @@ export default function Header() {
 							className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
 						>
 							<Image
-								src="/images/icon_sijunjung.png"
+								src="/images/icon_sijunjung.webp"
 								alt="Nagari Lima Koto Logo"
 								width={32}
 								height={32}

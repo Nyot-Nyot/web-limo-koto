@@ -91,7 +91,7 @@ export default function HeroSection() {
       <div
         className="fixed inset-0 bg-fixed"
         style={{
-          backgroundImage: 'url("/images/background.png")',
+          backgroundImage: 'url("/images/background.webp")',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
         }}
