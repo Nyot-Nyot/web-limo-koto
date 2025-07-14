@@ -21,11 +21,6 @@ const InformasiJorong = lazy(() =>
     default: module.default
   }))
 );
-const AdatIstiadat = lazy(() => 
-  import('./AdatIstiadat').then(module => ({
-    default: module.default
-  }))
-);
 const Galeri = lazy(() => 
   import('./Galeri').then(module => ({
     default: module.default
@@ -89,8 +84,7 @@ const COMPONENT_MAP = {
   '01': ProfilSingkat,
   '02': VisiMisi,
   '03': InformasiJorong,
-  '04': AdatIstiadat,
-  '05': Galeri,
+  '04': Galeri,
 } as const;
 
 interface ProfilContentProps {

@@ -8,8 +8,7 @@ export const PROFIL_SECTIONS: Section[] = [
   { id: '01', title: 'Profil Singkat', label: 'Profil' },
   { id: '02', title: 'Visi & Misi', label: 'Visi Misi' },
   { id: '03', title: 'Jorong', label: 'Jorong' },
-  { id: '04', title: 'Adat Istiadat', label: 'Adat' },
-  { id: '05', title: 'Galeri', label: 'Galeri' },
+  { id: '04', title: 'Galeri', label: 'Galeri' },
 ];
 
 export const OBSERVER_OPTIONS: IntersectionObserverInit = {
