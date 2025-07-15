@@ -2,6 +2,8 @@ import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
 import fs from 'fs';
 import path from 'path';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export class DocxGenerator {
   private templateDir = path.join(process.cwd(), 'templates');
@@ -85,7 +87,7 @@ export class DocxGenerator {
     
     return {
       // Placeholder yang sesuai dengan template
-      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_1: data.nama_orang_1 || '',
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
       nama_orang_2: data.nama_orang_2 || '',
       tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
@@ -109,7 +111,7 @@ export class DocxGenerator {
     
     return {
       // Placeholder yang sesuai dengan template domisili
-      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_1: data.nama_orang_1 || '',
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
       nama_orang_2: data.nama_orang_2 || '',
       tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
@@ -133,7 +135,7 @@ export class DocxGenerator {
     
     return {
       // Placeholder yang sesuai dengan template kelahiran
-      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_1: data.nama_orang_1 || '',
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
       hari: data.hari || '',
       tanggal: data.tanggal || '',
@@ -153,7 +155,7 @@ export class DocxGenerator {
     
     return {
       // Placeholder yang sesuai dengan template meninggal dunia
-      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_1: data.nama_orang_1 || '',
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
       nama_orang_2: data.nama_orang_2 || '', // nama almarhum
       tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
@@ -204,7 +206,7 @@ export class DocxGenerator {
     
     const templateData = {
       // Placeholder yang sesuai dengan template pindah
-      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_1: data.nama_orang_1 || '',
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
       nomor_kk: data.nomor_kk || '',
       nama_orang_2: data.nama_orang_2 || '', // nama yang pindah
@@ -225,9 +227,6 @@ export class DocxGenerator {
       provinsi_tujuan: data.provinsi_tujuan || '',
       anggota_keluarga: anggotaList,
       
-      // Anggota keluarga untuk template loop
-      anggota_keluarga: anggotaKeluarga,
-      
       tanggal: this.formatDate(currentDate)
     };
     
@@ -242,7 +241,7 @@ export class DocxGenerator {
     
     return {
       // Placeholder yang sesuai dengan template tempat tinggal
-      nama_orang_1: '[Akan diisi admin]', // Akan diisi admin
+      nama_orang_1: data.nama_orang_1 || '',
       jabatan_orang_1: '[Akan diisi admin]', // Akan diisi admin
       nama_orang_2: data.nama_orang_2 || '',
       tempat_tanggal_lahir: data.tempat_tanggal_lahir || '',
@@ -297,4 +296,17 @@ export class DocxGenerator {
     
     return prefixes[serviceType] || '470/SK';
   }
+}
+
+// Fungsi async untuk ambil nama wali nagari dari Firestore
+export async function getWaliNagariNameFromFirestore(): Promise<string | null> {
+  const pejabatRef = collection(db, 'pejabat');
+  const q = query(pejabatRef, where('title', '==', 'Wali Nagari'));
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    const waliDoc = snapshot.docs[0];
+    const data = waliDoc.data();
+    return data.name || null;
+  }
+  return null;
 }
