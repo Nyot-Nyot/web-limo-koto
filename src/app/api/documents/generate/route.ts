@@ -3,13 +3,10 @@ import { DocxGenerator } from '@/lib/docxGenerator';
 
 export async function POST(request: NextRequest) {
   try {
-    // Hanya terima JSON, tidak perlu FormData
+    // Hanya terima JSON dari admin
     const body = await request.json();
     const mainServiceType = body.serviceType || body.jenisLayanan;
-    // Ambil semua field selain serviceType/jenisLayanan
-    const formDataObj = { ...body };
-    delete formDataObj.serviceType;
-    delete formDataObj.jenisLayanan;
+    const formDataObj = body.formData || body.data;
     const nomorPermohonan = body.nomorPermohonan;
 
     // Validate required fields

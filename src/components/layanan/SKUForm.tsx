@@ -66,21 +66,8 @@ export default function SKUForm({ onClose }: SKUFormProps) {
           foto_tempat_usaha: { url: formData.foto_tempat_usaha || '', filename: 'foto_tempat_usaha', type: '' },
         }
       );
-      const response = await fetch("/api/documents/generate", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceType: 'SKU_AN',
-          ...formData,
-        }),
-      });
-      if (response.ok) {
-        alert("Permohonan berhasil dikirim! Silakan tunggu proses dari admin.");
-        onClose();
-      } else {
-        const result = await response.json();
-        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
-      }
+      alert('Permohonan berhasil dikirim!');
+      onClose();
     } catch (error) {
       console.error("Error:", error);
       alert("Terjadi kesalahan. Silakan coba lagi.");

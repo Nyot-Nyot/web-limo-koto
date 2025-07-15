@@ -87,32 +87,8 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
           surat_permohonan: { url: formData.surat_permohonan || '', filename: 'surat_permohonan', type: '' },
         }
       );
-      const response = await fetch("/api/documents/generate", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceType: 'SKDomisili',
-          ...formData,
-        }),
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        const timestamp = Date.now();
-        const filename = `Domisili-${formData.nama_orang_2 || "Document"}-${timestamp}.docx`;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        alert("Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!");
-        onClose();
-      } else {
-        const result = await response.json();
-        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
-      }
+      alert('Permohonan berhasil dikirim!');
+      onClose();
     } catch (error) {
       console.error("Error:", error);
       alert("Terjadi kesalahan. Silakan coba lagi.");
