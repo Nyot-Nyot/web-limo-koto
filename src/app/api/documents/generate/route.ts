@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DocxGenerator } from '@/lib/docxGenerator';
+import { DocxGenerator, getWaliNagariNameFromFirestore } from '@/lib/docxGenerator';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
         error: 'Missing required fields: serviceType and formData' 
       }, { status: 400 });
     }
+
+    // Inject nama wali nagari dari Firestore ke formDataObj
+    const waliNagariName = await getWaliNagariNameFromFirestore();
+    formDataObj.nama_orang_1 = waliNagariName || '[Tidak ditemukan]';
 
     // Generate document
     const docxGenerator = new DocxGenerator();
