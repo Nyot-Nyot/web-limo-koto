@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
+import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
+import imageCompression from 'browser-image-compression';
 
 interface SKPindahFormProps {
   onClose: () => void;
@@ -41,9 +43,9 @@ interface SKPindahFormData {
   anggota_keluarga: AnggotaKeluarga[];
   
   // File uploads
-  kk?: File | null;
-  ktp?: File | null;
-  pas_photo?: File | null;
+  kk?: string | null;
+  ktp?: string | null;
+  pas_photo?: string | null;
 }
 
 export default function SKPindahForm({ onClose }: SKPindahFormProps) {
@@ -51,7 +53,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     nomor_kk: '',
     nama_orang_2: '',
     nik: '',
-    nomorHP: '', // Tambahkan field nomor HP
+    nomorHP: '',
     desa_kelurahan_asal: '',
     kecamatan_asal: '',
     kabupaten_kota_asal: '',
@@ -72,6 +74,11 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({
+    kk: false,
+    ktp: false,
+    pas_photo: false,
+  });
 
   // Functions for managing anggota keluarga
   const addAnggotaKeluarga = () => {
@@ -96,104 +103,47 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
       )
     }));
   };
-  // Upload file directly to Cloudinary
-  const uploadToCloudinary = async (file: File | null): Promise<string> => {
-    if (!file) return '';
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', 'limokoto-upload');
-    const res = await fetch('https://api.cloudinary.com/v1_1/dehm8moqy/image/upload', {
-      method: 'POST', body: data
-    });
-    const json = await res.json();
-    return json.secure_url;
-  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // Validasi input
       if (!formData.nama_orang_2 || !formData.nik || !formData.nomorHP) {
         alert('Harap isi semua field yang wajib diisi!');
         setIsSubmitting(false);
         return;
       }
-
-      // Upload attachments to Cloudinary
-      const kkUrl = await uploadToCloudinary(formData.kk || null);
-      const ktpUrl = await uploadToCloudinary(formData.ktp || null);
-      const photoUrl = await uploadToCloudinary(formData.pas_photo || null);
-
-      // Prepare primitive form data
-      const cleanedDataToSubmit = Object.fromEntries(
-        Object.entries(formData).filter(([, value]) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
-      ) as Record<string, string | number | boolean>;
-
-      // Build attachments object
-      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (kkUrl) attachments.kk = { url: kkUrl, filename: formData.kk?.name || 'kk', type: formData.kk?.type || 'application/octet-stream' };
-      if (ktpUrl) attachments.ktp = { url: ktpUrl, filename: formData.ktp?.name || 'ktp', type: formData.ktp?.type || 'application/octet-stream' };
-      if (photoUrl) attachments.pas_photo = { url: photoUrl, filename: formData.pas_photo?.name || 'pas_photo', type: formData.pas_photo?.type || 'application/octet-stream' };
-
-      // Save data to Firestore
-      const nomorPermohonan = await savePermohonanToFirestore('SKPindah', cleanedDataToSubmit, formData.nomorHP, attachments);
-
-      // Create FormData object
-      const submitFormData = new FormData();
-      submitFormData.append('serviceType', 'SKPindah');
-      
-      // Append form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'anggota_keluarga') {
-          // Handle array data for anggota_keluarga - send as JSON for docxtemplater
-          submitFormData.append(key, JSON.stringify(value));
-        } else if (value !== null && typeof value === 'string') {
-          submitFormData.append(key, value);
-        } else if (value instanceof File) {
-          submitFormData.append(key, value);
+      await savePermohonanToFirestore(
+        'SKPindah',
+        Object.fromEntries(
+          Object.entries(formData).filter(([, v]) =>
+            typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null
+          )
+        ),
+        formData.nomorHP,
+        {
+          kk: { url: formData.kk || '', filename: 'kk', type: '' },
+          ktp: { url: formData.ktp || '', filename: 'ktp', type: '' },
+          pas_photo: { url: formData.pas_photo || '', filename: 'pas_photo', type: '' },
         }
+      );
+      const response = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: 'SKPindah',
+          ...formData,
+        }),
       });
-
-      // Debug: Log the anggota_keluarga data
-      console.log('Anggota Keluarga Data:', formData.anggota_keluarga);
-
-      const response = await fetch('/api/documents/generate', {
-        method: 'POST',
-        body: submitFormData,
-      });
-
       if (response.ok) {
-        // Get the blob from response
-        const blob = await response.blob();
-        
-        // Create download link
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        // Generate filename
-        const timestamp = Date.now();
-        const filename = `SKPindah-${formData.nama_orang_2 || 'Pemohon'}-${timestamp}.docx`;
-        link.download = filename;
-        
-        // Trigger download
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up
-        window.URL.revokeObjectURL(url);
-        
-        alert(`Dokumen Surat Keterangan Pindah berhasil dibuat dan didownload!\nNomor Permohonan: ${nomorPermohonan}`);
+        alert("Permohonan berhasil dikirim! Silakan tunggu proses dari admin.");
         onClose();
       } else {
         const result = await response.json();
-        alert(`Error: ${result.error || 'Gagal membuat dokumen'}`);
+        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      console.error("Error:", error);
+      alert("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -206,13 +156,30 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
     }));
   };
 
-  const handleFileChange = (fieldName: keyof SKPindahFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (fieldName: keyof SKPindahFormData) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        [fieldName]: file
-      }));
+      if (!file.type.startsWith('image/')) {
+        alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!');
+        return;
+      }
+      setUploading((prev) => ({ ...prev, [fieldName]: true }));
+      try {
+        file = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
+        const url = await uploadToCloudinary(file);
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: url,
+        }));
+      } catch {
+        alert('Gagal upload file. Silakan coba lagi.');
+      } finally {
+        setUploading((prev) => ({ ...prev, [fieldName]: false }));
+      }
     }
   };
 
@@ -582,11 +549,14 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange('kk')}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
+                disabled={uploading.kk}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              {uploading.kk && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.kk && !uploading.kk && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)</p>
             </div>
 
             <div>
@@ -596,11 +566,14 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange('ktp')}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
+                disabled={uploading.ktp}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max: 5MB)</p>
+              {uploading.ktp && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.ktp && !uploading.ktp && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, WEBP (Max: 1MB setelah kompresi)</p>
             </div>
 
             <div>
@@ -610,11 +583,14 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
               <input
                 type="file"
                 onChange={handleFileChange('pas_photo')}
-                accept=".jpg,.jpeg,.png"
+                accept=".jpg,.jpeg,.png,.webp"
                 required
+                disabled={uploading.pas_photo}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG (Max: 2MB)</p>
+              {uploading.pas_photo && <p className="text-xs text-yellow-600 mt-1">Mengupload...</p>}
+              {formData.pas_photo && !uploading.pas_photo && <p className="text-xs text-green-600 mt-1">File terupload ✔</p>}
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, WEBP (Max: 1MB setelah kompresi)</p>
             </div>
           </div>
         </div>
@@ -630,7 +606,7 @@ export default function SKPindahForm({ onClose }: SKPindahFormProps) {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Object.values(uploading).some(Boolean)}
             className="px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg"
           >
             {isSubmitting ? (

@@ -91,7 +91,7 @@ export default function HeroSection() {
       <div
         className="fixed inset-0 bg-fixed"
         style={{
-          backgroundImage: 'url("/images/background.png")',
+          backgroundImage: 'url("/images/background.webp")',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
         }}
@@ -109,7 +109,7 @@ export default function HeroSection() {
           <div className="text-center text-white max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
               Selamat Datang di<br />
-              <span className="text-yellow-400">Website Nagari Lima Koto</span>
+              <span className="text-yellow-400">Website Nagari Limo Koto</span>
             </h1>
             
             <div className="w-20 h-1 bg-yellow-400 mx-auto mb-6"></div>
@@ -119,12 +119,12 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
+              <Link href="/profil" className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
                 Jelajahi Profil Nagari
-              </button>
-              <button className="bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
+              </Link>
+              <Link href="/berita" className="bg-transparent border-2 border-white hover:bg-white hover:text-black text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300 inline-block cursor-pointer">
                 Baca Portal Berita
-              </button>
+              </Link>
             </div>
           </div>
         </section>

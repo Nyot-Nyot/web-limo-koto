@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { savePermohonanToFirestore } from '@/lib/layananUtils';
+import imageCompression from 'browser-image-compression';
 
 interface DomisiliFormProps {
   onClose: () => void;
@@ -21,9 +22,9 @@ interface DomisiliFormData {
   nama_kabupaten: string;
   tujuan: string;
   nomorHP: string; // Tambahkan field nomor HP
-  kk: File | null;
-  ktp: File | null;
-  surat_permohonan: File | null;
+  kk: string | null;
+  ktp: string | null;
+  surat_permohonan: string | null;
 }
 
 export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
@@ -66,110 +67,55 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // Validasi nomor HP
       if (!formData.nomorHP) {
         alert('Nomor HP wajib diisi');
         setIsSubmitting(false);
         return;
       }
-
-      // Upload attachments to Cloudinary
-      const kkUrl = await uploadToCloudinary(formData.kk);
-      const ktpUrl = await uploadToCloudinary(formData.ktp);
-      const suratUrl = await uploadToCloudinary(formData.surat_permohonan);
-
-      // Prepare submission data (primitive values)
-      const dataToSubmit = { ...formData };
-
-      // Build attachments object for Firestore
-      const attachments: Record<string, { url: string; filename: string; type: string }> = {};
-      if (kkUrl) {
-        attachments.kk = {
-          url: kkUrl,
-          filename: formData.kk?.name || 'kk',
-          type: formData.kk?.type || 'application/octet-stream'
-        };
-      }
-      if (ktpUrl) {
-        attachments.ktp = {
-          url: ktpUrl,
-          filename: formData.ktp?.name || 'ktp',
-          type: formData.ktp?.type || 'application/octet-stream'
-        };
-      }
-      if (suratUrl) {
-        attachments.surat_permohonan = {
-          url: suratUrl,
-          filename: formData.surat_permohonan?.name || 'surat_permohonan',
-          type: formData.surat_permohonan?.type || 'application/octet-stream'
-        };
-      }
-
-      // Simpan data ke Firestore (filter out undefined values)
-      // Keep only primitive form values (string, number, boolean) to avoid undefined or object values
-      const cleanedDataToSubmit = Object.fromEntries(
-        Object.entries(dataToSubmit).filter(([, value]) =>
-          typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-        )
-      ) as Record<string, string | number | boolean>;
-      const nomorPermohonan = await savePermohonanToFirestore(
+      await savePermohonanToFirestore(
         'SKDomisili',
-        cleanedDataToSubmit,
+        Object.fromEntries(
+          Object.entries(formData).filter(([, v]) =>
+            typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null
+          )
+        ),
         formData.nomorHP,
-        attachments
-      );
-
-      // Create FormData object untuk generate dokumen
-      const submitFormData = new FormData();
-      submitFormData.append('serviceType', 'SKDomisili');
-      
-      // Append form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && typeof value === 'string') {
-          submitFormData.append(key, value);
-        } else if (value instanceof File) {
-          submitFormData.append(key, value);
+        {
+          kk: { url: formData.kk || '', filename: 'kk', type: '' },
+          ktp: { url: formData.ktp || '', filename: 'ktp', type: '' },
+          surat_permohonan: { url: formData.surat_permohonan || '', filename: 'surat_permohonan', type: '' },
         }
+      );
+      const response = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: 'SKDomisili',
+          ...formData,
+        }),
       });
-
-      const response = await fetch('/api/documents/generate', {
-        method: 'POST',
-        body: submitFormData,
-      });
-
       if (response.ok) {
-        // Get the blob from response
         const blob = await response.blob();
-        
-        // Create download link
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        
-        // Generate filename
         const timestamp = Date.now();
-        const filename = `Domisili-${formData.nama_orang_2 || 'Document'}-${timestamp}.docx`;
+        const filename = `Domisili-${formData.nama_orang_2 || "Document"}-${timestamp}.docx`;
         link.download = filename;
-        
-        // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        // Clean up
         window.URL.revokeObjectURL(url);
-        
-        alert(`Permohonan berhasil disimpan dengan nomor: ${nomorPermohonan}. Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!`);
+        alert("Dokumen Surat Keterangan Domisili berhasil dibuat dan didownload!");
         onClose();
       } else {
         const result = await response.json();
-        alert(`Error: ${result.error || 'Gagal membuat dokumen'}`);
+        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      console.error("Error:", error);
+      alert("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -182,13 +128,27 @@ export default function DomisiliFormNew({ onClose }: DomisiliFormProps) {
     }));
   };
 
-  const handleFileChange = (fieldName: keyof DomisiliFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (fieldName: keyof DomisiliFormData) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        [fieldName]: file
-      }));
+      if (!file.type.startsWith('image/')) {
+        alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!');
+        return;
+      }
+      try {
+        file = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
+        const url = await uploadToCloudinary(file);
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: url,
+        }));
+      } catch {
+        alert('Gagal upload file. Silakan coba lagi.');
+      }
     }
   };
 

@@ -18,11 +18,11 @@ export const featuresData: Feature[] = [
   },
   {
     id: 2,
-    title: "Adat Istiadat",
-    description: "Tradisi dan budaya dari 10 Jorong yang ada di Nagari",
+    title: "FAQ",
+    description: "Pertanyaan yang sering diajukan seputar layanan dan nagari.",
     bgColor: "bg-yellow-500",
     iconType: 'book',
-    link: "/profil"
+    link: "#faq"
   },
   {
     id: 3,
