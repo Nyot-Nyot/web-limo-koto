@@ -51,6 +51,7 @@ interface PermohonanData {
     alamat?: string;
     agama?: string;
     pekerjaan?: string;
+    nama_orang_2?: string;
     [key: string]: unknown;
   };
   attachments?: {
@@ -762,7 +763,11 @@ export default function AdminLayananPage() {
   const handleDownload = async (permohonan: PermohonanData) => {
     try {
       setActionLoading(permohonan.id);
-      
+      // Pastikan field nama_orang_2 selalu ada
+      const formData = {
+        ...permohonan.data,
+        nama_orang_2: permohonan.data.nama_orang_2 || permohonan.data.nama || '',
+      };
       // Call API to generate document
       const response = await fetch('/api/documents/generate', {
         method: 'POST',
@@ -771,7 +776,7 @@ export default function AdminLayananPage() {
         },
         body: JSON.stringify({
           serviceType: permohonan.jenisLayanan,
-          formData: permohonan.data,
+          formData,
           nomorPermohonan: permohonan.nomorPermohonan
         })
       });

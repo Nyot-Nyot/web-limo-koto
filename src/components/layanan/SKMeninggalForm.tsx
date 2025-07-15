@@ -91,22 +91,8 @@ export default function SKMeninggalForm({ onClose }: SKMeninggalFormProps) {
           ktp_pelapor: { url: formData.ktp_pelapor || '', filename: 'ktp_pelapor', type: '' },
         }
       );
-      // Kirim ke API generate dokumen (JSON)
-      const response = await fetch("/api/documents/generate", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceType: 'SKMeninggalDunia',
-          ...formData,
-        }),
-      });
-      if (response.ok) {
-        alert("Permohonan berhasil dikirim! Silakan tunggu proses dari admin.");
-        onClose();
-      } else {
-        const result = await response.json();
-        alert(`Error: ${result.error || "Gagal membuat dokumen"}`);
-      }
+      alert('Permohonan berhasil dikirim!');
+      onClose();
     } catch (error) {
       console.error("Error:", error);
       alert("Terjadi kesalahan. Silakan coba lagi.");

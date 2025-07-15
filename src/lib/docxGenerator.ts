@@ -116,7 +116,7 @@ export class DocxGenerator {
       nik: data.nik || '',
       jenis_kelamin: data.jenis_kelamin || '',
       agama: data.agama || '',
-      status: data.status || '',
+      status: data.status || data.status_perkawinan || '',
       pekerjaan: data.pekerjaan || '',
       alamat: data.alamat || '',
       nama_jorong: data.nama_jorong || '',
