@@ -713,18 +713,6 @@ export default function AdminLayananPage() {
         </button>
       );
     }
-    
-    // Notification button
-    buttons.push(
-      <button
-        key="notify"
-        onClick={() => handleSendNotification(permohonan)}
-        className="p-2 text-green-400 hover:bg-gray-700 rounded-lg transition-colors"
-        title="Kirim SMS Notifikasi"
-      >
-        <FaWhatsapp />
-      </button>
-    );
 
     // Add delete button for rejected data
     if (permohonan.status === 'ditolak') {
@@ -880,64 +868,6 @@ export default function AdminLayananPage() {
     }
   };
 
-  // Handle send notification
-  const handleSendNotification = async (permohonan: PermohonanData) => {
-    // Show custom confirmation modal
-    setConfirmModal({
-      show: true,
-      type: 'sms',
-      title: 'Konfirmasi Kirim SMS',
-      message: 'Apakah Anda yakin ingin mengirim SMS notifikasi?',
-      details: `Nomor HP: ${permohonan.nomorHP}\nNama: ${permohonan.namaPemohon}\nJenis Layanan: ${permohonan.jenisLayanan}\nStatus: ${permohonan.status}`,
-      onConfirm: async () => {
-        try {
-          setConfirmModal(prev => ({ ...prev, loading: true }));
-          setActionLoading(permohonan.id);
-          
-          // Send SMS notification instead of WhatsApp
-          const success = await sendSMSNotification(
-            permohonan.nomorHP,
-            permohonan.jenisLayanan,
-            permohonan.nomorPermohonan,
-            permohonan.status,
-            permohonan.alasanTolak
-          );
-          
-          if (success) {
-            // Update notification status in Firebase
-            const docRef = doc(db, 'permohonan_layanan', permohonan.id);
-            await updateDoc(docRef, {
-              'notifikasi.terkirim': true,
-              'notifikasi.tanggal': new Date(),
-              'notifikasi.error': ''
-            });
-            
-            await fetchPermohonanData();
-            setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
-            setNotifModal({ show: true, type: 'success', message: 'SMS notifikasi berhasil dikirim!' });
-          } else {
-            throw new Error('Failed to send SMS notification');
-          }
-        } catch (error) {
-          console.error('Error sending SMS notification:', error);
-          
-          // Update notification error in Firebase
-          const docRef = doc(db, 'permohonan_layanan', permohonan.id);
-          await updateDoc(docRef, {
-            'notifikasi.terkirim': false,
-            'notifikasi.error': error instanceof Error ? error.message : 'Unknown error'
-          });
-          
-          setConfirmModal({ show: false, type: 'action', title: '', message: '', onConfirm: () => {} });
-          setNotifModal({ show: true, type: 'error', message: 'Gagal mengirim SMS notifikasi. Silakan coba lagi.' });
-        } finally {
-          setActionLoading(null);
-          setConfirmModal(prev => ({ ...prev, loading: false }));
-        }
-      }
-    });
-  };
-
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -994,21 +924,6 @@ export default function AdminLayananPage() {
               <h1 className="text-2xl font-bold text-yellow-400">Management Surat Keterangan</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-                className="relative p-2 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                {quickStats.notifikasiGagal > 0 ? (
-                  <MdNotificationsActive className="h-6 w-6 text-red-400" />
-                ) : (
-                  <MdNotifications className="h-6 w-6" />
-                )}
-                {quickStats.notifikasiGagal > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
-                    {quickStats.notifikasiGagal}
-                  </span>
-                )}
-              </button>
               <button
                 onClick={fetchPermohonanData}
                 disabled={loading}
@@ -1502,14 +1417,6 @@ export default function AdminLayananPage() {
                     >
                       <FaDownload className="inline mr-2" />
                       Download Surat
-                    </button>
-                    
-                    <button
-                      onClick={() => handleSendNotification(selectedPermohonan)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      <FaWhatsapp className="inline mr-2" />
-                      Kirim Notifikasi
                     </button>
                     {selectedPermohonan.status === 'pending' && (
                       <>
