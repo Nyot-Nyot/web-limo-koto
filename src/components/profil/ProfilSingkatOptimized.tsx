@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { ADAT_IMAGES, PERFORMANCE_CONFIG } from './constants';
 import { useGaleriFirestore } from '@/lib/galeriService';
 import type { GalleryItem } from '@/data/galeri';
+import Image from 'next/image';
 
 // Optimized touch handlers
 const useTouchHandlers = (onPrevious: () => void, onNext: () => void) => {
@@ -186,9 +187,11 @@ const ImageCard = memo(({
       onClick={onClick}
     >
       <div className="relative w-full h-full">
-        <img 
+        <Image 
           src={image.src}
           alt={image.title}
+          width={400}
+          height={300}
           className="w-full h-full object-cover"
           loading="lazy"
         />

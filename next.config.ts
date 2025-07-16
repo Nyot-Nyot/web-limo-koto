@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
   },
   images: {
     domains: ['placehold.co', 'img.youtube.com', 'i.ytimg.com', 'i.vimeocdn.com'],
-    unoptimized: true
   },
 };
 

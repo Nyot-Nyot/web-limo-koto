@@ -1,6 +1,7 @@
 'use client';
 
 import { memo } from 'react';
+import Image from 'next/image';
 
 const AdatIstiadat = memo(() => {
   const adatCategories = [
@@ -156,9 +157,11 @@ const AdatIstiadat = memo(() => {
 
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-600 to-red-600 shadow-2xl">
-              <img 
+              <Image 
                 src="https://placehold.co/600x450" 
                 alt="Adat Istiadat Nagari Lima Koto"
+                width={600}
+                height={450}
                 className="w-full h-full object-cover"
               />
             </div>
